@@ -1,19 +1,33 @@
 <script lang="ts">
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
+import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 
 export default {
   name: 'CalculatorsView',
   components: {
-    TwinLeadCharImp
+    TwinLeadCharImp,
+    TwistedPairCharImp
   },
   data() {
     return {
       activeCalculator: 'twinlead'
     }
   },
+  mounted() {
+    // Check if there's a calculator parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const calculator = urlParams.get('calculator');
+    if (calculator && ['twinlead', 'twistedpair'].includes(calculator)) {
+      this.activeCalculator = calculator;
+    }
+  },
   methods: {
     setActiveCalculator(calculator: string) {
-      this.activeCalculator = calculator
+      this.activeCalculator = calculator;
+      // Update URL without reloading the page
+      const url = new URL(window.location.href);
+      url.searchParams.set('calculator', calculator);
+      window.history.pushState({}, '', url);
     }
   }
 }
@@ -33,6 +47,12 @@ export default {
           >
             Twin Lead Magnet Wire Characteristic Impedance
           </li>
+          <li 
+            :class="{ active: activeCalculator === 'twistedpair' }"
+            @click="setActiveCalculator('twistedpair')"
+          >
+            Twisted Pair Magnet Wire Characteristic Impedance
+          </li>
           <!-- Add more calculators here as they become available -->
           <li class="coming-soon">Antenna Length Calculator</li>
           <li class="coming-soon">Coil Inductance Calculator</li>
@@ -43,6 +63,7 @@ export default {
       
       <div class="calculator-container">
         <TwinLeadCharImp v-if="activeCalculator === 'twinlead'" />
+        <TwistedPairCharImp v-if="activeCalculator === 'twistedpair'" />
       </div>
     </div>
   </div>

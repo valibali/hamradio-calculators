@@ -9,31 +9,79 @@ export default {
   },
   data() {
     return {
-      characteristicImpedanceHtml: '',
-      markdownContent: '',
+      activeCalculator: 'twinlead',
+      calculators: [
+        { 
+          id: 'twinlead', 
+          name: 'Twin Lead Magnet Wire Characteristic Impedance',
+          file: 'twinlead-magnetwire-charimp.md',
+          html: ''
+        },
+        { 
+          id: 'twistedpair', 
+          name: 'Twisted Pair Magnet Wire Characteristic Impedance',
+          file: 'twistedpair-magnetwire-charimp.md',
+          html: ''
+        }
+      ]
+    }
+  },
+  computed: {
+    currentCalculator() {
+      return this.calculators.find(calc => calc.id === this.activeCalculator) || this.calculators[0];
     }
   },
   mounted() {
-    this.loadMarkdownFile()
+    // Check if there's a calculator parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const calculator = urlParams.get('calculator');
+    if (calculator && this.calculators.some(calc => calc.id === calculator)) {
+      this.activeCalculator = calculator;
+    }
+    
+    // Load the markdown for the active calculator
+    this.loadMarkdownFile(this.activeCalculator);
   },
   methods: {
-    async loadMarkdownFile() {
+    setActiveCalculator(calculatorId) {
+      this.activeCalculator = calculatorId;
+      this.loadMarkdownFile(calculatorId);
+      
+      // Update URL without reloading the page
+      const url = new URL(window.location.href);
+      url.searchParams.set('calculator', calculatorId);
+      window.history.pushState({}, '', url);
+    },
+    async loadMarkdownFile(calculatorId) {
       try {
+        const calculator = this.calculators.find(calc => calc.id === calculatorId);
+        if (!calculator) return;
+        
+        // Skip if already loaded
+        if (calculator.html) {
+          this.$nextTick(() => {
+            if (window.MathJax) {
+              window.MathJax.typeset();
+            }
+          });
+          return;
+        }
+        
         // Load the markdown file from the docs directory
-        const response = await fetch('/src/docs/twinlead-magnetwire-charimp.md')
-        this.markdownContent = await response.text()
+        const response = await fetch(`/src/docs/${calculator.file}`);
+        const markdownContent = await response.text();
 
         // Render the markdown content
-        this.characteristicImpedanceHtml = marked.parse(this.markdownContent)
+        calculator.html = marked.parse(markdownContent);
 
         // Typeset math after the content is rendered
         this.$nextTick(() => {
           if (window.MathJax) {
-            window.MathJax.typeset()
+            window.MathJax.typeset();
           }
-        })
+        });
       } catch (error) {
-        console.error('Error loading markdown file:', error)
+        console.error('Error loading markdown file:', error);
       }
     },
   },
@@ -50,13 +98,19 @@ export default {
       <div class="formula-nav">
         <h3>Available Calculators</h3>
         <ul>
-          <li class="active">Twin Lead Magnet Wire Characteristic Impedance</li>
-          <!-- Add more calculators here as they become available -->
+          <li 
+            v-for="calculator in calculators" 
+            :key="calculator.id"
+            :class="{ active: activeCalculator === calculator.id }"
+            @click="setActiveCalculator(calculator.id)"
+          >
+            {{ calculator.name }}
+          </li>
         </ul>
       </div>
 
       <div class="formula-docs">
-        <div v-html="characteristicImpedanceHtml" class="markdown-content"></div>
+        <div v-html="currentCalculator.html" class="markdown-content"></div>
       </div>
     </div>
   </div>

@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 
 export default {
-  name: 'TwinLeadCharImp',
+  name: 'TwistedPairCharImp',
   components: {
     RouterLink
   },
@@ -11,28 +11,28 @@ export default {
     return {
       // Define AWG wire options with their bare diameters in mm
       wireOptions: [
-        { value: 'awg15', label: 'AWG 15', diameter: 1.450, radius: 0.725 },
-        { value: 'awg16', label: 'AWG 16', diameter: 1.291, radius: 0.6455 },
-        { value: 'awg18', label: 'AWG 18', diameter: 1.024, radius: 0.512 },
-        { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 }
+        { value: 'awg22', label: 'AWG 22', diameter: 0.644 },
+        { value: 'awg24', label: 'AWG 24', diameter: 0.511 },
+        { value: 'awg26', label: 'AWG 26', diameter: 0.405 },
+        { value: 'custom', label: 'Custom Diameter', diameter: 0.5 }
       ],
       
       // Define insulation types with their permittivity
       insulationTypes: [
-        { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.05 },
+        { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.03 },
         { value: 'ptfe', label: 'PTFE', permittivity: 2.1, thickness: 0.1 },
         { value: 'pvc', label: 'PVC', permittivity: 3.0, thickness: 0.15 },
-        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 }
+        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.03 }
       ],
       
       // Form inputs
-      selectedWire: 'awg15', // Default to AWG 15
+      selectedWire: 'awg24', // Default to AWG 24
       selectedInsulation: 'polyimide', // Default to Polyimide Enamel
-      customDiameter: 1.0, // mm
-      customInsulationThickness: 0.05, // mm
+      customDiameter: 0.5, // mm
+      customInsulationThickness: 0.03, // mm
       customPermittivity: 3.5,
-      targetImpedance: 50, // Ohms
-      airGap: 0.1 // mm
+      twistPitch: 10, // mm
+      twistTightness: 'medium' // loose, medium, tight
     }
   },
   
@@ -46,12 +46,17 @@ export default {
       return this.insulationTypes.find(i => i.value === this.selectedInsulation) || this.insulationTypes[0]
     },
     
-    // Get the effective wire radius (considering custom values if selected)
-    wireRadius() {
+    // Get the wire diameter (considering custom values if selected)
+    wireDiameter() {
       if (this.selectedWire === 'custom') {
-        return this.customDiameter / 2
+        return this.customDiameter
       }
-      return this.selectedWireObj.radius
+      return this.selectedWireObj.diameter
+    },
+    
+    // Get the wire radius
+    wireRadius() {
+      return this.wireDiameter / 2
     },
     
     // Get the insulation thickness (considering custom values if selected)
@@ -70,53 +75,58 @@ export default {
       return this.selectedInsulationObj.permittivity
     },
     
-    // Calculate center-to-center distance (D)
-    centerToCenter() {
-      // D = 2a + 2t + s (2 * wire radius + 2 * insulation thickness + air gap)
-      return 2 * this.wireRadius + 2 * this.insulationThickness + this.airGap
+    // Calculate effective radius including insulation
+    effectiveRadius() {
+      return this.wireRadius + this.insulationThickness
     },
     
-    // Calculate effective permittivity
+    // Calculate center-to-center spacing based on twist pitch
+    centerToCenter() {
+      return this.twistPitch / Math.PI
+    },
+    
+    // Calculate spacing to radius ratio
+    spacingRatio() {
+      return this.centerToCenter / this.effectiveRadius
+    },
+    
+    // Calculate effective permittivity based on insulation and air
     effectivePermittivity() {
-      // Total insulation thickness: 2t + s (enamel on both wires + air gap)
-      const totalInsulation = 2 * this.insulationThickness + this.airGap
+      // Adjust air gap based on twist tightness
+      let airGapFactor = 1.0
+      if (this.twistTightness === 'loose') {
+        airGapFactor = 1.5
+      } else if (this.twistTightness === 'tight') {
+        airGapFactor = 0.7
+      }
       
-      // Effective permittivity calculation
-      // εeff = Total Insulation / ((Enamel Thickness / εr) + (Air Gap / 1))
-      const effectivePerm = totalInsulation / 
-        ((2 * this.insulationThickness / this.permittivity) + this.airGap)
+      // Simplified model: weighted average of insulation and air
+      const totalThickness = 2 * this.insulationThickness + (this.centerToCenter - 2 * this.effectiveRadius) * airGapFactor
+      const insulationPart = 2 * this.insulationThickness / totalThickness
+      const airPart = 1 - insulationPart
+      
+      const effectivePerm = (insulationPart * this.permittivity) + (airPart * 1.0)
       
       return Math.round(effectivePerm * 100) / 100 // Round to 2 decimal places
     },
     
-    // Calculate the characteristic impedance
-    impedance() {
-      // Z0 = (120 / √εeff) * arccosh(D/2a)
-      const ratio = this.centerToCenter / (2 * this.wireRadius)
-      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
-      
-      const impedanceValue = (120 / Math.sqrt(this.effectivePermittivity)) * arccosh
-      
-      return Math.round(impedanceValue * 100) / 100 // Round to 2 decimal places
+    // Calculate the arccosh term
+    arccoshTerm() {
+      const ratio = this.spacingRatio
+      return Math.log(ratio + Math.sqrt(ratio * ratio - 1))
     },
     
-    // Calculate required air gap for target impedance
-    calculatedAirGap() {
-      // Solve for s using the target impedance
-      // First, calculate the required effective permittivity
-      const arccosh = Math.log(this.centerToCenter / (2 * this.wireRadius) + 
-        Math.sqrt(Math.pow(this.centerToCenter / (2 * this.wireRadius), 2) - 1))
+    // Calculate the characteristic impedance
+    impedance() {
+      // Z0 = (120 / √εeff) * ln(s/r + √((s/r)² - 1))
+      const impedanceValue = (120 / Math.sqrt(this.effectivePermittivity)) * this.arccoshTerm
       
-      const requiredEffPerm = Math.pow((120 / this.targetImpedance) * arccosh, 2)
-      
-      // Then solve for s using the effective permittivity formula
-      // s = (2t * εeff / (εr - εeff)) - (2t / εr)
-      const t = this.insulationThickness
-      const er = this.permittivity
-      
-      const gap = ((2 * t * requiredEffPerm) / (er - requiredEffPerm)) - ((2 * t) / er)
-      
-      return Math.max(0, Math.round(gap * 1000) / 1000) // Round to 3 decimal places, minimum 0
+      return Math.round(impedanceValue * 10) / 10 // Round to 1 decimal place
+    },
+    
+    // Calculate twist density in Turns Per Inch (TPI)
+    twistTPI() {
+      return Math.round((25.4 / this.twistPitch) * 10) / 10 // Convert mm to inch and round to 1 decimal
     }
   }
 }
@@ -124,9 +134,9 @@ export default {
 
 <template>
   <div>
-    <h2>Twin Lead Magnet Wire Characteristic Impedance</h2>
+    <h2>Twisted Pair Magnet Wire Characteristic Impedance</h2>
     <p class="calculator-description">
-      Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size, insulation, and air gap.
+      Calculate the characteristic impedance (Z₀) of twisted pair magnet wire based on wire size, insulation, and twist pitch.
     </p>
     
     <div class="calculator-form">
@@ -162,8 +172,15 @@ export default {
       </div>
       
       <div class="form-group">
-        <label for="air-gap">Air Gap (mm):</label>
-        <input type="number" id="air-gap" v-model="airGap" min="0" step="0.01" />
+        <label for="twist-pitch">Twist Pitch (mm):</label>
+        <input type="number" id="twist-pitch" v-model="twistPitch" min="1" step="0.5" />
+        
+        <label for="twist-tightness">Twist Tightness:</label>
+        <select id="twist-tightness" v-model="twistTightness">
+          <option value="loose">Loose</option>
+          <option value="medium">Medium</option>
+          <option value="tight">Tight</option>
+        </select>
       </div>
     </div>
     
@@ -173,12 +190,20 @@ export default {
       
       <div class="parameters">
         <div class="parameter">
-          <span class="parameter-label">Wire Radius (a):</span>
-          <span class="parameter-value">{{ wireRadius }} mm</span>
+          <span class="parameter-label">Wire Diameter:</span>
+          <span class="parameter-value">{{ wireDiameter }} mm</span>
         </div>
         <div class="parameter">
-          <span class="parameter-label">Center-to-Center Distance (D):</span>
-          <span class="parameter-value">{{ centerToCenter }} mm</span>
+          <span class="parameter-label">Effective Radius (r):</span>
+          <span class="parameter-value">{{ effectiveRadius }} mm</span>
+        </div>
+        <div class="parameter">
+          <span class="parameter-label">Center-to-Center (s):</span>
+          <span class="parameter-value">{{ centerToCenter.toFixed(2) }} mm</span>
+        </div>
+        <div class="parameter">
+          <span class="parameter-label">Twist Density:</span>
+          <span class="parameter-value">{{ twistTPI }} TPI</span>
         </div>
         <div class="parameter">
           <span class="parameter-label">Effective Permittivity (εₑff):</span>
@@ -186,28 +211,15 @@ export default {
         </div>
       </div>
       
-      <div class="target-impedance">
-        <h4>Air Gap Calculator</h4>
-        <div class="target-form">
-          <label for="target-impedance">Target Impedance (Ω):</label>
-          <input type="number" id="target-impedance" v-model="targetImpedance" min="1" step="1" />
-        </div>
-        <div class="calculated-gap">
-          <span>Required Air Gap:</span>
-          <span class="gap-value">{{ calculatedAirGap }} mm</span>
-        </div>
-      </div>
-      
       <p class="formula">
-        <router-link to="/formulas?calculator=twinlead">Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</router-link>
+        <router-link to="/formulas?calculator=twistedpair">Formula: Z₀ = (120 / √εₑff) × ln(s/r + √((s/r)² - 1))</router-link>
       </p>
-      <p class="formula-explanation">Where D is center-to-center distance, a is wire radius, and εₑff is effective permittivity</p>
+      <p class="formula-explanation">Where s is center-to-center spacing, r is effective radius, and εₑff is effective permittivity</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-
 h2 {
   color: var(--color-heading);
   margin-bottom: 1rem;
@@ -292,39 +304,6 @@ select, input {
 
 .parameter-value {
   font-weight: bold;
-}
-
-.target-impedance {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background-color: var(--color-background);
-  border-radius: 4px;
-}
-
-.target-impedance h4 {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--color-heading);
-}
-
-.target-form {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.calculated-gap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.gap-value {
-  font-weight: bold;
-  color: hsla(160, 100%, 37%, 1);
 }
 
 .formula {
