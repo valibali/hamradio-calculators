@@ -50,7 +50,7 @@ export default {
       <div class="formula-nav">
         <h3>Available Calculators</h3>
         <ul>
-          <li class="active">Characteristic Impedance</li>
+          <li class="active">Twin Lead Magnet Wire Characteristic Impedance</li>
           <!-- Add more calculators here as they become available -->
         </ul>
       </div>

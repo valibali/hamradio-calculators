@@ -1,6 +1,6 @@
 <script lang="ts">
 export default {
-  name: 'CharacteristicImpedanceCalculator',
+  name: 'TwinLeadCharImp',
   
   data() {
     return {
@@ -119,7 +119,7 @@ export default {
 
 <template>
   <div class="calculator-container">
-    <h2>Characteristic Impedance Calculator</h2>
+    <h2>Twin Lead Magnet Wire Characteristic Impedance</h2>
     <p class="calculator-description">
       Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size, insulation, and air gap.
     </p>
