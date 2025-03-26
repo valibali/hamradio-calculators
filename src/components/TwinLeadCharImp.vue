@@ -118,7 +118,7 @@ export default {
 </script>
 
 <template>
-  <div class="calculator-container">
+  <div>
     <h2>Twin Lead Magnet Wire Characteristic Impedance</h2>
     <p class="calculator-description">
       Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size, insulation, and air gap.
@@ -200,13 +200,6 @@ export default {
 </template>
 
 <style scoped>
-.calculator-container {
-  background-color: var(--color-background-soft);
-  border-radius: 8px;
-  padding: 2rem;
-  margin-top: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
 
 h2 {
   color: var(--color-heading);
