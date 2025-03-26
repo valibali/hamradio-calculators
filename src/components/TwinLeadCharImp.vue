@@ -1,6 +1,11 @@
 <script lang="ts">
+import { RouterLink } from 'vue-router'
+
 export default {
   name: 'TwinLeadCharImp',
+  components: {
+    RouterLink
+  },
   
   data() {
     return {
@@ -193,7 +198,9 @@ export default {
         </div>
       </div>
       
-      <p class="formula">Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</p>
+      <p class="formula">
+        <router-link to="/formulas">Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</router-link>
+      </p>
       <p class="formula-explanation">Where D is center-to-center distance, a is wire radius, and εₑff is effective permittivity</p>
     </div>
   </div>
@@ -324,6 +331,17 @@ select, input {
   font-style: italic;
   margin-bottom: 0.5rem;
   margin-top: 1.5rem;
+}
+
+.formula a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--color-border);
+  transition: color 0.2s;
+}
+
+.formula a:hover {
+  color: hsla(160, 100%, 37%, 1);
 }
 
 .formula-explanation {
