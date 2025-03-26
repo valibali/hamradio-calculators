@@ -1,17 +1,18 @@
-<script setup lang="ts">
-import { onMounted } from 'vue'
-
-// Function to load MathJax
-const loadMathJax = () => {
-  if (window.MathJax) {
-    return Promise.resolve()
-  }
-
-  return new Promise<void>((resolve) => {
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
-    script.async = true
-    script.onload = () => {
+<script lang="ts">
+export default {
+  name: 'MathJaxLoader',
+  
+  mounted() {
+    this.loadMathJax();
+  },
+  
+  methods: {
+    loadMathJax() {
+      if (window.MathJax) {
+        return;
+      }
+      
+      // Configure MathJax before loading the script
       window.MathJax = {
         tex: {
           inlineMath: [['$', '$']],
@@ -19,17 +20,20 @@ const loadMathJax = () => {
         },
         svg: {
           fontCache: 'global'
+        },
+        startup: {
+          typeset: true
         }
-      }
-      resolve()
+      };
+      
+      // Create and append the script
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.async = true;
+      document.head.appendChild(script);
     }
-    document.head.appendChild(script)
-  })
+  }
 }
-
-onMounted(async () => {
-  await loadMathJax()
-})
 </script>
 
 <template>

@@ -1,112 +1,120 @@
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-
-// Define AWG wire options with their bare diameters in mm
-const wireOptions = [
-  { value: 'awg15', label: 'AWG 15', diameter: 1.450, radius: 0.725 },
-  { value: 'awg16', label: 'AWG 16', diameter: 1.291, radius: 0.6455 },
-  { value: 'awg18', label: 'AWG 18', diameter: 1.024, radius: 0.512 },
-  { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 }
-]
-
-// Define insulation types with their permittivity
-const insulationTypes = [
-  { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.05 },
-  { value: 'ptfe', label: 'PTFE', permittivity: 2.1, thickness: 0.1 },
-  { value: 'pvc', label: 'PVC', permittivity: 3.0, thickness: 0.15 },
-  { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 }
-]
-
-// Form inputs
-const selectedWire = ref(wireOptions[0].value) // Default to AWG 15
-const selectedInsulation = ref(insulationTypes[0].value) // Default to Polyimide Enamel
-const customDiameter = ref(1.0) // mm
-const customInsulationThickness = ref(0.05) // mm
-const customPermittivity = ref(3.5)
-const targetImpedance = ref(50) // Ohms
-const airGap = ref(0.1) // mm
-
-// Get the selected wire and insulation objects
-const selectedWireObj = computed(() => {
-  return wireOptions.find(w => w.value === selectedWire.value) || wireOptions[0]
-})
-
-const selectedInsulationObj = computed(() => {
-  return insulationTypes.find(i => i.value === selectedInsulation.value) || insulationTypes[0]
-})
-
-// Get the effective wire radius (considering custom values if selected)
-const wireRadius = computed(() => {
-  if (selectedWire.value === 'custom') {
-    return customDiameter.value / 2
+<script lang="ts">
+export default {
+  name: 'CharacteristicImpedanceCalculator',
+  
+  data() {
+    return {
+      // Define AWG wire options with their bare diameters in mm
+      wireOptions: [
+        { value: 'awg15', label: 'AWG 15', diameter: 1.450, radius: 0.725 },
+        { value: 'awg16', label: 'AWG 16', diameter: 1.291, radius: 0.6455 },
+        { value: 'awg18', label: 'AWG 18', diameter: 1.024, radius: 0.512 },
+        { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 }
+      ],
+      
+      // Define insulation types with their permittivity
+      insulationTypes: [
+        { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.05 },
+        { value: 'ptfe', label: 'PTFE', permittivity: 2.1, thickness: 0.1 },
+        { value: 'pvc', label: 'PVC', permittivity: 3.0, thickness: 0.15 },
+        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 }
+      ],
+      
+      // Form inputs
+      selectedWire: 'awg15', // Default to AWG 15
+      selectedInsulation: 'polyimide', // Default to Polyimide Enamel
+      customDiameter: 1.0, // mm
+      customInsulationThickness: 0.05, // mm
+      customPermittivity: 3.5,
+      targetImpedance: 50, // Ohms
+      airGap: 0.1 // mm
+    }
+  },
+  
+  computed: {
+    // Get the selected wire and insulation objects
+    selectedWireObj() {
+      return this.wireOptions.find(w => w.value === this.selectedWire) || this.wireOptions[0]
+    },
+    
+    selectedInsulationObj() {
+      return this.insulationTypes.find(i => i.value === this.selectedInsulation) || this.insulationTypes[0]
+    },
+    
+    // Get the effective wire radius (considering custom values if selected)
+    wireRadius() {
+      if (this.selectedWire === 'custom') {
+        return this.customDiameter / 2
+      }
+      return this.selectedWireObj.radius
+    },
+    
+    // Get the insulation thickness (considering custom values if selected)
+    insulationThickness() {
+      if (this.selectedInsulation === 'custom') {
+        return this.customInsulationThickness
+      }
+      return this.selectedInsulationObj.thickness
+    },
+    
+    // Get the insulation permittivity (considering custom values if selected)
+    permittivity() {
+      if (this.selectedInsulation === 'custom') {
+        return this.customPermittivity
+      }
+      return this.selectedInsulationObj.permittivity
+    },
+    
+    // Calculate center-to-center distance (D)
+    centerToCenter() {
+      // D = 2a + 2t + s (2 * wire radius + 2 * insulation thickness + air gap)
+      return 2 * this.wireRadius + 2 * this.insulationThickness + this.airGap
+    },
+    
+    // Calculate effective permittivity
+    effectivePermittivity() {
+      // Total insulation thickness: 2t + s (enamel on both wires + air gap)
+      const totalInsulation = 2 * this.insulationThickness + this.airGap
+      
+      // Effective permittivity calculation
+      // εeff = Total Insulation / ((Enamel Thickness / εr) + (Air Gap / 1))
+      const effectivePerm = totalInsulation / 
+        ((2 * this.insulationThickness / this.permittivity) + this.airGap)
+      
+      return Math.round(effectivePerm * 100) / 100 // Round to 2 decimal places
+    },
+    
+    // Calculate the characteristic impedance
+    impedance() {
+      // Z0 = (120 / √εeff) * arccosh(D/2a)
+      const ratio = this.centerToCenter / (2 * this.wireRadius)
+      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
+      
+      const impedanceValue = (120 / Math.sqrt(this.effectivePermittivity)) * arccosh
+      
+      return Math.round(impedanceValue * 100) / 100 // Round to 2 decimal places
+    },
+    
+    // Calculate required air gap for target impedance
+    calculatedAirGap() {
+      // Solve for s using the target impedance
+      // First, calculate the required effective permittivity
+      const arccosh = Math.log(this.centerToCenter / (2 * this.wireRadius) + 
+        Math.sqrt(Math.pow(this.centerToCenter / (2 * this.wireRadius), 2) - 1))
+      
+      const requiredEffPerm = Math.pow((120 / this.targetImpedance) * arccosh, 2)
+      
+      // Then solve for s using the effective permittivity formula
+      // s = (2t * εeff / (εr - εeff)) - (2t / εr)
+      const t = this.insulationThickness
+      const er = this.permittivity
+      
+      const gap = ((2 * t * requiredEffPerm) / (er - requiredEffPerm)) - ((2 * t) / er)
+      
+      return Math.max(0, Math.round(gap * 1000) / 1000) // Round to 3 decimal places, minimum 0
+    }
   }
-  return selectedWireObj.value.radius
-})
-
-// Get the insulation thickness (considering custom values if selected)
-const insulationThickness = computed(() => {
-  if (selectedInsulation.value === 'custom') {
-    return customInsulationThickness.value
-  }
-  return selectedInsulationObj.value.thickness
-})
-
-// Get the insulation permittivity (considering custom values if selected)
-const permittivity = computed(() => {
-  if (selectedInsulation.value === 'custom') {
-    return customPermittivity.value
-  }
-  return selectedInsulationObj.value.permittivity
-})
-
-// Calculate center-to-center distance (D)
-const centerToCenter = computed(() => {
-  // D = 2a + 2t + s (2 * wire radius + 2 * insulation thickness + air gap)
-  return 2 * wireRadius.value + 2 * insulationThickness.value + airGap.value
-})
-
-// Calculate effective permittivity
-const effectivePermittivity = computed(() => {
-  // Total insulation thickness: 2t + s (enamel on both wires + air gap)
-  const totalInsulation = 2 * insulationThickness.value + airGap.value
-  
-  // Effective permittivity calculation
-  // εeff = Total Insulation / ((Enamel Thickness / εr) + (Air Gap / 1))
-  const effectivePerm = totalInsulation / 
-    ((2 * insulationThickness.value / permittivity.value) + airGap.value)
-  
-  return Math.round(effectivePerm * 100) / 100 // Round to 2 decimal places
-})
-
-// Calculate the characteristic impedance
-const impedance = computed(() => {
-  // Z0 = (120 / √εeff) * arccosh(D/2a)
-  const ratio = centerToCenter.value / (2 * wireRadius.value)
-  const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
-  
-  const impedanceValue = (120 / Math.sqrt(effectivePermittivity.value)) * arccosh
-  
-  return Math.round(impedanceValue * 100) / 100 // Round to 2 decimal places
-})
-
-// Calculate required air gap for target impedance
-const calculatedAirGap = computed(() => {
-  // Solve for s using the target impedance
-  // First, calculate the required effective permittivity
-  const arccosh = Math.log(centerToCenter.value / (2 * wireRadius.value) + 
-    Math.sqrt(Math.pow(centerToCenter.value / (2 * wireRadius.value), 2) - 1))
-  
-  const requiredEffPerm = Math.pow((120 / targetImpedance.value) * arccosh, 2)
-  
-  // Then solve for s using the effective permittivity formula
-  // s = (2t * εeff / (εr - εeff)) - (2t / εr)
-  const t = insulationThickness.value
-  const er = permittivity.value
-  
-  const gap = ((2 * t * requiredEffPerm) / (er - requiredEffPerm)) - ((2 * t) / er)
-  
-  return Math.max(0, Math.round(gap * 1000) / 1000) // Round to 3 decimal places, minimum 0
-})
+}
 </script>
 
 <template>
