@@ -20,7 +20,7 @@ export default {
     async loadMarkdownFile() {
       try {
         // Load the markdown file from the docs directory
-        const response = await fetch('/src/docs/twinlead-charimp.md')
+        const response = await fetch('/src/docs/twinlead-magnetwire-charimp.md')
         this.markdownContent = await response.text()
 
         // Render the markdown content
