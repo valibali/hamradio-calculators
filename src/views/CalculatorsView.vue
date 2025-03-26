@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import CharacteristicImpedanceCalculator from '../components/CharacteristicImpedanceCalculator.vue'
+import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 </script>
 
 <template>
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
     <p class="intro">
-      A collection of useful calculators for HAM radio operators. Select a calculator from the options below.
+      A collection of useful calculators for HAM radio operators. Select a calculator from the
+      options below.
     </p>
-    
-    <CharacteristicImpedanceCalculator />
-    
+
+    <TwinLeadCharImp />
+
     <div class="coming-soon">
       <h3>More Calculators Coming Soon</h3>
       <ul>
