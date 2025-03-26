@@ -80,9 +80,11 @@ export default {
       return this.wireRadius + this.insulationThickness
     },
     
-    // Calculate center-to-center spacing based on twist pitch
+    // Calculate center-to-center spacing based on twist pitch and wire diameter
     centerToCenter() {
-      return this.twistPitch / Math.PI
+      // For twisted pairs, the center-to-center distance is approximately 2 * effective radius
+      // The twist pitch affects how the wires are positioned relative to each other
+      return 2 * this.effectiveRadius
     },
     
     // Calculate spacing to radius ratio
