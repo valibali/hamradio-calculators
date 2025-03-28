@@ -12,8 +12,6 @@ import MathJaxLoader from './components/MathJaxLoader.vue'
 marked.setOptions({
   gfm: true,
   breaks: true,
-  headerIds: true,
-  mangle: false
 })
 
 const app = createApp(App)

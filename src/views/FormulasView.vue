@@ -1,5 +1,5 @@
 <script lang="ts">
-import { marked } from 'marked'
+import { marked, options } from 'marked'
 import MathJaxLoader from '../components/MathJaxLoader.vue'
 
 export default {
@@ -11,77 +11,81 @@ export default {
     return {
       activeCalculator: 'twinlead',
       calculators: [
-        { 
-          id: 'twinlead', 
+        {
+          id: 'twinlead',
           name: 'Twin Lead Magnet Wire Characteristic Impedance',
           file: 'twinlead-magnetwire-charimp.md',
-          html: ''
+          html: '',
         },
-        { 
-          id: 'twistedpair', 
+        {
+          id: 'twistedpair',
           name: 'Twisted Pair Magnet Wire Characteristic Impedance',
           file: 'twistedpair-magnetwire-charimp.md',
-          html: ''
-        }
-      ]
+          html: '',
+        },
+      ],
     }
   },
   computed: {
     currentCalculator() {
-      return this.calculators.find(calc => calc.id === this.activeCalculator) || this.calculators[0];
-    }
+      return (
+        this.calculators.find((calc) => calc.id === this.activeCalculator) || this.calculators[0]
+      )
+    },
   },
   mounted() {
     // Check if there's a calculator parameter in the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const calculator = urlParams.get('calculator');
-    if (calculator && this.calculators.some(calc => calc.id === calculator)) {
-      this.activeCalculator = calculator;
+    const urlParams = new URLSearchParams(window.location.search)
+    const calculator = urlParams.get('calculator')
+    if (calculator && this.calculators.some((calc) => calc.id === calculator)) {
+      this.activeCalculator = calculator
     }
-    
+
     // Load the markdown for the active calculator
-    this.loadMarkdownFile(this.activeCalculator);
+    this.loadMarkdownFile(this.activeCalculator)
   },
   methods: {
-    setActiveCalculator(calculatorId) {
-      this.activeCalculator = calculatorId;
-      this.loadMarkdownFile(calculatorId);
-      
+    setActiveCalculator(calculatorId: string) {
+      this.activeCalculator = calculatorId
+      this.loadMarkdownFile(calculatorId)
+
       // Update URL without reloading the page
-      const url = new URL(window.location.href);
-      url.searchParams.set('calculator', calculatorId);
-      window.history.pushState({}, '', url);
+      const url = new URL(window.location.href)
+      url.searchParams.set('calculator', calculatorId)
+      window.history.pushState({}, '', url)
     },
-    async loadMarkdownFile(calculatorId) {
+    async loadMarkdownFile(calculatorId: string) {
       try {
-        const calculator = this.calculators.find(calc => calc.id === calculatorId);
-        if (!calculator) return;
-        
+        const calculator = this.calculators.find((calc) => calc.id === calculatorId)
+        if (!calculator) return
+
         // Skip if already loaded
         if (calculator.html) {
           this.$nextTick(() => {
             if (window.MathJax) {
-              window.MathJax.typeset();
+              window.MathJax.typeset()
             }
-          });
-          return;
+          })
+          return
         }
-        
+
         // Load the markdown file from the docs directory
-        const response = await fetch(`/src/docs/${calculator.file}`);
-        const markdownContent = await response.text();
+        const response = await fetch(`/src/docs/${calculator.file}`)
+        const markdownContent = await response.text()
 
         // Render the markdown content
-        calculator.html = marked.parse(markdownContent);
+        marked.parse(markdownContent, { async: true }).then((res) => {
+          calculator.html = res
+        })
 
         // Typeset math after the content is rendered
         this.$nextTick(() => {
           if (window.MathJax) {
-            window.MathJax.typeset();
+            window.MathJax.typeset()
           }
-        });
+        })
       } catch (error) {
-        console.error('Error loading markdown file:', error);
+        console.error('Error loading markdown file:', error)
       }
     },
   },
@@ -98,8 +102,8 @@ export default {
       <div class="formula-nav">
         <h3>Available Calculators</h3>
         <ul>
-          <li 
-            v-for="calculator in calculators" 
+          <li
+            v-for="calculator in calculators"
             :key="calculator.id"
             :class="{ active: activeCalculator === calculator.id }"
             @click="setActiveCalculator(calculator.id)"
