@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { Analytics } from '@vercel/analytics/vue'
 </script>
 
 <template>
+  <Analytics />
   <header>
     <div class="header-content">
       <div class="logo-container">
