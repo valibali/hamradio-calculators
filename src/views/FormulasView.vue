@@ -74,7 +74,7 @@ export default {
         const markdownContent = await response.text()
 
         // Render the markdown content
-        marked.parse(markdownContent, { async: true }).then((res) => {
+        await marked.parse(markdownContent, { async: true }).then((res) => {
           calculator.html = res
         })
 
