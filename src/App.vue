@@ -7,7 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="header-content">
       <div class="logo-container">
         <img alt="HAM Radio logo" class="logo" src="@/assets/logo.svg" width="50" height="50" />
-        <span class="site-title">HAM Radio Calculators</span>
+        <span class="site-title">HA5XB Radioamateur Homepage</span>
       </div>
 
       <nav>
@@ -19,11 +19,11 @@ import { RouterLink, RouterView } from 'vue-router'
   </header>
 
   <RouterView />
-  
+
   <footer>
     <div class="footer-content">
-      <p>&copy; {{ new Date().getFullYear() }} HAM Radio Calculators</p>
-      <p>A tool for amateur radio enthusiasts</p>
+      <p>&copy; {{ new Date().getFullYear() }} HA5XB Radioamateur Website</p>
+      <p>Tools for amateur radio enthusiasts</p>
     </div>
   </footer>
 </template>
@@ -100,7 +100,7 @@ footer {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   nav {
     width: 100%;
     justify-content: center;
