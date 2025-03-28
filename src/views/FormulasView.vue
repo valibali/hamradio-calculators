@@ -1,5 +1,5 @@
 <script lang="ts">
-import { marked, options } from 'marked'
+import { marked } from 'marked'
 import MathJaxLoader from '../components/MathJaxLoader.vue'
 
 export default {
@@ -70,7 +70,7 @@ export default {
         }
 
         // Load the markdown file from the docs directory
-        const response = await fetch(`/src/docs/${calculator.file}`)
+        const response = await fetch(`/docs/${calculator.file}`)
         const markdownContent = await response.text()
 
         // Render the markdown content
