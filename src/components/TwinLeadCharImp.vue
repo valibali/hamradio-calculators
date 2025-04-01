@@ -4,121 +4,162 @@ import { RouterLink } from 'vue-router'
 export default {
   name: 'TwinLeadCharImp',
   components: {
-    RouterLink
+    RouterLink,
   },
-  
+
   data() {
     return {
-      // Define AWG wire options with their bare diameters in mm
       wireOptions: [
-        { value: 'awg15', label: 'AWG 15', diameter: 1.450, radius: 0.725 },
+        { value: 'awg15', label: 'AWG 15', diameter: 1.45, radius: 0.725 },
         { value: 'awg16', label: 'AWG 16', diameter: 1.291, radius: 0.6455 },
         { value: 'awg18', label: 'AWG 18', diameter: 1.024, radius: 0.512 },
-        { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 }
+        { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 },
       ],
-      
-      // Define insulation types with their permittivity
+
       insulationTypes: [
         { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.05 },
         { value: 'ptfe', label: 'PTFE', permittivity: 2.1, thickness: 0.1 },
         { value: 'pvc', label: 'PVC', permittivity: 3.0, thickness: 0.15 },
-        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 }
+        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 },
       ],
-      
-      // Form inputs
-      selectedWire: 'awg15', // Default to AWG 15
-      selectedInsulation: 'polyimide', // Default to Polyimide Enamel
-      customDiameter: 1.0, // mm
-      customInsulationThickness: 0.05, // mm
+
+      selectedWire: 'awg15',
+      selectedInsulation: 'polyimide',
+      customDiameter: 1.0,
+      customInsulationThickness: 0.05,
       customPermittivity: 3.5,
-      targetImpedance: 50, // Ohms
-      airGap: 0.1 // mm
+      targetImpedance: 50,
+      airGap: 0.1,
     }
   },
-  
+
   computed: {
-    // Get the selected wire and insulation objects
     selectedWireObj() {
-      return this.wireOptions.find(w => w.value === this.selectedWire) || this.wireOptions[0]
+      return this.wireOptions.find((w) => w.value === this.selectedWire) || this.wireOptions[0]
     },
-    
+
     selectedInsulationObj() {
-      return this.insulationTypes.find(i => i.value === this.selectedInsulation) || this.insulationTypes[0]
+      return (
+        this.insulationTypes.find((i) => i.value === this.selectedInsulation) ||
+        this.insulationTypes[0]
+      )
     },
-    
-    // Get the effective wire radius (considering custom values if selected)
+
     wireRadius() {
       if (this.selectedWire === 'custom') {
         return this.customDiameter / 2
       }
       return this.selectedWireObj.radius
     },
-    
-    // Get the insulation thickness (considering custom values if selected)
+
     insulationThickness() {
       if (this.selectedInsulation === 'custom') {
         return this.customInsulationThickness
       }
       return this.selectedInsulationObj.thickness
     },
-    
-    // Get the insulation permittivity (considering custom values if selected)
+
     permittivity() {
       if (this.selectedInsulation === 'custom') {
         return this.customPermittivity
       }
       return this.selectedInsulationObj.permittivity
     },
-    
-    // Calculate center-to-center distance (D)
+
     centerToCenter() {
-      // D = 2a + 2t + s (2 * wire radius + 2 * insulation thickness + air gap)
       return 2 * this.wireRadius + 2 * this.insulationThickness + this.airGap
     },
-    
-    // Calculate effective permittivity
+
     effectivePermittivity() {
-      // Total insulation thickness: 2t + s (enamel on both wires + air gap)
-      const totalInsulation = 2 * this.insulationThickness + this.airGap
-      
-      // Effective permittivity calculation
-      // εeff = Total Insulation / ((Enamel Thickness / εr) + (Air Gap / 1))
-      const effectivePerm = totalInsulation / 
-        ((2 * this.insulationThickness / this.permittivity) + this.airGap)
-      
-      return Math.round(effectivePerm * 100) / 100 // Round to 2 decimal places
+      return this.calculateEffectivePermittivity(
+        this.insulationThickness,
+        this.airGap,
+        this.permittivity,
+      )
     },
-    
-    // Calculate the characteristic impedance
+
     impedance() {
-      // Z0 = (120 / √εeff) * arccosh(D/2a)
-      const ratio = this.centerToCenter / (2 * this.wireRadius)
-      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
-      
-      const impedanceValue = (120 / Math.sqrt(this.effectivePermittivity)) * arccosh
-      
-      return Math.round(impedanceValue * 100) / 100 // Round to 2 decimal places
+      return this.calculateCharacteristicImpedance(
+        this.wireRadius,
+        this.insulationThickness,
+        this.airGap,
+        this.permittivity,
+      )
     },
-    
-    // Calculate required air gap for target impedance
+
     calculatedAirGap() {
-      // Solve for s using the target impedance
-      // First, calculate the required effective permittivity
-      const arccosh = Math.log(this.centerToCenter / (2 * this.wireRadius) + 
-        Math.sqrt(Math.pow(this.centerToCenter / (2 * this.wireRadius), 2) - 1))
-      
-      const requiredEffPerm = Math.pow((120 / this.targetImpedance) * arccosh, 2)
-      
-      // Then solve for s using the effective permittivity formula
-      // s = (2t * εeff / (εr - εeff)) - (2t / εr)
-      const t = this.insulationThickness
-      const er = this.permittivity
-      
-      const gap = ((2 * t * requiredEffPerm) / (er - requiredEffPerm)) - ((2 * t) / er)
-      
-      return Math.max(0, Math.round(gap * 1000) / 1000) // Round to 3 decimal places, minimum 0
-    }
-  }
+      return this.calculateRequiredAirGap(
+        this.wireRadius,
+        this.insulationThickness,
+        this.permittivity,
+        this.targetImpedance,
+      )
+    },
+  },
+
+  methods: {
+    calculateCharacteristicImpedance(
+      wireRadius: number,
+      insulationThickness: number,
+      airGap: number,
+      epsilonR: number,
+    ): number {
+      // Validate inputs
+      if (insulationThickness < 0 || airGap < 0 || epsilonR < 1) {
+        return 0
+      }
+
+      // Calculate center-to-center distance
+      const D = 2 * wireRadius + 2 * insulationThickness + airGap
+
+      // Calculate effective permittivity
+      const epsilonEff = this.calculateEffectivePermittivity(insulationThickness, airGap, epsilonR)
+
+      // Calculate impedance
+      const ratio = D / (2 * wireRadius)
+      if (ratio < 1) return 0 // Invalid geometry
+
+      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
+      const Z0 = (120 / Math.sqrt(epsilonEff)) * arccosh
+
+      return Math.round(Z0 * 100) / 100
+    },
+
+    calculateEffectivePermittivity(
+      insulationThickness: number,
+      airGap: number,
+      epsilonR: number,
+    ): number {
+      const numerator = 2 * insulationThickness + airGap
+      const denominator = (2 * insulationThickness) / epsilonR + airGap
+      const epsilonEff = numerator / denominator
+      return Math.round(epsilonEff * 100) / 100
+    },
+
+    calculateRequiredAirGap(
+      wireRadius: number,
+      insulationThickness: number,
+      epsilonR: number,
+      targetImpedance: number,
+    ): number {
+      // First calculate required effective permittivity
+      const D = 2 * wireRadius + 2 * insulationThickness // Initial D without air gap
+      const ratio = D / (2 * wireRadius)
+
+      if (ratio < 1) return 0 // Invalid geometry
+
+      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
+      const requiredEffPerm = Math.pow((120 / targetImpedance) * arccosh, 2)
+
+      // Then solve for air gap
+      const t = insulationThickness
+      const er = epsilonR
+
+      const gap = (2 * t * requiredEffPerm) / (er - requiredEffPerm) - (2 * t) / er
+
+      return Math.max(0, Math.round(gap * 1000) / 1000)
+    },
+  },
 }
 </script>
 
@@ -126,9 +167,10 @@ export default {
   <div>
     <h2>Twin Lead Magnet Wire Characteristic Impedance</h2>
     <p class="calculator-description">
-      Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size, insulation, and air gap.
+      Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size,
+      insulation, and air gap.
     </p>
-    
+
     <div class="calculator-form">
       <div class="form-group">
         <label for="wire-type">Wire Size:</label>
@@ -137,13 +179,13 @@ export default {
             {{ option.label }}
           </option>
         </select>
-        
+
         <div v-if="selectedWire === 'custom'" class="custom-input">
           <label for="custom-diameter">Custom Diameter (mm):</label>
           <input type="number" id="custom-diameter" v-model="customDiameter" min="0.1" step="0.1" />
         </div>
       </div>
-      
+
       <div class="form-group">
         <label for="insulation-type">Insulation Type:</label>
         <select id="insulation-type" v-model="selectedInsulation">
@@ -151,26 +193,38 @@ export default {
             {{ option.label }}
           </option>
         </select>
-        
+
         <div v-if="selectedInsulation === 'custom'" class="custom-input">
           <label for="custom-thickness">Thickness (mm):</label>
-          <input type="number" id="custom-thickness" v-model="customInsulationThickness" min="0.01" step="0.01" />
-          
+          <input
+            type="number"
+            id="custom-thickness"
+            v-model="customInsulationThickness"
+            min="0.01"
+            step="0.01"
+          />
+
           <label for="custom-permittivity">Relative Permittivity (εᵣ):</label>
-          <input type="number" id="custom-permittivity" v-model="customPermittivity" min="1" step="0.1" />
+          <input
+            type="number"
+            id="custom-permittivity"
+            v-model="customPermittivity"
+            min="1"
+            step="0.1"
+          />
         </div>
       </div>
-      
+
       <div class="form-group">
         <label for="air-gap">Air Gap (mm):</label>
         <input type="number" id="air-gap" v-model="airGap" min="0" step="0.01" />
       </div>
     </div>
-    
+
     <div class="result">
       <h3>Characteristic Impedance (Z₀):</h3>
       <div class="impedance-value">{{ impedance }} Ω</div>
-      
+
       <div class="parameters">
         <div class="parameter">
           <span class="parameter-label">Wire Radius (a):</span>
@@ -185,7 +239,7 @@ export default {
           <span class="parameter-value">{{ effectivePermittivity }}</span>
         </div>
       </div>
-      
+
       <div class="target-impedance">
         <h4>Air Gap Calculator</h4>
         <div class="target-form">
@@ -197,17 +251,20 @@ export default {
           <span class="gap-value">{{ calculatedAirGap }} mm</span>
         </div>
       </div>
-      
+
       <p class="formula">
-        <router-link to="/formulas?calculator=twinlead">Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</router-link>
+        <router-link to="/formulas?calculator=twinlead"
+          >Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</router-link
+        >
       </p>
-      <p class="formula-explanation">Where D is center-to-center distance, a is wire radius, and εₑff is effective permittivity</p>
+      <p class="formula-explanation">
+        Where D is center-to-center distance, a is wire radius, and εₑff is effective permittivity
+      </p>
     </div>
   </div>
 </template>
 
 <style scoped>
-
 h2 {
   color: var(--color-heading);
   margin-bottom: 1rem;
@@ -245,7 +302,8 @@ label {
   color: var(--color-heading);
 }
 
-select, input {
+select,
+input {
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 4px;
