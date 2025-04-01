@@ -30,6 +30,7 @@ export default {
       customPermittivity: 3.5,
       targetImpedance: 50,
       airGap: 0.1,
+      activeTab: 'impedance', // Default active tab
     }
   },
 
@@ -171,6 +172,7 @@ export default {
       insulation, and air gap.
     </p>
 
+    <!-- Common Wire and Insulation Settings -->
     <div class="calculator-form">
       <div class="form-group">
         <label for="wire-type">Wire Size:</label>
@@ -214,41 +216,81 @@ export default {
           />
         </div>
       </div>
-
-      <div class="form-group">
-        <label for="air-gap">Air Gap (mm):</label>
-        <input type="number" id="air-gap" v-model="airGap" min="0" step="0.01" />
-      </div>
     </div>
 
-    <div class="result">
-      <h3>Characteristic Impedance (Z₀):</h3>
-      <div class="impedance-value">{{ impedance }} Ω</div>
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+      <button 
+        class="tab-button" 
+        :class="{ active: activeTab === 'impedance' }" 
+        @click="activeTab = 'impedance'"
+      >
+        Calculate Impedance
+      </button>
+      <button 
+        class="tab-button" 
+        :class="{ active: activeTab === 'airgap' }" 
+        @click="activeTab = 'airgap'"
+      >
+        Calculate Air Gap
+      </button>
+    </div>
 
-      <div class="parameters">
-        <div class="parameter">
-          <span class="parameter-label">Wire Radius (a):</span>
-          <span class="parameter-value">{{ wireRadius }} mm</span>
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Impedance Calculator Tab -->
+      <div v-if="activeTab === 'impedance'" class="tab-pane">
+        <div class="form-group">
+          <label for="air-gap">Air Gap (mm):</label>
+          <input type="number" id="air-gap" v-model="airGap" min="0" step="0.01" />
         </div>
-        <div class="parameter">
-          <span class="parameter-label">Center-to-Center Distance (D):</span>
-          <span class="parameter-value">{{ centerToCenter }} mm</span>
-        </div>
-        <div class="parameter">
-          <span class="parameter-label">Effective Permittivity (εₑff):</span>
-          <span class="parameter-value">{{ effectivePermittivity }}</span>
+
+        <div class="result">
+          <h3>Characteristic Impedance (Z₀):</h3>
+          <div class="impedance-value">{{ impedance }} Ω</div>
+
+          <div class="parameters">
+            <div class="parameter">
+              <span class="parameter-label">Wire Radius (a):</span>
+              <span class="parameter-value">{{ wireRadius }} mm</span>
+            </div>
+            <div class="parameter">
+              <span class="parameter-label">Center-to-Center Distance (D):</span>
+              <span class="parameter-value">{{ centerToCenter }} mm</span>
+            </div>
+            <div class="parameter">
+              <span class="parameter-label">Effective Permittivity (εₑff):</span>
+              <span class="parameter-value">{{ effectivePermittivity }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="target-impedance">
-        <h4>Air Gap Calculator</h4>
-        <div class="target-form">
+      <!-- Air Gap Calculator Tab -->
+      <div v-if="activeTab === 'airgap'" class="tab-pane">
+        <div class="form-group">
           <label for="target-impedance">Target Impedance (Ω):</label>
           <input type="number" id="target-impedance" v-model="targetImpedance" min="1" step="1" />
         </div>
-        <div class="calculated-gap">
-          <span>Required Air Gap:</span>
-          <span class="gap-value">{{ calculatedAirGap }} mm</span>
+
+        <div class="result">
+          <h3>Required Air Gap:</h3>
+          <div class="impedance-value">{{ calculatedAirGap }} mm</div>
+
+          <div class="parameters">
+            <div class="parameter">
+              <span class="parameter-label">Wire Radius (a):</span>
+              <span class="parameter-value">{{ wireRadius }} mm</span>
+            </div>
+            <div class="parameter">
+              <span class="parameter-label">Insulation Thickness:</span>
+              <span class="parameter-value">{{ insulationThickness }} mm</span>
+            </div>
+            <div class="parameter">
+              <span class="parameter-label">Permittivity (εᵣ):</span>
+              <span class="parameter-value">{{ permittivity }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -278,13 +320,14 @@ h2 {
 .calculator-form {
   display: grid;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .custom-input {
@@ -312,11 +355,52 @@ input {
   font-size: 1rem;
 }
 
+/* Tabs styling */
+.tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: hsla(160, 100%, 37%, 0.8);
+}
+
+.tab-button.active {
+  color: hsla(160, 100%, 37%, 1);
+  border-bottom-color: hsla(160, 100%, 37%, 1);
+}
+
+.tab-content {
+  margin-top: 1rem;
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .result {
   background-color: var(--color-background-mute);
   padding: 1.5rem;
   border-radius: 6px;
   text-align: center;
+  margin-top: 1rem;
 }
 
 .impedance-value {
@@ -352,39 +436,6 @@ input {
   font-weight: bold;
 }
 
-.target-impedance {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background-color: var(--color-background);
-  border-radius: 4px;
-}
-
-.target-impedance h4 {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--color-heading);
-}
-
-.target-form {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.calculated-gap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.gap-value {
-  font-weight: bold;
-  color: hsla(160, 100%, 37%, 1);
-}
-
 .formula {
   font-style: italic;
   margin-bottom: 0.5rem;
@@ -409,7 +460,7 @@ input {
 
 @media (min-width: 768px) {
   .calculator-form {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
