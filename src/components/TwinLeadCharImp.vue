@@ -185,6 +185,10 @@ export default {
         and ununs in RF applications.
       </p>
 
+      <div class="diagram-container">
+        <img src="@/components/diagrams/twinlead.svg" alt="Twin Lead Wire Configuration" class="diagram" />
+      </div>
+
       <div class="introduction-details">
         <h3>Why This Calculator Matters</h3>
 
@@ -375,6 +379,19 @@ h3 {
   background-color: var(--color-background-soft);
   border-radius: 8px;
   border-left: 4px solid hsla(160, 100%, 37%, 0.8);
+}
+
+.diagram-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.diagram {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .introduction-details {
