@@ -12,7 +12,7 @@ import IconGitHub from '@/components/icons/IconGitHub.vue'
     <div class="header-content">
       <div class="logo-container">
         <img alt="HAM Radio logo" class="logo" src="@/assets/logo.svg" width="50" height="50" />
-        <span class="site-title">HA5XB Radioamateur Homepage</span>
+        <span class="site-title">HA5XB Hungarian Amateur Radio Station</span>
       </div>
 
       <div class="nav-container">
@@ -21,11 +21,11 @@ import IconGitHub from '@/components/icons/IconGitHub.vue'
           <RouterLink to="/calculators">Calculators</RouterLink>
           <RouterLink to="/formulas">Formulas</RouterLink>
         </nav>
-        
-        <a 
-          href="https://github.com/valibali/hamradio-calculators/issues/new" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+
+        <a
+          href="https://github.com/valibali/hamradio-calculators/issues/new"
+          target="_blank"
+          rel="noopener noreferrer"
           class="feedback-link"
           aria-label="Provide feedback on GitHub"
         >
@@ -109,7 +109,9 @@ nav a.router-link-active {
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
   margin-left: 1rem;
 }
 
@@ -160,7 +162,7 @@ footer {
     justify-content: center;
     flex-wrap: wrap;
   }
-  
+
   .feedback-link {
     position: fixed;
     top: 10px;
@@ -169,7 +171,7 @@ footer {
     margin-left: 0;
     z-index: 101;
   }
-  
+
   .feedback-text {
     display: none;
   }

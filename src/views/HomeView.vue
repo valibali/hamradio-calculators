@@ -5,19 +5,15 @@ import { RouterLink } from 'vue-router'
 <template>
   <main class="home">
     <div class="hero">
-      <h1>HAM Radio Calculators</h1>
+      <h1>HA5XB op. Balazs 's useful calculators</h1>
       <p class="tagline">Essential tools for amateur radio operators</p>
-      
+
       <div class="cta-buttons">
-        <RouterLink to="/calculators" class="cta-button primary">
-          Try Our Calculators
-        </RouterLink>
-        <RouterLink to="/about" class="cta-button secondary">
-          Learn More
-        </RouterLink>
+        <RouterLink to="/calculators" class="cta-button primary"> Try Our Calculators </RouterLink>
+        <RouterLink to="/about" class="cta-button secondary"> Learn More </RouterLink>
       </div>
     </div>
-    
+
     <div class="features">
       <div class="feature-card">
         <div class="feature-icon">📡</div>
@@ -25,20 +21,20 @@ import { RouterLink } from 'vue-router'
         <p>Calculate impedance for magnet wires with different diameters and insulation types.</p>
         <RouterLink to="/calculators" class="feature-link">Try it now</RouterLink>
       </div>
-      
+
       <div class="feature-card">
         <div class="feature-icon">📏</div>
         <h3>Coming Soon: Antenna Length</h3>
         <p>Calculate the optimal length for various antenna types based on frequency.</p>
       </div>
-      
+
       <div class="feature-card">
         <div class="feature-icon">🧮</div>
         <h3>Coming Soon: Coil Inductance</h3>
         <p>Determine the inductance of coils based on dimensions and winding specifications.</p>
       </div>
     </div>
-    
+
     <div class="about-section">
       <h2>About HAM Radio Calculators</h2>
       <p>
@@ -167,7 +163,7 @@ import { RouterLink } from 'vue-router'
     flex-direction: row;
     justify-content: center;
   }
-  
+
   .features {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -177,7 +173,7 @@ import { RouterLink } from 'vue-router'
   .hero {
     padding: 4rem 2rem;
   }
-  
+
   .hero h1 {
     font-size: 3rem;
   }
