@@ -177,8 +177,8 @@ footer {
   }
 
   .feedback-link {
-    bottom: 20px;
-    top: auto;
+    bottom: auto;
+    top: 0;
     transform: none;
     right: 0;
     border-radius: 4px 0 0 4px;

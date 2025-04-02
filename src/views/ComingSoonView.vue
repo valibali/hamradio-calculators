@@ -14,7 +14,7 @@ const pageName = route.path.substring(1) // Remove the leading slash
         The <span class="highlight">{{ pageName || 'requested' }}</span> page is under construction.
       </p>
       <p class="sub-message">
-        We're working hard to bring you great content. Please check back later!
+        I'm working hard to bring you great content. Please check back later!
       </p>
       <div class="actions">
         <RouterLink to="/" class="home-button">Return to Home</RouterLink>
@@ -48,7 +48,8 @@ const pageName = route.path.substring(1) // Remove the leading slash
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
