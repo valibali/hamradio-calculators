@@ -146,7 +146,6 @@ export default {
 
 .calculator-nav li.active button {
   background-color: var(--color-background-mute);
-  font-weight: bold;
   border-left: 4px solid var(--color-border-hover);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -166,16 +165,11 @@ export default {
 }
 
 .calculator-nav li:not(.coming-soon) button::before {
-  content: "▶";
+  content: "•";
   margin-right: 8px;
-  font-size: 0.8em;
+  font-size: 1em;
   color: var(--color-border-hover);
-  transition: transform 0.2s ease;
   flex-shrink: 0;
-}
-
-.calculator-nav li.active button::before {
-  transform: rotate(90deg);
 }
 
 .calculator-container {
@@ -226,10 +220,6 @@ h1 {
     margin-right: 0;
     margin-bottom: 0.5rem;
     align-self: center;
-  }
-  
-  .calculator-nav li.active button::before {
-    transform: rotate(90deg);
   }
 }
 
