@@ -30,7 +30,7 @@ export default {
       customPermittivity: 3.5,
       targetImpedance: 50,
       airGap: 0.1,
-      activeTab: 'impedance', // Default active tab
+      activeTab: 'impedance',
     }
   },
 
@@ -110,14 +110,10 @@ export default {
         return 0
       }
 
-      // Calculate center-to-center distance
       const D = 2 * wireRadius + 2 * insulationThickness + airGap
-
-      // Calculate effective permittivity
       const epsilonEff = this.calculateEffectivePermittivity(insulationThickness, airGap, epsilonR)
-
-      // Calculate impedance
       const ratio = D / (2 * wireRadius)
+
       if (ratio < 1) return 0 // Invalid geometry
 
       const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
@@ -133,8 +129,7 @@ export default {
     ): number {
       const numerator = 2 * insulationThickness + airGap
       const denominator = (2 * insulationThickness) / epsilonR + airGap
-      const epsilonEff = numerator / denominator
-      return Math.round(epsilonEff * 100) / 100
+      return numerator / denominator
     },
 
     calculateRequiredAirGap(
@@ -143,22 +138,36 @@ export default {
       epsilonR: number,
       targetImpedance: number,
     ): number {
-      // First calculate required effective permittivity
-      const D = 2 * wireRadius + 2 * insulationThickness // Initial D without air gap
-      const ratio = D / (2 * wireRadius)
+      // Binary search parameters
+      const precision = 0.001 // mm
+      const maxIterations = 100
+      let low = 0
+      let high = 10 * wireRadius // Upper bound (10x wire radius)
+      let bestGuess = (low + high) / 2
 
-      if (ratio < 1) return 0 // Invalid geometry
+      for (let i = 0; i < maxIterations; i++) {
+        const mid = (low + high) / 2
+        const currentZ0 = this.calculateCharacteristicImpedance(
+          wireRadius,
+          insulationThickness,
+          mid,
+          epsilonR,
+        )
 
-      const arccosh = Math.log(ratio + Math.sqrt(ratio * ratio - 1))
-      const requiredEffPerm = Math.pow((120 / targetImpedance) * arccosh, 2)
+        if (Math.abs(currentZ0 - targetImpedance) < 0.1) {
+          return Math.round(mid / precision) * precision // Return with 0.001mm precision
+        }
 
-      // Then solve for air gap
-      const t = insulationThickness
-      const er = epsilonR
+        if (currentZ0 < targetImpedance) {
+          low = mid // Need larger air gap
+        } else {
+          high = mid // Need smaller air gap
+        }
 
-      const gap = (2 * t * requiredEffPerm) / (er - requiredEffPerm) - (2 * t) / er
+        bestGuess = mid
+      }
 
-      return Math.max(0, Math.round(gap * 1000) / 1000)
+      return Math.round(bestGuess * 1000) / 1000 // Return best guess if not converged
     },
   },
 }
@@ -166,6 +175,50 @@ export default {
 
 <template>
   <div>
+    <!-- Added Introduction -->
+    <div class="calculator-introduction">
+      <h2>Twin Lead Wire Calculator: Building Better RF Transformers</h2>
+
+      <p>
+        This calculator helps you design and build precision transmission lines using common magnet
+        wire, which is essential for creating high-performance impedance transformers like baluns
+        and ununs in RF applications.
+      </p>
+
+      <div class="introduction-details">
+        <h3>Why This Calculator Matters</h3>
+
+        <p>
+          When building RF transformers such as baluns (balanced-to-unbalanced) or ununs
+          (unbalanced-to-unbalanced), the characteristic impedance of the transmission line is
+          critical. These transformers don't just rely on magnetic coupling - they function because
+          the wire itself forms a transmission line with a specific impedance when wound around the
+          core.
+        </p>
+
+        <p>The impedance of this transmission line directly affects:</p>
+
+        <ul>
+          <li>Power handling capability</li>
+          <li>Frequency response and bandwidth</li>
+          <li>Insertion loss and SWR</li>
+          <li>Overall performance of your antenna system</li>
+        </ul>
+
+        <p>
+          By precisely controlling the spacing between wires and selecting appropriate insulation
+          materials, you can create transmission lines with exact impedance values (commonly 50Ω,
+          75Ω, or 100Ω) to match your system requirements.
+        </p>
+
+        <p>
+          Whether you're building a 4:1 current balun, a 9:1 unun for an end-fed antenna, or
+          experimenting with custom impedance ratios, this calculator helps you achieve the exact
+          characteristic impedance needed for optimal performance.
+        </p>
+      </div>
+    </div>
+
     <h2>Twin Lead Magnet Wire Characteristic Impedance</h2>
     <p class="calculator-description">
       Calculate the characteristic impedance (Z₀) of parallel magnet wire pairs based on wire size,
@@ -220,16 +273,16 @@ export default {
 
     <!-- Tabs Navigation -->
     <div class="tabs">
-      <button 
-        class="tab-button" 
-        :class="{ active: activeTab === 'impedance' }" 
+      <button
+        class="tab-button"
+        :class="{ active: activeTab === 'impedance' }"
         @click="activeTab = 'impedance'"
       >
         Calculate Impedance
       </button>
-      <button 
-        class="tab-button" 
-        :class="{ active: activeTab === 'airgap' }" 
+      <button
+        class="tab-button"
+        :class="{ active: activeTab === 'airgap' }"
         @click="activeTab = 'airgap'"
       >
         Calculate Air Gap
@@ -293,15 +346,6 @@ export default {
           </div>
         </div>
       </div>
-
-      <p class="formula">
-        <router-link to="/formulas?calculator=twinlead"
-          >Formula: Z₀ = (120 / √εₑff) × arccosh(D/2a)</router-link
-        >
-      </p>
-      <p class="formula-explanation">
-        Where D is center-to-center distance, a is wire radius, and εₑff is effective permittivity
-      </p>
     </div>
   </div>
 </template>
@@ -310,6 +354,34 @@ export default {
 h2 {
   color: var(--color-heading);
   margin-bottom: 1rem;
+}
+
+h3 {
+  color: var(--color-heading);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Added introduction styles */
+.calculator-introduction {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  border-left: 4px solid hsla(160, 100%, 37%, 0.8);
+}
+
+.introduction-details {
+  margin-top: 1.5rem;
+}
+
+.introduction-details ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.introduction-details li {
+  margin-bottom: 0.5rem;
 }
 
 .calculator-description {
@@ -391,8 +463,12 @@ input {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .result {
