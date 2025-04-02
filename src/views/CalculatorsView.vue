@@ -1,12 +1,14 @@
 <script lang="ts">
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
+import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
 
 export default {
   name: 'CalculatorsView',
   components: {
     TwinLeadCharImp,
-    TwistedPairCharImp
+    TwistedPairCharImp,
+    SingleConductorAboveGroundPlane
   },
   data() {
     return {
@@ -17,7 +19,7 @@ export default {
     // Check if there's a calculator parameter in the URL
     const urlParams = new URLSearchParams(window.location.search);
     const calculator = urlParams.get('calculator');
-    if (calculator && ['twinlead', 'twistedpair'].includes(calculator)) {
+    if (calculator && ['twinlead', 'twistedpair', 'singleconductor'].includes(calculator)) {
       this.activeCalculator = calculator;
     }
   },
@@ -62,6 +64,11 @@ export default {
               Twisted Pair Magnet Wire Characteristic Impedance
             </button>
           </li>
+          <li :class="{ active: activeCalculator === 'singleconductor' }">
+            <button @click="setActiveCalculator('singleconductor')">
+              Single Conductor Above Ground Plane
+            </button>
+          </li>
           <!-- Add more calculators here as they become available -->
           <li class="coming-soon">
             <button disabled>Antenna Length Calculator</button>
@@ -81,6 +88,7 @@ export default {
       <div class="calculator-container">
         <TwinLeadCharImp v-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-if="activeCalculator === 'twistedpair'" />
+        <SingleConductorAboveGroundPlane v-if="activeCalculator === 'singleconductor'" />
       </div>
     </div>
   </div>
