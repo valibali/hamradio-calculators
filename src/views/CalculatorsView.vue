@@ -1,9 +1,24 @@
 <script lang="ts">
+import { defineComponent } from 'vue'
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
 
-export default {
+interface Calculator {
+  id: string
+  name: string
+  description: string
+  comingSoon?: boolean
+}
+
+interface Category {
+  id: string
+  name: string
+  description: string
+  calculators: Calculator[]
+}
+
+export default defineComponent({
   name: 'CalculatorsView',
   components: {
     TwinLeadCharImp,
@@ -103,8 +118,8 @@ export default {
     const calculator = urlParams.get('calculator')
 
     // Flatten all calculators to check if the requested one exists
-    const allCalculators = this.categories.flatMap((category) =>
-      category.calculators.map((calc) => calc.id),
+    const allCalculators = this.categories.flatMap((category: Category) =>
+      category.calculators.map((calc: Calculator) => calc.id),
     )
 
     if (
@@ -116,7 +131,7 @@ export default {
     }
   },
   methods: {
-    setActiveCalculator(calculator: string) {
+    setActiveCalculator(calculator: string): void {
       // Don't set if it's a coming soon calculator
       if (this.getCalculatorById(calculator)?.comingSoon) {
         return
@@ -140,9 +155,9 @@ export default {
       }
     },
 
-    getCalculatorById(id: string) {
+    getCalculatorById(id: string): Calculator | null {
       for (const category of this.categories) {
-        const calculator = category.calculators.find((calc) => calc.id === id)
+        const calculator = category.calculators.find((calc: Calculator) => calc.id === id)
         if (calculator) {
           return calculator
         }
@@ -150,13 +165,13 @@ export default {
       return null
     },
 
-    getCategoryForCalculator(calculatorId: string) {
-      return this.categories.find((category) =>
-        category.calculators.some((calc) => calc.id === calculatorId),
+    getCategoryForCalculator(calculatorId: string): Category | undefined {
+      return this.categories.find((category: Category) =>
+        category.calculators.some((calc: Calculator) => calc.id === calculatorId),
       )
     },
   },
-}
+})
 </script>
 
 <template>
