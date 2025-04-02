@@ -32,7 +32,7 @@ onMounted(() => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault()
 
-      const targetId = this.getAttribute('href')?.substring(1)
+      const targetId = anchor.getAttribute('href')?.substring(1)
       if (targetId) {
         scrollToElement(targetId)
       }

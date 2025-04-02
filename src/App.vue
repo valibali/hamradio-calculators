@@ -24,7 +24,6 @@ import DonateButton from '@/components/DonateButton.vue'
           <RouterLink to="/my-story">My Story</RouterLink>
           <RouterLink to="/my-rig">My Rig</RouterLink>
           <RouterLink to="/homebrew">Homebrew</RouterLink>
-          <RouterLink to="/about">Homebrew</RouterLink>
         </nav>
 
         <div class="action-buttons">
