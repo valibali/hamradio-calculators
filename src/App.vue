@@ -20,6 +20,9 @@ import IconGitHub from '@/components/icons/IconGitHub.vue'
           <RouterLink to="/">Home</RouterLink>
           <RouterLink to="/calculators">Calculators</RouterLink>
           <RouterLink to="/formulas">Formulas</RouterLink>
+          <RouterLink to="/my-story">My Story</RouterLink>
+          <RouterLink to="/my-rig">My Rig</RouterLink>
+          <RouterLink to="/homebrew">Homebrew</RouterLink>
         </nav>
 
         <a
