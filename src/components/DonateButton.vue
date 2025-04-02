@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const isOpen = ref(false)
 
@@ -15,6 +15,25 @@ const closeDropdown = () => {
 const handleOptionClick = (event: Event) => {
   event.stopPropagation()
 }
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const container = document.querySelector('.donate-container')
+  
+  if (container && !container.contains(target)) {
+    closeDropdown()
+  }
+}
+
+// Add and remove event listeners
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
