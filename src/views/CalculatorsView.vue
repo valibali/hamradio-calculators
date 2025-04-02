@@ -109,7 +109,7 @@ export default defineComponent({
             },
           ],
         },
-      ],
+      ] as Category[],
     }
   },
   mounted() {
