@@ -3,13 +3,28 @@ import { RouterLink } from 'vue-router'
 import { onMounted } from 'vue'
 
 onMounted(() => {
+  // Function to scroll with header offset
+  const scrollToElement = (elementId: string) => {
+    const element = document.getElementById(elementId)
+    if (element) {
+      const headerHeight = document.querySelector('header')?.offsetHeight || 0
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - headerHeight - 20 // 20px extra padding
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+      
+      // Update URL hash without jumping
+      history.pushState(null, '', `#${elementId}`)
+    }
+  }
+
   // Handle hash navigation for smooth scrolling
   if (window.location.hash) {
     const id = window.location.hash.substring(1)
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
+    scrollToElement(id)
   }
 
   // Add click handler for anchor links
@@ -19,12 +34,7 @@ onMounted(() => {
 
       const targetId = this.getAttribute('href')?.substring(1)
       if (targetId) {
-        const targetElement = document.getElementById(targetId)
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth' })
-          // Update URL hash without jumping
-          history.pushState(null, '', `#${targetId}`)
-        }
+        scrollToElement(targetId)
       }
     })
   })
