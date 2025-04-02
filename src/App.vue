@@ -28,6 +28,14 @@ import { SpeedInsights } from '@vercel/speed-insights/vue'
     <div class="footer-content">
       <p>&copy; {{ new Date().getFullYear() }} HA5XB Radioamateur Website</p>
       <p>Tools for amateur radio enthusiasts</p>
+      <a 
+        href="https://github.com/valibali/hamradio-calculators/issues/new" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="feedback-button"
+      >
+        Got any feedback?
+      </a>
     </div>
   </footer>
 </template>
@@ -97,6 +105,22 @@ footer {
 .footer-content p {
   margin: 0.5rem 0;
   color: var(--color-text-light-2);
+}
+
+.feedback-button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.feedback-button:hover {
+  background-color: hsla(160, 100%, 30%, 1);
 }
 
 @media (max-width: 768px) {
