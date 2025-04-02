@@ -44,6 +44,9 @@ onMounted(() => {
 <template>
   <main class="home">
     <div class="hero">
+      <div class="profile-container">
+        <img src="@/assets/profile-pic.jpg" alt="HA5XB Balazs" class="profile-pic" />
+      </div>
       <h1>HA5XB op. Balazs</h1>
       <p class="tagline">Amateur Radio Station & Resources</p>
 
@@ -156,6 +159,19 @@ onMounted(() => {
   background-color: var(--color-background-soft);
   border-radius: 8px;
   margin-bottom: 3rem;
+}
+
+.profile-container {
+  margin-bottom: 1.5rem;
+}
+
+.profile-pic {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid hsla(160, 100%, 37%, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .hero-about {
