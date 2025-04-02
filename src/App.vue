@@ -15,22 +15,24 @@ import IconGitHub from '@/components/icons/IconGitHub.vue'
         <span class="site-title">HA5XB Radioamateur Homepage</span>
       </div>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/calculators">Calculators</RouterLink>
-        <RouterLink to="/formulas">Formulas</RouterLink>
-      </nav>
-      
-      <a 
-        href="https://github.com/valibali/hamradio-calculators/issues/new" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        class="feedback-link"
-        aria-label="Provide feedback on GitHub"
-      >
-        <IconGitHub class="github-icon" />
-        <span class="feedback-text">Got any feedback?</span>
-      </a>
+      <div class="nav-container">
+        <nav>
+          <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/calculators">Calculators</RouterLink>
+          <RouterLink to="/formulas">Formulas</RouterLink>
+        </nav>
+        
+        <a 
+          href="https://github.com/valibali/hamradio-calculators/issues/new" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="feedback-link"
+          aria-label="Provide feedback on GitHub"
+        >
+          <IconGitHub class="github-icon" />
+          <span class="feedback-text">Got any feedback?</span>
+        </a>
+      </div>
     </div>
   </header>
 
@@ -60,7 +62,6 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: relative;
 }
 
 .logo-container {
@@ -77,6 +78,11 @@ header {
 
 .logo {
   display: block;
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
 }
 
 nav {
@@ -104,9 +110,7 @@ nav a.router-link-active {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: background-color 0.3s, transform 0.2s;
-  position: absolute;
-  right: 0;
-  top: 0;
+  margin-left: 1rem;
 }
 
 .feedback-link:hover {
@@ -146,6 +150,11 @@ footer {
     padding: 0 0.5rem;
   }
 
+  .nav-container {
+    width: 100%;
+    justify-content: center;
+  }
+
   nav {
     width: 100%;
     justify-content: center;
@@ -157,6 +166,7 @@ footer {
     top: 10px;
     right: 10px;
     padding: 0.5rem;
+    margin-left: 0;
     z-index: 101;
   }
   
