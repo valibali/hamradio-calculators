@@ -145,8 +145,8 @@ export default {
 }
 
 .calculator-nav li.active button {
-  background-color: var(--color-background-mute);
-  border-left: 4px solid var(--color-border-hover);
+  background-color: rgba(0, 128, 0, 0.15);
+  border-left: 4px solid green;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
