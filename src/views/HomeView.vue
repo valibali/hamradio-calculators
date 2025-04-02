@@ -84,7 +84,7 @@ import { RouterLink } from 'vue-router'
           <div class="category-icon">📊</div>
           <h3>Hamledger - The Logger</h3>
           <p>A powerful logging tool for amateur radio operators to track contacts and activities.</p>
-          <RouterLink to="/hamledger" class="category-link">Try Hamledger</RouterLink>
+          <a href="https://github.com/valibali/hamledger/" target="_blank" rel="noopener" class="category-link">Try Hamledger</a>
         </div>
       </div>
     </div>
