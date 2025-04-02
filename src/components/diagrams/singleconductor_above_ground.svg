@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400px" height="300px">
+  <rect width="400" height="300" fill="#f8f9fa" rx="8"/>
+  <text x="200" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333" style="white-space: pre;">Point Charge Above Conducting Plane</text>
+  <line x1="50" y1="220" x2="350" y2="220" stroke="#6c5ce7" stroke-width="3"/>
+  <g stroke="#6c5ce7" stroke-width="2">
+    <path d="M 60 220 L 70 230"/>
+    <path d="M 80 220 L 90 230"/>
+    <path d="M 100 220 L 110 230"/>
+    <path d="M 120 220 L 130 230"/>
+    <path d="M 140 220 L 150 230"/>
+    <path d="M 160 220 L 170 230"/>
+    <path d="M 180 220 L 190 230"/>
+    <path d="M 200 220 L 210 230"/>
+    <path d="M 220 220 L 230 230"/>
+    <path d="M 240 220 L 250 230"/>
+    <path d="M 260 220 L 270 230"/>
+    <path d="M 280 220 L 290 230"/>
+    <path d="M 300 220 L 310 230"/>
+    <path d="M 320 220 L 330 230"/>
+    <path d="M 340 220 L 350 230"/>
+  </g>
+  <circle cx="200" cy="100" r="20" fill="#fdcb6e" stroke="#f39c12" stroke-width="2"/>
+  <text x="200" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333" style="white-space: pre;">+</text>
+  <line x1="130" y1="100" x2="130" y2="220" stroke="#333" stroke-width="1.5"/>
+  <line x1="125" y1="100" x2="135" y2="100" stroke="#333" stroke-width="1.5"/>
+  <line x1="125" y1="220" x2="135" y2="220" stroke="#333" stroke-width="1.5"/>
+  <text x="118" y="160" text-anchor="end" font-family="Arial, sans-serif" font-size="16" fill="#333" style="white-space: pre;">h</text>
+  <text x="170" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-style="italic" fill="#e84393" style="white-space: pre;">ε</text>
+  <line x1="220" y1="60" x2="220" y2="80" stroke="#333" stroke-width="1.5"/>
+  <line x1="220" y1="120" x2="220" y2="140" stroke="#333" stroke-width="1.5"/>
+  <line x1="227.304" y1="80.774" x2="207.304" y2="80.774" stroke="#333" stroke-width="1.5"/>
+  <text x="230.411" y="104.912" text-anchor="start" font-family="Arial, sans-serif" font-size="16" fill="#333" style="white-space: pre; font-size: 16px;">d</text>
+  <polygon points="130,105 126,112 134,112" fill="#333"/>
+  <polygon points="130,215 126,208 134,208" fill="#333"/>
+  <polygon points="220 81 216 74 224 74" fill="#333"/>
+  <polygon points="220 119 216 126 224 126" fill="#333"/>
+  <line x1="227.291" y1="120.072" x2="207.291" y2="120.072" stroke="#333" stroke-width="1.5"/>
+  <line x1="219.831" y1="70.532" x2="219.831" y2="123.18" stroke="#333" stroke-width="1.5" style=""/>
+</svg>

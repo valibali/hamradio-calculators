@@ -22,7 +22,7 @@ export default {
     impedance() {
       if (this.conductorDiameter <= 0 || this.heightAboveGround <= 0) return 0
       const ratio = (2 * this.heightAboveGround) / this.conductorRadius
-      return Math.round(((138 / Math.sqrt(this.dielectricConstant)) * Math.log10(ratio)) * 100) / 100
+      return Math.round((138 / Math.sqrt(this.dielectricConstant)) * Math.log10(ratio) * 100) / 100
     },
     calculatedHeight() {
       if (this.conductorDiameter <= 0 || this.targetImpedance <= 0) return 0
@@ -48,9 +48,7 @@ export default {
       <div class="introduction-details">
         <h3>Applications</h3>
 
-        <p>
-          Single conductor transmission lines above a ground plane are commonly used in:
-        </p>
+        <p>Single conductor transmission lines above a ground plane are commonly used in:</p>
 
         <ul>
           <li>Microstrip PCB designs</li>
@@ -60,11 +58,19 @@ export default {
         </ul>
 
         <p>
-          The impedance of this transmission line is determined by the conductor diameter, 
-          height above the ground plane, and the dielectric constant of the material between
-          the conductor and ground.
+          The impedance of this transmission line is determined by the conductor diameter, height
+          above the ground plane, and the dielectric constant of the material between the conductor
+          and ground.
         </p>
-        
+
+        <div class="diagram-container">
+          <img
+            src="@/components/diagrams/singleconductor_above_ground.svg"
+            alt="Twin Lead Wire Configuration"
+            class="diagram"
+          />
+        </div>
+
         <div class="formula-button-container">
           <router-link to="/formulas?calculator=singleconductor" class="formula-button">
             View Mathematical Formulas
@@ -75,8 +81,8 @@ export default {
 
     <h2>Single Conductor Above Ground Plane</h2>
     <p class="calculator-description">
-      Calculate the characteristic impedance (Z₀) of a single conductor above a ground plane
-      based on conductor size, height, and dielectric constant.
+      Calculate the characteristic impedance (Z₀) of a single conductor above a ground plane based
+      on conductor size, height, and dielectric constant.
     </p>
 
     <!-- Tabs Navigation -->
@@ -104,15 +110,33 @@ export default {
         <div class="calculator-form">
           <div class="form-group">
             <label for="conductor-diameter">Conductor Diameter (mm):</label>
-            <input type="number" id="conductor-diameter" v-model="conductorDiameter" min="0.1" step="0.1" />
+            <input
+              type="number"
+              id="conductor-diameter"
+              v-model="conductorDiameter"
+              min="0.1"
+              step="0.1"
+            />
           </div>
           <div class="form-group">
             <label for="height-above-ground">Height Above Ground (mm):</label>
-            <input type="number" id="height-above-ground" v-model="heightAboveGround" min="0.1" step="0.1" />
+            <input
+              type="number"
+              id="height-above-ground"
+              v-model="heightAboveGround"
+              min="0.1"
+              step="0.1"
+            />
           </div>
           <div class="form-group">
             <label for="dielectric-constant">Dielectric Constant (ε):</label>
-            <input type="number" id="dielectric-constant" v-model="dielectricConstant" min="1" step="0.1" />
+            <input
+              type="number"
+              id="dielectric-constant"
+              v-model="dielectricConstant"
+              min="1"
+              step="0.1"
+            />
           </div>
         </div>
 
@@ -127,7 +151,9 @@ export default {
             </div>
             <div class="parameter">
               <span class="parameter-label">Height/Radius Ratio:</span>
-              <span class="parameter-value">{{ ((2 * heightAboveGround) / conductorRadius).toFixed(2) }}</span>
+              <span class="parameter-value">{{
+                ((2 * heightAboveGround) / conductorRadius).toFixed(2)
+              }}</span>
             </div>
             <div class="parameter">
               <span class="parameter-label">Dielectric Constant (ε):</span>
@@ -142,7 +168,13 @@ export default {
         <div class="calculator-form">
           <div class="form-group">
             <label for="conductor-diameter-height">Conductor Diameter (mm):</label>
-            <input type="number" id="conductor-diameter-height" v-model="conductorDiameter" min="0.1" step="0.1" />
+            <input
+              type="number"
+              id="conductor-diameter-height"
+              v-model="conductorDiameter"
+              min="0.1"
+              step="0.1"
+            />
           </div>
           <div class="form-group">
             <label for="target-impedance">Target Impedance (Ω):</label>
@@ -150,7 +182,13 @@ export default {
           </div>
           <div class="form-group">
             <label for="dielectric-constant-height">Dielectric Constant (ε):</label>
-            <input type="number" id="dielectric-constant-height" v-model="dielectricConstant" min="1" step="0.1" />
+            <input
+              type="number"
+              id="dielectric-constant-height"
+              v-model="dielectricConstant"
+              min="1"
+              step="0.1"
+            />
           </div>
         </div>
 
@@ -190,6 +228,12 @@ h3 {
   margin-bottom: 0.75rem;
 }
 
+.diagram-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
 /* Introduction styles */
 .calculator-introduction {
   margin-bottom: 2.5rem;
@@ -225,7 +269,9 @@ h3 {
   border-radius: 4px;
   text-decoration: none;
   font-weight: bold;
-  transition: background-color 0.2s, transform 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
 }
 
 .formula-button:hover {

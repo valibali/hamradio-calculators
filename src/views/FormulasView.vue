@@ -23,6 +23,12 @@ export default {
           file: 'twistedpair-magnetwire-charimp.md',
           html: '',
         },
+        {
+          id: 'singleconductor',
+          name: 'Twisted Pair Magnet Wire Characteristic Impedance',
+          file: 'single-conductor-above-ground.md',
+          html: '',
+        },
       ],
     }
   },
