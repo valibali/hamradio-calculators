@@ -132,11 +132,17 @@ footer {
   .header-content {
     flex-direction: column;
     gap: 1rem;
+    padding: 0 0.5rem;
   }
 
   nav {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .feedback-link {
+    margin-top: 0.5rem;
   }
 }
 </style>
