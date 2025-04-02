@@ -216,6 +216,12 @@ export default {
           experimenting with custom impedance ratios, this calculator helps you achieve the exact
           characteristic impedance needed for optimal performance.
         </p>
+        
+        <div class="formula-button-container">
+          <router-link to="/formulas?calculator=twinlead" class="formula-button">
+            View Mathematical Formulas
+          </router-link>
+        </div>
       </div>
     </div>
 
@@ -382,6 +388,31 @@ h3 {
 
 .introduction-details li {
   margin-bottom: 0.5rem;
+}
+
+.formula-button-container {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.formula-button {
+  display: inline-block;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.formula-button:hover {
+  background-color: hsla(160, 100%, 37%, 0.8);
+  transform: translateY(-2px);
+}
+
+.formula-button:active {
+  transform: translateY(0);
 }
 
 .calculator-description {
