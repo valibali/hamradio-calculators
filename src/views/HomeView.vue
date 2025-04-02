@@ -10,12 +10,12 @@ onMounted(() => {
       const headerHeight = document.querySelector('header')?.offsetHeight || 0
       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
       const offsetPosition = elementPosition - headerHeight - 20 // 20px extra padding
-      
+
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
-      
+
       // Update URL hash without jumping
       history.pushState(null, '', `#${elementId}`)
     }
@@ -52,7 +52,7 @@ onMounted(() => {
 
       <div class="cta-buttons">
         <a href="#resources" class="cta-button primary">Explore Resources</a>
-        <RouterLink to="/about" class="cta-button secondary">About Me</RouterLink>
+        <RouterLink to="/my-story" class="cta-button secondary">About Me</RouterLink>
       </div>
 
       <div class="hero-about">

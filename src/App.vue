@@ -24,11 +24,12 @@ import DonateButton from '@/components/DonateButton.vue'
           <RouterLink to="/my-story">My Story</RouterLink>
           <RouterLink to="/my-rig">My Rig</RouterLink>
           <RouterLink to="/homebrew">Homebrew</RouterLink>
+          <RouterLink to="/about">Homebrew</RouterLink>
         </nav>
 
         <div class="action-buttons">
           <DonateButton class="donate-btn" />
-          
+
           <a
             href="https://github.com/valibali/hamradio-calculators/issues/new"
             target="_blank"
@@ -203,11 +204,11 @@ footer {
     transform: none;
     right: 0;
   }
-  
+
   .donate-btn {
     align-self: center;
   }
-  
+
   .feedback-link {
     border-radius: 4px 0 0 4px;
   }
