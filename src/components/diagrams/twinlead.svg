@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" width="600px" height="360px">
+  <rect width="600" height="360" fill="#f8f9fa" rx="8" x="0" y="0"/>
+  <text x="300" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333" style="white-space: pre;">Twin Lead Wire Configuration</text>
+  <line x1="170" y1="180" x2="430" y2="180" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <circle cx="230" cy="180" r="25" fill="#c25e5e" stroke="#a33" stroke-width="2"/>
+  <circle cx="230" cy="180" r="30" fill="none" stroke="#6f9e5e" stroke-width="8"/>
+  <circle cx="370" cy="180" r="25" fill="#c25e5e" stroke="#a33" stroke-width="2"/>
+  <circle cx="370" cy="180" r="30" fill="none" stroke="#6f9e5e" stroke-width="8"/>
+  <line x1="205.14" y1="147.656" x2="205.197" y2="132.318" stroke="#333" stroke-width="1"/>
+  <line x1="205" y1="140" x2="255" y2="140" stroke="#333" stroke-width="1"/>
+  <text x="230" y="127" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666" style="white-space: pre; font-size: 10px;">(Wire Diameter)</text>
+  <line x1="254.902" y1="216.835" x2="254.902" y2="233.835" stroke="#333" stroke-width="1"/>
+  <line x1="261.994" y1="216.736" x2="261.994" y2="233.736" stroke="#333" stroke-width="1"/>
+  <line x1="255.484" y1="225" x2="262.194" y2="225" stroke="#333" stroke-width="1" style=""/>
+  <text x="248" y="244" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#333" style="white-space: pre; font-size: 14px;">t</text>
+  <text x="248" y="258" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666" style="white-space: pre; font-size: 10px;">(Insulation Thickness)</text>
+  <line x1="264.472" y1="180" x2="335.282" y2="180" stroke="#333" stroke-width="1" style=""/>
+  <text x="300" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#333" style="white-space: pre; font-size: 14px;">Air Gap</text>
+  <line x1="230" y1="95" x2="370" y2="95" stroke="#333" stroke-width="1"/>
+  <line x1="230" y1="90" x2="230" y2="100" stroke="#333" stroke-width="1"/>
+  <line x1="370" y1="90" x2="370" y2="100" stroke="#333" stroke-width="1"/>
+  <text x="300" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#333" style="white-space: pre; font-size: 14px;">D</text>
+  <text x="300" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666" style="white-space: pre; font-size: 10px;">(Center to Center Distance)</text>
+  <line x1="255.295" y1="147.633" x2="255.352" y2="132.295" stroke="#333" stroke-width="1"/>
+  <rect x="50" y="270" width="500" height="60" rx="8" fill="#e9f2fd" stroke="#91c2f9" stroke-width="1"/>
+  <text x="300" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#333" style="white-space: pre;">
+    Z₀ = (120 / √εₑff) × arccosh(D/2a)
+  </text>
+  <text x="300" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666" style="white-space: pre;">
+    Where εₑff is the effective permittivity of the insulation and air combination
+  </text>
+  <text x="85" y="220" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle" style="white-space: pre;">Copper Wire</text>
+  <text x="510" y="220" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle" style="white-space: pre;">Insulation Layer</text>
+  <text x="85" y="240" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle" style="white-space: pre;">(εᵣ = 1)</text>
+  <text x="510" y="240" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle" style="white-space: pre;">(εᵣ &gt; 1)</text>
+  <line x1="264.622" y1="171.467" x2="264.622" y2="188.467" stroke="#333" stroke-width="1"/>
+  <line x1="335.542" y1="171.467" x2="335.542" y2="188.467" stroke="#333" stroke-width="1"/>
+</svg>
