@@ -1,5 +1,34 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // Handle hash navigation for smooth scrolling
+  if (window.location.hash) {
+    const id = window.location.hash.substring(1)
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+  
+  // Add click handler for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault()
+      
+      const targetId = this.getAttribute('href')?.substring(1)
+      if (targetId) {
+        const targetElement = document.getElementById(targetId)
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' })
+          // Update URL hash without jumping
+          history.pushState(null, '', `#${targetId}`)
+        }
+      }
+    })
+  })
+})
 </script>
 
 <template>
@@ -9,7 +38,7 @@ import { RouterLink } from 'vue-router'
       <p class="tagline">Amateur Radio Station & Resources</p>
 
       <div class="cta-buttons">
-        <RouterLink to="/calculators" class="cta-button primary">Explore Resources</RouterLink>
+        <a href="#resources" class="cta-button primary">Explore Resources</a>
         <RouterLink to="/about" class="cta-button secondary">About Me</RouterLink>
       </div>
       
@@ -24,9 +53,9 @@ import { RouterLink } from 'vue-router'
           ham or just getting started, I hope you'll find something useful here.
         </p>
       </div>
-    </div>
+    </section>
 
-    <div class="content-categories">
+    <section id="resources" class="content-categories">
       <h2>Explore My Ham Radio World</h2>
       
       <div class="category-grid">
