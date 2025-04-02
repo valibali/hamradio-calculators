@@ -106,6 +106,12 @@ nav a {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   font-weight: 500;
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+
+nav a:hover {
+  border-color: hsla(160, 100%, 37%, 1);
 }
 
 nav a.router-link-active {

@@ -254,6 +254,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  border: 1px solid transparent;
+}
+
+/* Add green border to the featured card */
+.category-card:has(.category-badge) {
+  border-color: hsla(160, 100%, 37%, 1);
 }
 
 .category-badge {
