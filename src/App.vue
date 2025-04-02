@@ -2,6 +2,7 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { Analytics } from '@vercel/analytics/vue'
 import { SpeedInsights } from '@vercel/speed-insights/vue'
+import IconGitHub from '@/components/icons/IconGitHub.vue'
 </script>
 
 <template>
@@ -18,6 +19,15 @@ import { SpeedInsights } from '@vercel/speed-insights/vue'
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/calculators">Calculators</RouterLink>
         <RouterLink to="/formulas">Formulas</RouterLink>
+        <a 
+          href="https://github.com/valibali/hamradio-calculators/issues/new" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="feedback-link"
+        >
+          <IconGitHub class="github-icon" />
+          Got any feedback?
+        </a>
       </nav>
     </div>
   </header>
@@ -28,14 +38,6 @@ import { SpeedInsights } from '@vercel/speed-insights/vue'
     <div class="footer-content">
       <p>&copy; {{ new Date().getFullYear() }} HA5XB Radioamateur Website</p>
       <p>Tools for amateur radio enthusiasts</p>
-      <a 
-        href="https://github.com/valibali/hamradio-calculators/issues/new" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        class="feedback-button"
-      >
-        Got any feedback?
-      </a>
     </div>
   </footer>
 </template>
@@ -90,6 +92,25 @@ nav a.router-link-active {
   font-weight: bold;
 }
 
+.feedback-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.feedback-link:hover {
+  background-color: hsla(160, 100%, 30%, 1);
+}
+
+.github-icon {
+  display: inline-block;
+}
+
 footer {
   background-color: var(--color-background-soft);
   padding: 2rem 1rem;
@@ -105,22 +126,6 @@ footer {
 .footer-content p {
   margin: 0.5rem 0;
   color: var(--color-text-light-2);
-}
-
-.feedback-button {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: hsla(160, 100%, 37%, 1);
-  color: white;
-  border-radius: 4px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: background-color 0.3s;
-}
-
-.feedback-button:hover {
-  background-color: hsla(160, 100%, 30%, 1);
 }
 
 @media (max-width: 768px) {
