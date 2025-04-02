@@ -19,16 +19,18 @@ import IconGitHub from '@/components/icons/IconGitHub.vue'
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/calculators">Calculators</RouterLink>
         <RouterLink to="/formulas">Formulas</RouterLink>
-        <a 
-          href="https://github.com/valibali/hamradio-calculators/issues/new" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          class="feedback-link"
-        >
-          <IconGitHub class="github-icon" />
-          Got any feedback?
-        </a>
       </nav>
+      
+      <a 
+        href="https://github.com/valibali/hamradio-calculators/issues/new" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="feedback-link"
+        aria-label="Provide feedback on GitHub"
+      >
+        <IconGitHub class="github-icon" />
+        <span class="feedback-text">Got any feedback?</span>
+      </a>
     </div>
   </header>
 
@@ -58,6 +60,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .logo-container {
@@ -100,15 +103,23 @@ nav a.router-link-active {
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .feedback-link:hover {
   background-color: hsla(160, 100%, 30%, 1);
+  transform: translateY(2px);
 }
 
 .github-icon {
   display: inline-block;
+}
+
+.feedback-text {
+  display: inline;
 }
 
 footer {
@@ -142,7 +153,15 @@ footer {
   }
   
   .feedback-link {
-    margin-top: 0.5rem;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 0.5rem;
+    z-index: 101;
+  }
+  
+  .feedback-text {
+    display: none;
   }
 }
 </style>
