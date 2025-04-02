@@ -14,11 +14,6 @@ const closeDropdown = () => {
 
 <template>
   <div class="donate-container" @mouseleave="closeDropdown">
-    <button @click="toggleDropdown" class="donate-button" aria-haspopup="true" :aria-expanded="isOpen">
-      <span class="donate-icon">❤️</span>
-      <span class="donate-text">Donate</span>
-    </button>
-    
     <div v-if="isOpen" class="donate-dropdown">
       <a href="https://thanks.dev/u/gh/valibali" target="_blank" rel="noopener noreferrer" class="donate-option">
         <span class="donate-option-icon">🙏</span>
@@ -29,6 +24,11 @@ const closeDropdown = () => {
         <span class="donate-option-text">Ko-fi</span>
       </a>
     </div>
+    
+    <button @click="toggleDropdown" class="donate-button" aria-haspopup="true" :aria-expanded="isOpen">
+      <span class="donate-icon">❤️</span>
+      <span class="donate-text">Donate</span>
+    </button>
   </div>
 </template>
 
@@ -42,7 +42,7 @@ const closeDropdown = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #ff6b6b;
+  background-color: #3498db;
   color: white;
   padding: 0.5rem 1rem;
   border: none;
@@ -53,7 +53,7 @@ const closeDropdown = () => {
 }
 
 .donate-button:hover {
-  background-color: #ff5252;
+  background-color: #2980b9;
 }
 
 .donate-icon {
@@ -75,9 +75,9 @@ const closeDropdown = () => {
 
 .donate-dropdown {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   right: 0;
-  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -90,7 +90,7 @@ const closeDropdown = () => {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
