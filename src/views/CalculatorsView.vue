@@ -28,6 +28,17 @@ export default {
       const url = new URL(window.location.href);
       url.searchParams.set('calculator', calculator);
       window.history.pushState({}, '', url);
+      
+      // On mobile, scroll to the calculator content
+      if (window.innerWidth <= 768) {
+        // Use setTimeout to ensure the DOM has updated with the new calculator
+        setTimeout(() => {
+          const calculatorContainer = document.querySelector('.calculator-container');
+          if (calculatorContainer) {
+            calculatorContainer.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
     }
   }
 }
