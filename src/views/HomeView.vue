@@ -12,6 +12,18 @@ import { RouterLink } from 'vue-router'
         <RouterLink to="/calculators" class="cta-button primary">Explore Resources</RouterLink>
         <RouterLink to="/about" class="cta-button secondary">About Me</RouterLink>
       </div>
+      
+      <div class="hero-about">
+        <p>
+          Welcome to my amateur radio website! I'm passionate about all aspects of ham radio, from
+          technical calculations to building equipment and making contacts around the world.
+        </p>
+        <p>
+          This site serves as a hub for various resources I've developed and collected over the years,
+          including calculators, articles, project documentation, and more. Whether you're a seasoned
+          ham or just getting started, I hope you'll find something useful here.
+        </p>
+      </div>
     </div>
 
     <div class="content-categories">
@@ -19,6 +31,7 @@ import { RouterLink } from 'vue-router'
       
       <div class="category-grid">
         <div class="category-card">
+          <div class="category-badge">Featured</div>
           <div class="category-icon">🧮</div>
           <h3>Calculators</h3>
           <p>Essential tools for amateur radio operators including impedance calculators, antenna length, and more.</p>
@@ -76,42 +89,7 @@ import { RouterLink } from 'vue-router'
       </div>
     </div>
 
-    <div class="featured-section">
-      <h2>Featured Calculators</h2>
-      <div class="features">
-        <div class="feature-card">
-          <div class="feature-icon">📡</div>
-          <h3>Characteristic Impedance</h3>
-          <p>Calculate impedance for magnet wires with different diameters and insulation types.</p>
-          <RouterLink to="/calculators" class="feature-link">Try it now</RouterLink>
-        </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">📏</div>
-          <h3>Coming Soon: Antenna Length</h3>
-          <p>Calculate the optimal length for various antenna types based on frequency.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🧮</div>
-          <h3>Coming Soon: Coil Inductance</h3>
-          <p>Determine the inductance of coils based on dimensions and winding specifications.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="about-section">
-      <h2>About HA5XB Amateur Radio Station</h2>
-      <p>
-        Welcome to my amateur radio website! I'm passionate about all aspects of ham radio, from
-        technical calculations to building equipment and making contacts around the world.
-      </p>
-      <p>
-        This site serves as a hub for various resources I've developed and collected over the years,
-        including calculators, articles, project documentation, and more. Whether you're a seasoned
-        ham or just getting started, I hope you'll find something useful here.
-      </p>
-    </div>
   </main>
 </template>
 
@@ -128,6 +106,17 @@ import { RouterLink } from 'vue-router'
   background-color: var(--color-background-soft);
   border-radius: 8px;
   margin-bottom: 3rem;
+}
+
+.hero-about {
+  max-width: 800px;
+  margin: 2rem auto 0;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.hero-about p {
+  margin-bottom: 1rem;
 }
 
 .hero h1 {
@@ -196,6 +185,19 @@ import { RouterLink } from 'vue-router'
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.category-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0 8px 0 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
 .category-card:hover {

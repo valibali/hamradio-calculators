@@ -60,11 +60,12 @@ header {
 }
 
 .header-content {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 1rem;
 }
 
 .logo-container {
@@ -86,11 +87,14 @@ header {
 .nav-container {
   display: flex;
   align-items: center;
+  flex-grow: 1;
+  justify-content: flex-end;
 }
 
 nav {
   display: flex;
-  gap: 1rem;
+  gap: 0.8rem;
+  margin-right: 1rem;
 }
 
 nav a {
@@ -115,12 +119,17 @@ nav a.router-link-active {
   transition:
     background-color 0.3s,
     transform 0.2s;
-  margin-left: 1rem;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 4px 0 0 4px;
+  z-index: 100;
 }
 
 .feedback-link:hover {
   background-color: hsla(160, 100%, 30%, 1);
-  transform: translateY(2px);
+  transform: translateY(-50%) translateX(-5px);
 }
 
 .github-icon {
@@ -164,15 +173,19 @@ footer {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+    margin-right: 0;
   }
 
   .feedback-link {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    padding: 0.5rem;
-    margin-left: 0;
-    z-index: 101;
+    bottom: 20px;
+    top: auto;
+    transform: none;
+    right: 0;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .feedback-link:hover {
+    transform: translateX(-5px);
   }
 
   .feedback-text {
