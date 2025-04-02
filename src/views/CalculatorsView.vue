@@ -8,7 +8,7 @@ export default {
   components: {
     TwinLeadCharImp,
     TwistedPairCharImp,
-    SingleConductorAboveGroundPlane
+    SingleConductorAboveGroundPlane,
   },
   data() {
     return {
@@ -17,169 +17,173 @@ export default {
         {
           id: 'transmission-lines',
           name: 'Transmission Lines',
-          description: 'Calculate characteristic impedance and parameters for various transmission line types',
+          description:
+            'Calculate characteristic impedance and parameters for various transmission line types',
           calculators: [
-            { 
-              id: 'twinlead', 
+            {
+              id: 'twinlead',
               name: 'Twin Lead Magnet Wire',
-              description: 'Calculate impedance for parallel wire transmission lines'
+              description: 'Calculate impedance for parallel wire transmission lines',
             },
-            { 
-              id: 'twistedpair', 
+            {
+              id: 'twistedpair',
               name: 'Twisted Pair Magnet Wire',
-              description: 'Calculate impedance for twisted pair transmission lines'
+              description: 'Calculate impedance for twisted pair transmission lines',
             },
-            { 
-              id: 'singleconductor', 
+            {
+              id: 'singleconductor',
               name: 'Single Conductor Above Ground',
-              description: 'Calculate impedance for single wire above ground plane'
-            }
-          ]
+              description: 'Calculate impedance for single wire above ground plane',
+            },
+          ],
         },
         {
           id: 'antennas',
           name: 'Antennas',
           description: 'Calculate antenna dimensions, gain, and radiation patterns',
           calculators: [
-            { 
-              id: 'dipole', 
+            {
+              id: 'dipole',
               name: 'Dipole Antenna',
               description: 'Calculate dipole antenna length (Coming Soon)',
-              comingSoon: true
+              comingSoon: true,
             },
-            { 
-              id: 'yagi', 
+            {
+              id: 'yagi',
               name: 'Yagi-Uda Antenna',
               description: 'Calculate Yagi-Uda antenna dimensions (Coming Soon)',
-              comingSoon: true
-            }
-          ]
+              comingSoon: true,
+            },
+          ],
         },
         {
           id: 'components',
           name: 'Components',
           description: 'Calculate values for inductors, capacitors, and other RF components',
           calculators: [
-            { 
-              id: 'coil', 
+            {
+              id: 'coil',
               name: 'Coil Inductance',
               description: 'Calculate inductance of air-core and toroidal coils (Coming Soon)',
-              comingSoon: true
+              comingSoon: true,
             },
-            { 
-              id: 'filter', 
+            {
+              id: 'filter',
               name: 'Filter Design',
               description: 'Calculate LC filter component values (Coming Soon)',
-              comingSoon: true
-            }
-          ]
+              comingSoon: true,
+            },
+          ],
         },
         {
           id: 'rf-power',
           name: 'RF Power',
           description: 'Calculate power, SWR, and transmission line losses',
           calculators: [
-            { 
-              id: 'swr', 
+            {
+              id: 'swr',
               name: 'SWR Calculator',
               description: 'Calculate SWR, return loss, and reflection coefficient (Coming Soon)',
-              comingSoon: true
+              comingSoon: true,
             },
-            { 
-              id: 'line-loss', 
+            {
+              id: 'line-loss',
               name: 'Line Loss Calculator',
               description: 'Calculate transmission line losses (Coming Soon)',
-              comingSoon: true
-            }
-          ]
-        }
-      ]
+              comingSoon: true,
+            },
+          ],
+        },
+      ],
     }
   },
   mounted() {
     // Check if there's a calculator parameter in the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const calculator = urlParams.get('calculator');
-    
+    const urlParams = new URLSearchParams(window.location.search)
+    const calculator = urlParams.get('calculator')
+
     // Flatten all calculators to check if the requested one exists
-    const allCalculators = this.categories.flatMap(category => 
-      category.calculators.map(calc => calc.id)
-    );
-    
-    if (calculator && allCalculators.includes(calculator) && 
-        !this.getCalculatorById(calculator)?.comingSoon) {
-      this.activeCalculator = calculator;
+    const allCalculators = this.categories.flatMap((category) =>
+      category.calculators.map((calc) => calc.id),
+    )
+
+    if (
+      calculator &&
+      allCalculators.includes(calculator) &&
+      !this.getCalculatorById(calculator)?.comingSoon
+    ) {
+      this.activeCalculator = calculator
     }
   },
   methods: {
     setActiveCalculator(calculator: string) {
       // Don't set if it's a coming soon calculator
       if (this.getCalculatorById(calculator)?.comingSoon) {
-        return;
+        return
       }
-      
-      this.activeCalculator = calculator;
+
+      this.activeCalculator = calculator
       // Update URL without reloading the page
-      const url = new URL(window.location.href);
-      url.searchParams.set('calculator', calculator);
-      window.history.pushState({}, '', url);
-      
+      const url = new URL(window.location.href)
+      url.searchParams.set('calculator', calculator)
+      window.history.pushState({}, '', url)
+
       // On mobile, scroll to the calculator content
       if (window.innerWidth <= 768) {
         // Use setTimeout to ensure the DOM has updated with the new calculator
         setTimeout(() => {
-          const calculatorContainer = document.querySelector('.calculator-container');
+          const calculatorContainer = document.querySelector('.calculator-container')
           if (calculatorContainer) {
-            calculatorContainer.scrollIntoView({ behavior: 'smooth' });
+            calculatorContainer.scrollIntoView({ behavior: 'smooth' })
           }
-        }, 100);
+        }, 100)
       }
     },
-    
+
     getCalculatorById(id: string) {
       for (const category of this.categories) {
-        const calculator = category.calculators.find(calc => calc.id === id);
+        const calculator = category.calculators.find((calc) => calc.id === id)
         if (calculator) {
-          return calculator;
+          return calculator
         }
       }
-      return null;
+      return null
     },
-    
+
     getCategoryForCalculator(calculatorId: string) {
-      return this.categories.find(category => 
-        category.calculators.some(calc => calc.id === calculatorId)
-      );
-    }
-  }
+      return this.categories.find((category) =>
+        category.calculators.some((calc) => calc.id === calculatorId),
+      )
+    },
+  },
 }
 </script>
 
 <template>
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
-    
+
     <div class="calculators-content">
       <div class="calculator-nav">
         <h3>Calculator Categories</h3>
-        
+
         <div class="categories-container">
           <div v-for="category in categories" :key="category.id" class="category">
             <div class="category-header">
               <h4>{{ category.name }}</h4>
               <p class="category-description">{{ category.description }}</p>
             </div>
-            
+
             <ul class="calculator-list">
-              <li 
-                v-for="calculator in category.calculators" 
+              <li
+                v-for="calculator in category.calculators"
                 :key="calculator.id"
-                :class="{ 
+                :class="{
                   active: activeCalculator === calculator.id,
-                  'coming-soon': calculator.comingSoon 
+                  'coming-soon': calculator.comingSoon,
                 }"
               >
-                <button 
+                <button
                   @click="setActiveCalculator(calculator.id)"
                   :disabled="calculator.comingSoon"
                 >
@@ -191,7 +195,7 @@ export default {
           </div>
         </div>
       </div>
-      
+
       <div class="calculator-container">
         <div class="calculator-header">
           <h2>
@@ -201,7 +205,7 @@ export default {
             </span>
           </h2>
         </div>
-        
+
         <TwinLeadCharImp v-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-if="activeCalculator === 'singleconductor'" />
@@ -338,7 +342,7 @@ export default {
 }
 
 .calculator-list li.coming-soon .calculator-name::after {
-  content: " (Coming Soon)";
+  content: ' (Coming Soon)';
   font-size: 0.8em;
   opacity: 0.8;
   font-weight: normal;
@@ -387,24 +391,24 @@ h1 {
   .calculators-content {
     flex-direction: column;
   }
-  
+
   .calculator-nav {
     flex: 0 0 auto;
     position: static;
     max-height: none;
     width: 100%;
   }
-  
+
   .categories-container {
     gap: 1rem;
   }
-  
+
   .calculator-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 0.75rem;
   }
-  
+
   .calculator-list li button {
     height: 100%;
     min-height: 80px;
@@ -415,13 +419,13 @@ h1 {
   .calculator-list {
     grid-template-columns: 1fr;
   }
-  
+
   .calculator-header h2 {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .category-badge {
     align-self: flex-start;
   }
