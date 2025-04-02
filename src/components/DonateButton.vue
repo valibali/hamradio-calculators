@@ -10,11 +10,16 @@ const toggleDropdown = () => {
 const closeDropdown = () => {
   isOpen.value = false
 }
+
+// Prevent dropdown from closing when clicking on options
+const handleOptionClick = (event: Event) => {
+  event.stopPropagation()
+}
 </script>
 
 <template>
-  <div class="donate-container" @mouseleave="closeDropdown">
-    <div v-if="isOpen" class="donate-dropdown">
+  <div class="donate-container">
+    <div v-if="isOpen" class="donate-dropdown" @click="handleOptionClick">
       <a href="https://thanks.dev/u/gh/valibali" target="_blank" rel="noopener noreferrer" class="donate-option">
         <span class="donate-option-icon">🙏</span>
         <span class="donate-option-text">thanks.dev</span>
