@@ -11,12 +11,12 @@ onMounted(() => {
       element.scrollIntoView({ behavior: 'smooth' })
     }
   }
-  
+
   // Add click handler for anchor links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault()
-      
+
       const targetId = this.getAttribute('href')?.substring(1)
       if (targetId) {
         const targetElement = document.getElementById(targetId)
@@ -41,36 +41,41 @@ onMounted(() => {
         <a href="#resources" class="cta-button primary">Explore Resources</a>
         <RouterLink to="/about" class="cta-button secondary">About Me</RouterLink>
       </div>
-      
+
       <div class="hero-about">
         <p>
           Welcome to my amateur radio website! I'm passionate about all aspects of ham radio, from
           technical calculations to building equipment and making contacts around the world.
         </p>
         <p>
-          This site serves as a hub for various resources I've developed and collected over the years,
-          including calculators, articles, project documentation, and more. Whether you're a seasoned
-          ham or just getting started, I hope you'll find something useful here.
+          This site serves as a hub for various resources I've developed and collected over the
+          years, including calculators, articles, project documentation, and more. Whether you're a
+          seasoned ham or just getting started, I hope you'll find something useful here.
         </p>
       </div>
-    </section>
+    </div>
 
     <section id="resources" class="content-categories">
       <h2>Explore My Ham Radio World</h2>
-      
+
       <div class="category-grid">
         <div class="category-card">
           <div class="category-badge">Featured</div>
           <div class="category-icon">🧮</div>
           <h3>Calculators</h3>
-          <p>Essential tools for amateur radio operators including impedance calculators, antenna length, and more.</p>
+          <p>
+            Essential tools for amateur radio operators including impedance calculators, antenna
+            length, and more.
+          </p>
           <RouterLink to="/calculators" class="category-link">View Calculators</RouterLink>
         </div>
 
         <div class="category-card">
           <div class="category-icon">📖</div>
           <h3>My Story</h3>
-          <p>Learn about my journey in amateur radio and how I got started in this fascinating hobby.</p>
+          <p>
+            Learn about my journey in amateur radio and how I got started in this fascinating hobby.
+          </p>
           <RouterLink to="/my-story" class="category-link">Read More</RouterLink>
         </div>
 
@@ -112,13 +117,19 @@ onMounted(() => {
         <div class="category-card">
           <div class="category-icon">📊</div>
           <h3>Hamledger - The Logger</h3>
-          <p>A powerful logging tool for amateur radio operators to track contacts and activities.</p>
-          <a href="https://github.com/valibali/hamledger/" target="_blank" rel="noopener" class="category-link">Try Hamledger</a>
+          <p>
+            A powerful logging tool for amateur radio operators to track contacts and activities.
+          </p>
+          <a
+            href="https://github.com/valibali/hamledger/"
+            target="_blank"
+            rel="noopener"
+            class="category-link"
+            >Try Hamledger</a
+          >
         </div>
       </div>
-    </div>
-
-
+    </section>
   </main>
 </template>
 
@@ -210,7 +221,9 @@ onMounted(() => {
   background-color: var(--color-background-soft);
   border-radius: 8px;
   padding: 1.5rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -351,7 +364,7 @@ onMounted(() => {
   .hero h1 {
     font-size: 3rem;
   }
-  
+
   .category-grid {
     grid-template-columns: repeat(4, 1fr);
   }
