@@ -540,6 +540,8 @@ export default {
 
 .formula-container {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .formula-header {
@@ -719,6 +721,7 @@ h1 {
 
   .formulas-content {
     flex-direction: column;
+    padding: 0;
   }
 
   .formula-nav {
@@ -738,7 +741,12 @@ h1 {
     height: 100%;
     min-height: 80px;
   }
-
+  
+  .formula-container {
+    width: 100%;
+    padding: 0;
+    margin-bottom: 100px; /* Add space at the bottom for action buttons */
+  }
 }
 
 @media (max-width: 480px) {

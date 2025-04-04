@@ -462,6 +462,8 @@ export default defineComponent({
 
 .calculator-container {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .calculator-header {
@@ -527,6 +529,7 @@ h1 {
 
   .calculators-content {
     flex-direction: column;
+    padding: 0;
   }
 
   .calculator-nav {
@@ -545,6 +548,12 @@ h1 {
   .calculator-list li button {
     height: 100%;
     min-height: 80px;
+  }
+  
+  .calculator-container {
+    width: 100%;
+    padding: 0;
+    margin-bottom: 100px; /* Add space at the bottom for action buttons */
   }
 }
 
