@@ -173,6 +173,20 @@ export default defineComponent({
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
+      
+      // Always select the first calculator in the category
+      const category = this.categories.find(c => c.id === categoryId)
+      if (category && category.calculators.length > 0) {
+        // Get the first calculator in this category
+        const firstCalculator = category.calculators[0]
+        
+        // Update the active calculator
+        this.activeCalculator = firstCalculator.id
+        
+        // Add calculator to URL
+        url.searchParams.set('calculator', firstCalculator.id)
+      }
+      
       window.history.pushState({}, '', url)
 
       // Only scroll to the nav area on mobile devices

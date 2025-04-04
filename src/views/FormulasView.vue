@@ -204,16 +204,26 @@ export default {
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
-      window.history.pushState({}, '', url)
-
-      // Find the first non-coming-soon formula in this category
+      
+      // Always select the first formula in the category
       const category = this.categories.find((c) => c.id === categoryId)
-      if (category) {
-        const firstFormula = category.formulas.find((f) => !f.comingSoon)
-        if (firstFormula && firstFormula.id !== this.activeFormula) {
-          this.setActiveFormula(firstFormula.id)
+      if (category && category.formulas.length > 0) {
+        // Get the first formula in this category
+        const firstFormula = category.formulas[0]
+        
+        // Update the active formula
+        this.activeFormula = firstFormula.id
+        
+        // Add formula to URL
+        url.searchParams.set('formula', firstFormula.id)
+        
+        // Load the markdown if it's not a coming soon formula
+        if (!firstFormula.comingSoon) {
+          this.loadMarkdownFile(firstFormula.id)
         }
       }
+      
+      window.history.pushState({}, '', url)
 
       // Only scroll to the nav area on mobile devices
       if (window.innerWidth <= 768) {
