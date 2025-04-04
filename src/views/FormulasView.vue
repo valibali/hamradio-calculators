@@ -452,6 +452,7 @@ export default {
   margin-top: 0;
   margin-bottom: 0.75rem;
   color: var(--color-heading);
+  font-size: clamp(1rem, 3vw, 1.25rem);
 }
 
 .category-tile p {
