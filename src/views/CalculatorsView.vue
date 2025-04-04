@@ -455,6 +455,20 @@ h1 {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
   
+  .category-tile {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .category-tile p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   .calculators-content {
     flex-direction: column;
   }
