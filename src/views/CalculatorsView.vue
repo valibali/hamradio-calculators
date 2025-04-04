@@ -258,7 +258,7 @@ export default defineComponent({
       class="scroll-top-button"
       aria-label="Scroll to top"
     >
-      ↑
+      <span class="arrow-up">↑</span>
     </button>
 
     <div class="category-tiles">
@@ -560,13 +560,19 @@ h1 {
   background-color: hsla(160, 100%, 37%, 1);
   color: white;
   border: none;
-  font-size: 20px;
   cursor: pointer;
   z-index: 1000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   align-items: center;
   justify-content: center;
+  padding: 0;
+}
+
+.arrow-up {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .scroll-top-button:hover {
