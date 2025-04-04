@@ -3,6 +3,7 @@ import { defineComponent } from 'vue'
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
+import BalunCalculator from '../components/BalunCalculator.vue'
 
 interface Calculator {
   id: string
@@ -25,6 +26,7 @@ export default defineComponent({
     TwinLeadCharImp,
     TwistedPairCharImp,
     SingleConductorAboveGroundPlane,
+    BalunCalculator,
   },
   data() {
     return {
@@ -51,6 +53,19 @@ export default defineComponent({
               id: 'singleconductor',
               name: 'Single Conductor Above Ground',
               description: 'Calculate impedance for single wire above ground plane',
+            },
+          ],
+        },
+        {
+          id: 'baluns',
+          name: 'Baluns & Transformers',
+          description:
+            'Design baluns, ununs, and impedance transformers for RF applications',
+          calculators: [
+            {
+              id: 'balun',
+              name: 'Balun Calculator',
+              description: 'Design balanced-to-unbalanced transformers for antenna systems',
             },
           ],
         },
@@ -318,6 +333,7 @@ export default defineComponent({
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
+        <BalunCalculator v-else-if="activeCalculator === 'balun'" />
       </div>
     </div>
   </div>
