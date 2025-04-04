@@ -153,6 +153,12 @@ export default {
 
       for (let i = 0; i < maxIterations; i++) {
         const mid = (low + high) / 2
+        // Calculate effective permittivity for this air gap
+        const epsilonEff = this.calculateEffectivePermittivity(
+          insulationThickness,
+          mid,
+          epsilonR
+        )
         const currentZ0 = this.calculateCharacteristicImpedance(
           wireRadius,
           insulationThickness,
@@ -364,6 +370,16 @@ export default {
             <div class="parameter">
               <span class="parameter-label">Permittivity (εᵣ):</span>
               <span class="parameter-value">{{ permittivity }}</span>
+            </div>
+            <div class="parameter">
+              <span class="parameter-label">Effective Permittivity (εₑff):</span>
+              <span class="parameter-value">{{ 
+                calculateEffectivePermittivity(
+                  insulationThickness, 
+                  calculatedAirGap, 
+                  permittivity
+                ).toFixed(3) 
+              }}</span>
             </div>
           </div>
         </div>
