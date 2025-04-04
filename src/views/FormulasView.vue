@@ -236,19 +236,21 @@ export default {
         }
       }
       
-      // Scroll to the formula nav area
-      this.$nextTick(() => {
-        const navElement = document.querySelector('.formula-nav')
-        if (navElement) {
-          // Get header height to adjust scroll position
-          const headerHeight = document.querySelector('header')?.offsetHeight || 0
-          const navPosition = navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
-          window.scrollTo({
-            top: navPosition,
-            behavior: 'smooth'
-          })
-        }
-      })
+      // Only scroll to the nav area on mobile devices
+      if (window.innerWidth <= 768) {
+        this.$nextTick(() => {
+          const navElement = document.querySelector('.formula-nav')
+          if (navElement) {
+            // Get header height to adjust scroll position
+            const headerHeight = document.querySelector('header')?.offsetHeight || 0
+            const navPosition = navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
+            window.scrollTo({
+              top: navPosition,
+              behavior: 'smooth'
+            })
+          }
+        })
+      }
     },
     
     setActiveFormula(formulaId: string): void {
@@ -273,7 +275,7 @@ export default {
       
       window.history.pushState({}, '', url)
 
-      // Only scroll to the formula content on mobile
+      // Only scroll to the formula content on mobile devices
       if (window.innerWidth <= 768) {
         // Use setTimeout to ensure the DOM has updated with the new formula
         setTimeout(() => {
