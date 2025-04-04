@@ -30,6 +30,7 @@ export default defineComponent({
     return {
       activeCalculator: 'twinlead',
       activeCategory: 'transmission-lines',
+      showScrollTopButton: false,
       categories: [
         {
           id: 'transmission-lines',
@@ -126,6 +127,9 @@ export default defineComponent({
     const calculator = urlParams.get('calculator')
     const category = urlParams.get('category')
 
+    // Add scroll event listener for scroll-to-top button
+    window.addEventListener('scroll', this.handleScroll)
+
     // Flatten all calculators to check if the requested one exists
     const allCalculators = this.categories.flatMap((category: Category) =>
       category.calculators.map((calc: Calculator) => calc.id),
@@ -148,6 +152,22 @@ export default defineComponent({
     }
   },
   methods: {
+    scrollToTop(): void {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    },
+    
+    handleScroll(): void {
+      // Only show button on mobile
+      if (window.innerWidth <= 768) {
+        this.showScrollTopButton = window.scrollY > 300
+      } else {
+        this.showScrollTopButton = false
+      }
+    },
+    
     selectCategory(categoryId: string): void {
       this.activeCategory = categoryId
       
@@ -220,12 +240,26 @@ export default defineComponent({
       )
     },
   },
+  
+  beforeUnmount() {
+    // Clean up the scroll event listener
+    window.removeEventListener('scroll', this.handleScroll)
+  }
 })
 </script>
 
 <template>
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
+
+    <button 
+      v-show="showScrollTopButton" 
+      @click="scrollToTop" 
+      class="scroll-top-button"
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
 
     <div class="category-tiles">
       <div 
@@ -515,6 +549,31 @@ h1 {
   }
 }
 
+.scroll-top-button {
+  display: none;
+  position: fixed;
+  bottom: 80px; /* Position above feedback button */
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-top-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 480px) {
   .calculator-list {
     grid-template-columns: 1fr;
@@ -528,6 +587,10 @@ h1 {
 
   .category-badge {
     align-self: flex-start;
+  }
+  
+  .scroll-top-button {
+    display: flex;
   }
 }
 </style>
