@@ -9,6 +9,7 @@ interface Calculator {
   name: string
   description: string
   comingSoon?: boolean
+  categoryId?: string
 }
 
 interface Category {
@@ -28,6 +29,7 @@ export default defineComponent({
   data() {
     return {
       activeCalculator: 'twinlead',
+      activeCategory: 'transmission-lines',
       categories: [
         {
           id: 'transmission-lines',
@@ -112,10 +114,17 @@ export default defineComponent({
       ] as Category[],
     }
   },
+  computed: {
+    filteredCalculators() {
+      const category = this.categories.find(c => c.id === this.activeCategory)
+      return category ? category.calculators : []
+    }
+  },
   mounted() {
     // Check if there's a calculator parameter in the URL
     const urlParams = new URLSearchParams(window.location.search)
     const calculator = urlParams.get('calculator')
+    const category = urlParams.get('category')
 
     // Flatten all calculators to check if the requested one exists
     const allCalculators = this.categories.flatMap((category: Category) =>
@@ -128,6 +137,14 @@ export default defineComponent({
       !this.getCalculatorById(calculator)?.comingSoon
     ) {
       this.activeCalculator = calculator
+      
+      // Set the active category based on the calculator
+      const calculatorCategory = this.getCategoryForCalculator(calculator)
+      if (calculatorCategory) {
+        this.activeCategory = calculatorCategory.id
+      }
+    } else if (category && this.categories.some(c => c.id === category)) {
+      this.activeCategory = category
     }
   },
   methods: {
@@ -138,9 +155,18 @@ export default defineComponent({
       }
 
       this.activeCalculator = calculator
+      
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('calculator', calculator)
+      
+      // Also update the category in the URL
+      const calculatorCategory = this.getCategoryForCalculator(calculator)
+      if (calculatorCategory) {
+        this.activeCategory = calculatorCategory.id
+        url.searchParams.set('category', calculatorCategory.id)
+      }
+      
       window.history.pushState({}, '', url)
 
       // On mobile, scroll to the calculator content
@@ -178,36 +204,42 @@ export default defineComponent({
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
 
+    <div class="category-tiles">
+      <div 
+        v-for="category in categories" 
+        :key="category.id" 
+        class="category-tile"
+        @click="activeCategory = category.id"
+        :class="{ active: activeCategory === category.id }"
+      >
+        <h3>{{ category.name }}</h3>
+        <p>{{ category.description }}</p>
+      </div>
+    </div>
+
     <div class="calculators-content">
       <div class="calculator-nav">
-        <h3>Calculator Categories</h3>
-
-        <div class="categories-container">
-          <div v-for="category in categories" :key="category.id" class="category">
-            <div class="category-header">
-              <h4>{{ category.name }}</h4>
-              <p class="category-description">{{ category.description }}</p>
-            </div>
-
-            <ul class="calculator-list">
-              <li
-                v-for="calculator in category.calculators"
-                :key="calculator.id"
-                :class="{
-                  active: activeCalculator === calculator.id,
-                  'coming-soon': calculator.comingSoon,
-                }"
+        <h3>Calculators</h3>
+        
+        <div class="calculators-list-container">
+          <ul class="calculator-list">
+            <li
+              v-for="calculator in filteredCalculators"
+              :key="calculator.id"
+              :class="{
+                active: activeCalculator === calculator.id,
+                'coming-soon': calculator.comingSoon,
+              }"
+            >
+              <button
+                @click="setActiveCalculator(calculator.id)"
+                :disabled="calculator.comingSoon"
               >
-                <button
-                  @click="setActiveCalculator(calculator.id)"
-                  :disabled="calculator.comingSoon"
-                >
-                  <span class="calculator-name">{{ calculator.name }}</span>
-                  <span class="calculator-description">{{ calculator.description }}</span>
-                </button>
-              </li>
-            </ul>
-          </div>
+                <span class="calculator-name">{{ calculator.name }}</span>
+                <span class="calculator-description">{{ calculator.description }}</span>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -230,6 +262,49 @@ export default defineComponent({
 </template>
 
 <style scoped>
+.category-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  padding: 0 1rem;
+}
+
+.category-tile {
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.category-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.category-tile.active {
+  border-color: hsla(160, 100%, 37%, 1);
+  background-color: rgba(0, 128, 0, 0.1);
+}
+
+.category-tile h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: var(--color-heading);
+}
+
+.category-tile p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+}
+
 .calculators-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -261,36 +336,9 @@ export default defineComponent({
   font-size: 1.2rem;
 }
 
-.categories-container {
+.calculators-list-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.category {
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-}
-
-.category-header {
-  background-color: var(--color-background-mute);
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.category-header h4 {
-  margin: 0;
-  color: var(--color-heading);
-  font-size: 1.1rem;
-}
-
-.category-description {
-  margin: 0.5rem 0 0;
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  line-height: 1.4;
 }
 
 .calculator-list {
@@ -403,6 +451,10 @@ h1 {
 }
 
 @media (max-width: 768px) {
+  .category-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
   .calculators-content {
     flex-direction: column;
   }
@@ -412,10 +464,6 @@ h1 {
     position: static;
     max-height: none;
     width: 100%;
-  }
-
-  .categories-container {
-    gap: 1rem;
   }
 
   .calculator-list {
