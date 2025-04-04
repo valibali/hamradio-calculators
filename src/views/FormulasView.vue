@@ -273,7 +273,7 @@ export default {
       
       window.history.pushState({}, '', url)
 
-      // On mobile, scroll to the formula content
+      // Only scroll to the formula content on mobile
       if (window.innerWidth <= 768) {
         // Use setTimeout to ensure the DOM has updated with the new formula
         setTimeout(() => {

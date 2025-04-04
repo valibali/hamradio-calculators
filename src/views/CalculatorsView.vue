@@ -229,7 +229,7 @@ export default defineComponent({
       
       window.history.pushState({}, '', url)
 
-      // On mobile, scroll to the calculator content
+      // Only scroll to the calculator content on mobile
       if (window.innerWidth <= 768) {
         // Use setTimeout to ensure the DOM has updated with the new calculator
         setTimeout(() => {
