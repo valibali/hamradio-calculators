@@ -73,7 +73,7 @@ onMounted(() => {
 
       <div class="category-grid">
         <div class="category-card">
-          <div class="category-badge">Featured</div>
+          <div class="category-badge">New: Balun calculator</div>
           <div class="category-icon">🧮</div>
           <h3>Calculators</h3>
           <p>
