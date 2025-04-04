@@ -572,6 +572,8 @@ export default {
   padding: 2rem;
   border-radius: 8px;
   border: 1px solid var(--color-border);
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 h1 {
@@ -605,6 +607,9 @@ h1 {
 .markdown-content :deep(p) {
   margin-bottom: 1rem;
   line-height: 1.6;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .markdown-content :deep(ul),
@@ -671,6 +676,19 @@ h1 {
 .markdown-content :deep(.math-inline) {
   font-style: italic;
   font-family: 'Times New Roman', serif;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Add MathJax specific styling */
+.markdown-content :deep(.MathJax) {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.markdown-content :deep(.MathJax_Display) {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 
