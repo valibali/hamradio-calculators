@@ -4,11 +4,49 @@ import { Analytics } from '@vercel/analytics/vue'
 import { SpeedInsights } from '@vercel/speed-insights/vue'
 import IconGitHub from '@/components/icons/IconGitHub.vue'
 import DonateButton from '@/components/DonateButton.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+
+// Scroll to top button logic
+const showScrollTopButton = ref(false)
+
+const handleScroll = () => {
+  // Only show button on mobile
+  if (window.innerWidth <= 768) {
+    showScrollTopButton.value = window.scrollY > 300
+  } else {
+    showScrollTopButton.value = false
+  }
+}
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <Analytics />
   <SpeedInsights />
+  
+  <button 
+    v-show="showScrollTopButton" 
+    @click="scrollToTop" 
+    class="scroll-top-button"
+    aria-label="Scroll to top"
+  >
+    <span class="arrow-up">↑</span>
+  </button>
+  
   <header>
     <div class="header-content">
       <div class="logo-container">
@@ -177,6 +215,37 @@ footer {
   color: var(--color-text-light-2);
 }
 
+.scroll-top-button {
+  display: none;
+  position: fixed;
+  bottom: 80px; /* Position above feedback button */
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.arrow-up {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.scroll-top-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
@@ -214,6 +283,10 @@ footer {
 
   .feedback-text {
     display: none;
+  }
+  
+  .scroll-top-button {
+    display: flex;
   }
 }
 </style>
