@@ -300,7 +300,7 @@ export default {
         if (formula.html) {
           this.$nextTick(() => {
             if (window.MathJax && window.MathJax.typesetPromise) {
-              window.MathJax.typesetPromise().catch((err) =>
+              window.MathJax.typesetPromise().catch((err: Error) =>
                 console.error('MathJax typeset error:', err),
               )
             } else if (window.MathJax && window.MathJax.typeset) {
@@ -322,7 +322,7 @@ export default {
         // Typeset math after the content is rendered
         this.$nextTick(() => {
           if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise().catch((err) =>
+            window.MathJax.typesetPromise().catch((err: Error) =>
               console.error('MathJax typeset error:', err),
             )
           } else if (window.MathJax && window.MathJax.typeset) {
