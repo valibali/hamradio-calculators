@@ -119,6 +119,23 @@ export default defineComponent({
     filteredCalculators() {
       const category = this.categories.find(c => c.id === this.activeCategory)
       return category ? category.calculators : []
+    },
+    hasActiveCalculator() {
+      // Check if there's at least one non-coming-soon calculator in the active category
+      const activeCategory = this.categories.find(c => c.id === this.activeCategory)
+      if (!activeCategory) return false
+      
+      // Check if the active calculator belongs to this category and is not coming soon
+      const calculator = this.getCalculatorById(this.activeCalculator)
+      if (calculator && !calculator.comingSoon) {
+        const calculatorCategory = this.getCategoryForCalculator(this.activeCalculator)
+        if (calculatorCategory && calculatorCategory.id === this.activeCategory) {
+          return true
+        }
+      }
+      
+      // Check if there's any non-coming-soon calculator in this category
+      return activeCategory.calculators.some(calc => !calc.comingSoon)
     }
   },
   mounted() {
@@ -310,9 +327,13 @@ export default defineComponent({
           </h2>
         </div>
 
-        <TwinLeadCharImp v-if="activeCalculator === 'twinlead'" />
-        <TwistedPairCharImp v-if="activeCalculator === 'twistedpair'" />
-        <SingleConductorAboveGroundPlane v-if="activeCalculator === 'singleconductor'" />
+        <div v-if="!hasActiveCalculator" class="coming-soon-message">
+          <h3>Stay tuned, this will update soon!</h3>
+          <p>We're working on adding calculators for this category.</p>
+        </div>
+        <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
+        <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
+        <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
       </div>
     </div>
   </div>
@@ -578,6 +599,25 @@ h1 {
 .scroll-top-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.coming-soon-message {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  border: 1px dashed var(--color-border);
+}
+
+.coming-soon-message h3 {
+  color: hsla(160, 100%, 37%, 1);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.coming-soon-message p {
+  color: var(--color-text-light);
+  font-size: 1.1rem;
 }
 
 @media (max-width: 480px) {
