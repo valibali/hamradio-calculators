@@ -521,6 +521,7 @@ export default defineComponent({
 h1 {
   margin-bottom: 2rem;
   text-align: center;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
 }
 
 @media (min-width: 1024px) {
