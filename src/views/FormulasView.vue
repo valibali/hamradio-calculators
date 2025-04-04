@@ -299,8 +299,11 @@ export default {
         // Skip if already loaded
         if (formula.html) {
           this.$nextTick(() => {
-            if (window.MathJax) {
+            if (window.MathJax && window.MathJax.typesetPromise) {
               window.MathJax.typesetPromise()
+                .catch((err) => console.error('MathJax typeset error:', err))
+            } else if (window.MathJax && window.MathJax.typeset) {
+              window.MathJax.typeset()
             }
           })
           return
@@ -317,8 +320,11 @@ export default {
 
         // Typeset math after the content is rendered
         this.$nextTick(() => {
-          if (window.MathJax) {
+          if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise()
+              .catch((err) => console.error('MathJax typeset error:', err))
+          } else if (window.MathJax && window.MathJax.typeset) {
+            window.MathJax.typeset()
           }
         })
       } catch (error) {
