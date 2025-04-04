@@ -148,6 +148,29 @@ export default defineComponent({
     }
   },
   methods: {
+    selectCategory(categoryId: string): void {
+      this.activeCategory = categoryId
+      
+      // Update URL without reloading the page
+      const url = new URL(window.location.href)
+      url.searchParams.set('category', categoryId)
+      window.history.pushState({}, '', url)
+      
+      // Scroll to the calculator nav area
+      this.$nextTick(() => {
+        const navElement = document.querySelector('.calculator-nav')
+        if (navElement) {
+          // Get header height to adjust scroll position
+          const headerHeight = document.querySelector('header')?.offsetHeight || 0
+          const navPosition = navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
+          window.scrollTo({
+            top: navPosition,
+            behavior: 'smooth'
+          })
+        }
+      })
+    },
+    
     setActiveCalculator(calculator: string): void {
       // Don't set if it's a coming soon calculator
       if (this.getCalculatorById(calculator)?.comingSoon) {
@@ -209,7 +232,7 @@ export default defineComponent({
         v-for="category in categories" 
         :key="category.id" 
         class="category-tile"
-        @click="activeCategory = category.id"
+        @click="selectCategory(category.id)"
         :class="{ active: activeCategory === category.id }"
       >
         <h3>{{ category.name }}</h3>
