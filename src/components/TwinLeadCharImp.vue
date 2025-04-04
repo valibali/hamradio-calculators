@@ -13,21 +13,27 @@ export default {
         { value: 'awg15', label: 'AWG 15', diameter: 1.45, radius: 0.725 },
         { value: 'awg16', label: 'AWG 16', diameter: 1.291, radius: 0.6455 },
         { value: 'awg18', label: 'AWG 18', diameter: 1.024, radius: 0.512 },
+        { value: 'mm12', label: '1.2mm Diameter', diameter: 1.2, radius: 0.6 },
         { value: 'custom', label: 'Custom Diameter', diameter: 1.0, radius: 0.5 },
       ],
 
       insulationTypes: [
-        { value: 'polyimide', label: 'Polyimide Enamel', permittivity: 3.5, thickness: 0.05 },
+        { value: 'aiw', label: 'AI/AIW Class 200', permittivity: 5.0, thickness: 0.06 },
+        { value: 'polyurethane', label: 'Polyurethane (PU)', permittivity: 3.5, thickness: 0.05 },
+        { value: 'polyester', label: 'Polyester (PE)', permittivity: 3.5, thickness: 0.05 },
+        { value: 'polyimide', label: 'Polyimide (PI)', permittivity: 3.5, thickness: 0.05 },
+        { value: 'pei', label: 'Polyester-imide (PEI)', permittivity: 4.0, thickness: 0.05 },
+        { value: 'pai', label: 'Polyamide-imide (PAI)', permittivity: 4.5, thickness: 0.05 },
         { value: 'ptfe', label: 'PTFE', permittivity: 2.1, thickness: 0.1 },
         { value: 'pvc', label: 'PVC', permittivity: 3.0, thickness: 0.15 },
-        { value: 'custom', label: 'Custom Insulation', permittivity: 3.5, thickness: 0.05 },
+        { value: 'custom', label: 'Custom Insulation', permittivity: 4.0, thickness: 0.06 },
       ],
 
-      selectedWire: 'awg15',
-      selectedInsulation: 'polyimide',
+      selectedWire: 'mm12',
+      selectedInsulation: 'aiw',
       customDiameter: 1.0,
-      customInsulationThickness: 0.05,
-      customPermittivity: 3.5,
+      customInsulationThickness: 0.06,
+      customPermittivity: 5.0,
       targetImpedance: 50,
       airGap: 0.1,
       activeTab: 'impedance',
@@ -198,6 +204,12 @@ export default {
           critical. These transformers don't just rely on magnetic coupling - they function because
           the wire itself forms a transmission line with a specific impedance when wound around the
           core.
+        </p>
+        
+        <p>
+          This calculator includes accurate parameters for common magnet wire insulation types, including
+          AI/AIW Class 200 (polyamide-imide over modified polyester) which has a relative permittivity (εᵣ)
+          of approximately 5.0 and typical thickness of 0.06mm per side for 1.2mm wire.
         </p>
 
         <p>The impedance of this transmission line directly affects:</p>
