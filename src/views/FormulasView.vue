@@ -162,7 +162,6 @@ export default {
     const formula = urlParams.get('formula')
     const category = urlParams.get('category')
 
-
     // Flatten all formulas to check if the requested one exists
     const allFormulas = this.categories.flatMap((category: Category) =>
       category.formulas.map((form: Formula) => form.id),
@@ -197,32 +196,31 @@ export default {
     }
   },
   methods: {
-
     selectCategory(categoryId: string): void {
       this.activeCategory = categoryId
 
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
-      
+
       // Always select the first formula in the category
       const category = this.categories.find((c) => c.id === categoryId)
       if (category && category.formulas.length > 0) {
         // Get the first formula in this category
         const firstFormula = category.formulas[0]
-        
+
         // Update the active formula
         this.activeFormula = firstFormula.id
-        
+
         // Add formula to URL
         url.searchParams.set('formula', firstFormula.id)
-        
+
         // Load the markdown if it's not a coming soon formula
         if (!firstFormula.comingSoon) {
           this.loadMarkdownFile(firstFormula.id)
         }
       }
-      
+
       window.history.pushState({}, '', url)
 
       // Only scroll to the nav area on mobile devices
@@ -302,7 +300,7 @@ export default {
         if (formula.html) {
           this.$nextTick(() => {
             if (window.MathJax) {
-              window.MathJax.typesetPromise && window.MathJax.typesetPromise()
+              window.MathJax.typesetPromise()
             }
           })
           return
@@ -320,7 +318,7 @@ export default {
         // Typeset math after the content is rendered
         this.$nextTick(() => {
           if (window.MathJax) {
-            window.MathJax.typesetPromise && window.MathJax.typesetPromise()
+            window.MathJax.typesetPromise()
           }
         })
       } catch (error) {
@@ -328,7 +326,6 @@ export default {
       }
     },
   },
-
 }
 </script>
 
@@ -337,7 +334,6 @@ export default {
     <MathJaxLoader />
 
     <h1>HAM Radio Calculator Formulas</h1>
-
 
     <div class="category-tiles">
       <div
@@ -701,7 +697,6 @@ h1 {
   max-width: 100%;
 }
 
-
 .coming-soon-message {
   text-align: center;
   padding: 3rem 1rem;
@@ -769,7 +764,7 @@ h1 {
     height: 100%;
     min-height: 80px;
   }
-  
+
   .formula-container {
     width: 100%;
     padding: 0;
