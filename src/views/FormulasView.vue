@@ -111,7 +111,8 @@ export default {
             {
               id: 'swr',
               name: 'SWR Calculations',
-              description: 'Formulas for SWR, return loss, and reflection coefficient (Coming Soon)',
+              description:
+                'Formulas for SWR, return loss, and reflection coefficient (Coming Soon)',
               file: '',
               html: '',
               comingSoon: true,
@@ -131,7 +132,7 @@ export default {
   },
   computed: {
     filteredFormulas() {
-      const category = this.categories.find(c => c.id === this.activeCategory)
+      const category = this.categories.find((c) => c.id === this.activeCategory)
       return category ? category.formulas : []
     },
     currentFormula() {
@@ -140,9 +141,9 @@ export default {
     },
     hasActiveFormula() {
       // Check if there's at least one non-coming-soon formula in the active category
-      const activeCategory = this.categories.find(c => c.id === this.activeCategory)
+      const activeCategory = this.categories.find((c) => c.id === this.activeCategory)
       if (!activeCategory) return false
-      
+
       // Check if the active formula belongs to this category and is not coming soon
       const formula = this.getFormulaById(this.activeFormula)
       if (formula && !formula.comingSoon) {
@@ -151,10 +152,10 @@ export default {
           return true
         }
       }
-      
+
       // Check if there's any non-coming-soon formula in this category
-      return activeCategory.formulas.some(form => !form.comingSoon)
-    }
+      return activeCategory.formulas.some((form) => !form.comingSoon)
+    },
   },
   mounted() {
     // Check if there's a formula parameter in the URL
@@ -170,28 +171,24 @@ export default {
       category.formulas.map((form: Formula) => form.id),
     )
 
-    if (
-      formula &&
-      allFormulas.includes(formula) &&
-      !this.getFormulaById(formula)?.comingSoon
-    ) {
+    if (formula && allFormulas.includes(formula) && !this.getFormulaById(formula)?.comingSoon) {
       this.activeFormula = formula
-      
+
       // Set the active category based on the formula
       const formulaCategory = this.getCategoryForFormula(formula)
       if (formulaCategory) {
         this.activeCategory = formulaCategory.id
       }
-      
+
       // Load the markdown for the active formula
       this.loadMarkdownFile(formula)
-    } else if (category && this.categories.some(c => c.id === category)) {
+    } else if (category && this.categories.some((c) => c.id === category)) {
       this.activeCategory = category
-      
+
       // Find the first non-coming-soon formula in this category
-      const categoryObj = this.categories.find(c => c.id === category)
+      const categoryObj = this.categories.find((c) => c.id === category)
       if (categoryObj) {
-        const firstFormula = categoryObj.formulas.find(f => !f.comingSoon)
+        const firstFormula = categoryObj.formulas.find((f) => !f.comingSoon)
         if (firstFormula) {
           this.activeFormula = firstFormula.id
           this.loadMarkdownFile(firstFormula.id)
@@ -206,10 +203,10 @@ export default {
     scrollToTop(): void {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
     },
-    
+
     handleScroll(): void {
       // Only show button on mobile
       if (window.innerWidth <= 768) {
@@ -218,24 +215,24 @@ export default {
         this.showScrollTopButton = false
       }
     },
-    
+
     selectCategory(categoryId: string): void {
       this.activeCategory = categoryId
-      
+
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
       window.history.pushState({}, '', url)
-      
+
       // Find the first non-coming-soon formula in this category
-      const category = this.categories.find(c => c.id === categoryId)
+      const category = this.categories.find((c) => c.id === categoryId)
       if (category) {
-        const firstFormula = category.formulas.find(f => !f.comingSoon)
+        const firstFormula = category.formulas.find((f) => !f.comingSoon)
         if (firstFormula && firstFormula.id !== this.activeFormula) {
           this.setActiveFormula(firstFormula.id)
         }
       }
-      
+
       // Only scroll to the nav area on mobile devices
       if (window.innerWidth <= 768) {
         this.$nextTick(() => {
@@ -243,16 +240,17 @@ export default {
           if (navElement) {
             // Get header height to adjust scroll position
             const headerHeight = document.querySelector('header')?.offsetHeight || 0
-            const navPosition = navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
+            const navPosition =
+              navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
             window.scrollTo({
               top: navPosition,
-              behavior: 'smooth'
+              behavior: 'smooth',
             })
           }
         })
       }
     },
-    
+
     setActiveFormula(formulaId: string): void {
       // Don't set if it's a coming soon formula
       if (this.getFormulaById(formulaId)?.comingSoon) {
@@ -261,18 +259,18 @@ export default {
 
       this.activeFormula = formulaId
       this.loadMarkdownFile(formulaId)
-      
+
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('formula', formulaId)
-      
+
       // Also update the category in the URL
       const formulaCategory = this.getCategoryForFormula(formulaId)
       if (formulaCategory) {
         this.activeCategory = formulaCategory.id
         url.searchParams.set('category', formulaCategory.id)
       }
-      
+
       window.history.pushState({}, '', url)
 
       // Only scroll to the formula content on mobile devices
@@ -302,7 +300,7 @@ export default {
         category.formulas.some((form: Formula) => form.id === formulaId),
       )
     },
-    
+
     async loadMarkdownFile(formulaId: string) {
       try {
         const formula = this.getFormulaById(formulaId)
@@ -338,11 +336,11 @@ export default {
       }
     },
   },
-  
+
   beforeUnmount() {
     // Clean up the scroll event listener
     window.removeEventListener('scroll', this.handleScroll)
-  }
+  },
 }
 </script>
 
@@ -352,9 +350,9 @@ export default {
 
     <h1>HAM Radio Calculator Formulas</h1>
 
-    <button 
-      v-show="showScrollTopButton" 
-      @click="scrollToTop" 
+    <button
+      v-show="showScrollTopButton"
+      @click="scrollToTop"
       class="scroll-top-button"
       aria-label="Scroll to top"
     >
@@ -362,9 +360,9 @@ export default {
     </button>
 
     <div class="category-tiles">
-      <div 
-        v-for="category in categories" 
-        :key="category.id" 
+      <div
+        v-for="category in categories"
+        :key="category.id"
         class="category-tile"
         @click="selectCategory(category.id)"
         :class="{ active: activeCategory === category.id }"
@@ -377,7 +375,7 @@ export default {
     <div class="formulas-content">
       <div class="formula-nav">
         <h3>Formulas</h3>
-        
+
         <div class="formulas-list-container">
           <ul class="formula-list">
             <li
@@ -388,10 +386,7 @@ export default {
                 'coming-soon': formula.comingSoon,
               }"
             >
-              <button
-                @click="setActiveFormula(formula.id)"
-                :disabled="formula.comingSoon"
-              >
+              <button @click="setActiveFormula(formula.id)" :disabled="formula.comingSoon">
                 <span class="formula-name">{{ formula.name }}</span>
                 <span class="formula-description">{{ formula.description }}</span>
               </button>
@@ -608,6 +603,7 @@ export default {
 
 h1 {
   margin-bottom: 2rem;
+  margin-top: 0.5rem;
   text-align: center;
   font-size: clamp(1.75rem, 5vw, 2.5rem);
 }
@@ -765,21 +761,21 @@ h1 {
   .category-tiles {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  
+
   .category-tile {
     aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
-  
+
   .category-tile p {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .formulas-content {
     flex-direction: column;
   }
@@ -801,7 +797,7 @@ h1 {
     height: 100%;
     min-height: 80px;
   }
-  
+
   .scroll-top-button {
     display: flex;
   }

@@ -117,14 +117,14 @@ export default defineComponent({
   },
   computed: {
     filteredCalculators() {
-      const category = this.categories.find(c => c.id === this.activeCategory)
+      const category = this.categories.find((c) => c.id === this.activeCategory)
       return category ? category.calculators : []
     },
     hasActiveCalculator() {
       // Check if there's at least one non-coming-soon calculator in the active category
-      const activeCategory = this.categories.find(c => c.id === this.activeCategory)
+      const activeCategory = this.categories.find((c) => c.id === this.activeCategory)
       if (!activeCategory) return false
-      
+
       // Check if the active calculator belongs to this category and is not coming soon
       const calculator = this.getCalculatorById(this.activeCalculator)
       if (calculator && !calculator.comingSoon) {
@@ -133,10 +133,10 @@ export default defineComponent({
           return true
         }
       }
-      
+
       // Check if there's any non-coming-soon calculator in this category
-      return activeCategory.calculators.some(calc => !calc.comingSoon)
-    }
+      return activeCategory.calculators.some((calc) => !calc.comingSoon)
+    },
   },
   mounted() {
     // Check if there's a calculator parameter in the URL
@@ -158,13 +158,13 @@ export default defineComponent({
       !this.getCalculatorById(calculator)?.comingSoon
     ) {
       this.activeCalculator = calculator
-      
+
       // Set the active category based on the calculator
       const calculatorCategory = this.getCategoryForCalculator(calculator)
       if (calculatorCategory) {
         this.activeCategory = calculatorCategory.id
       }
-    } else if (category && this.categories.some(c => c.id === category)) {
+    } else if (category && this.categories.some((c) => c.id === category)) {
       this.activeCategory = category
     }
   },
@@ -172,10 +172,10 @@ export default defineComponent({
     scrollToTop(): void {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
     },
-    
+
     handleScroll(): void {
       // Only show button on mobile
       if (window.innerWidth <= 768) {
@@ -184,15 +184,15 @@ export default defineComponent({
         this.showScrollTopButton = false
       }
     },
-    
+
     selectCategory(categoryId: string): void {
       this.activeCategory = categoryId
-      
+
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
       window.history.pushState({}, '', url)
-      
+
       // Only scroll to the nav area on mobile devices
       if (window.innerWidth <= 768) {
         this.$nextTick(() => {
@@ -200,16 +200,17 @@ export default defineComponent({
           if (navElement) {
             // Get header height to adjust scroll position
             const headerHeight = document.querySelector('header')?.offsetHeight || 0
-            const navPosition = navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
+            const navPosition =
+              navElement.getBoundingClientRect().top + window.scrollY - headerHeight - 20 // 20px extra padding
             window.scrollTo({
               top: navPosition,
-              behavior: 'smooth'
+              behavior: 'smooth',
             })
           }
         })
       }
     },
-    
+
     setActiveCalculator(calculator: string): void {
       // Don't set if it's a coming soon calculator
       if (this.getCalculatorById(calculator)?.comingSoon) {
@@ -217,18 +218,18 @@ export default defineComponent({
       }
 
       this.activeCalculator = calculator
-      
+
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('calculator', calculator)
-      
+
       // Also update the category in the URL
       const calculatorCategory = this.getCategoryForCalculator(calculator)
       if (calculatorCategory) {
         this.activeCategory = calculatorCategory.id
         url.searchParams.set('category', calculatorCategory.id)
       }
-      
+
       window.history.pushState({}, '', url)
 
       // Only scroll to the calculator content on mobile devices
@@ -259,11 +260,11 @@ export default defineComponent({
       )
     },
   },
-  
+
   beforeUnmount() {
     // Clean up the scroll event listener
     window.removeEventListener('scroll', this.handleScroll)
-  }
+  },
 })
 </script>
 
@@ -271,9 +272,9 @@ export default defineComponent({
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
 
-    <button 
-      v-show="showScrollTopButton" 
-      @click="scrollToTop" 
+    <button
+      v-show="showScrollTopButton"
+      @click="scrollToTop"
       class="scroll-top-button"
       aria-label="Scroll to top"
     >
@@ -281,9 +282,9 @@ export default defineComponent({
     </button>
 
     <div class="category-tiles">
-      <div 
-        v-for="category in categories" 
-        :key="category.id" 
+      <div
+        v-for="category in categories"
+        :key="category.id"
         class="category-tile"
         @click="selectCategory(category.id)"
         :class="{ active: activeCategory === category.id }"
@@ -296,7 +297,7 @@ export default defineComponent({
     <div class="calculators-content">
       <div class="calculator-nav">
         <h3>Calculators</h3>
-        
+
         <div class="calculators-list-container">
           <ul class="calculator-list">
             <li
@@ -307,10 +308,7 @@ export default defineComponent({
                 'coming-soon': calculator.comingSoon,
               }"
             >
-              <button
-                @click="setActiveCalculator(calculator.id)"
-                :disabled="calculator.comingSoon"
-              >
+              <button @click="setActiveCalculator(calculator.id)" :disabled="calculator.comingSoon">
                 <span class="calculator-name">{{ calculator.name }}</span>
                 <span class="calculator-description">{{ calculator.description }}</span>
               </button>
@@ -520,8 +518,14 @@ export default defineComponent({
 
 h1 {
   margin-bottom: 2rem;
+  margin-top: 0.5rem;
   text-align: center;
   font-size: clamp(1.75rem, 5vw, 2.5rem);
+}
+
+.calculators {
+  min-height: 100vh;
+  padding: 2rem 0;
 }
 
 @media (min-width: 1024px) {
@@ -535,21 +539,21 @@ h1 {
   .category-tiles {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  
+
   .category-tile {
     aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
-  
+
   .category-tile p {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .calculators-content {
     flex-direction: column;
   }
@@ -637,7 +641,7 @@ h1 {
   .category-badge {
     align-self: flex-start;
   }
-  
+
   .scroll-top-button {
     display: flex;
   }
