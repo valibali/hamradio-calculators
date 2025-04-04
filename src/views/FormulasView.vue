@@ -292,7 +292,7 @@ export default {
         if (formula.html) {
           this.$nextTick(() => {
             if (window.MathJax) {
-              window.MathJax.typeset()
+              window.MathJax.typesetPromise && window.MathJax.typesetPromise()
             }
           })
           return
@@ -310,7 +310,7 @@ export default {
         // Typeset math after the content is rendered
         this.$nextTick(() => {
           if (window.MathJax) {
-            window.MathJax.typeset()
+            window.MathJax.typesetPromise && window.MathJax.typesetPromise()
           }
         })
       } catch (error) {
