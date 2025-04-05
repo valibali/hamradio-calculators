@@ -676,18 +676,18 @@ export default defineComponent({
     },
 
     calculateWireResistance(awg: number, length_m: number): number {
-      const wire = this.WIRE_GAUGE.find(w => w.awg === awg);
-      if (!wire) return 0;
+      const wire = this.WIRE_GAUGE.find((w) => w.awg === awg)
+      if (!wire) return 0
 
-      const diameter_m = wire.diameter * 1e-3;
-      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2);
-      const resistivity = 1.68e-8; // Copper resistivity (Ω·m) at 20°C
-      const tempCoeff = 0.00393; // Temperature coefficient of copper
-      
+      const diameter_m = wire.diameter * 1e-3
+      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2)
+      const resistivity = 1.68e-8 // Copper resistivity (Ω·m) at 20°C
+      const tempCoeff = 0.00393 // Temperature coefficient of copper
+
       // Adjust for operating temperature (assuming 100°C)
-      const resistivityAtTemp = resistivity * (1 + tempCoeff * (100 - 20));
-      
-      return (resistivityAtTemp * length_m) / area_m2;
+      const resistivityAtTemp = resistivity * (1 + tempCoeff * (100 - 20))
+
+      return (resistivityAtTemp * length_m) / area_m2
     },
 
     createTestDesign(
@@ -712,31 +712,28 @@ export default defineComponent({
         params.freqMinHz,
         bMax,
         params.core.Ae,
-        params.core.le
+        params.core.le,
       )
 
       // Calculate wire resistance (more accurate calculation)
-      const meanTurnLength = (params.core.le + Math.sqrt(params.core.Ae)) * 1e-3; // in meters
-      const totalWireLength = (primaryTurns + secondaryTurns) * meanTurnLength;
-      const wireResistance = this.calculateWireResistance(
-        parseInt(wireGauge),
-        totalWireLength
-      )
+      const meanTurnLength = (params.core.le + Math.sqrt(params.core.Ae)) * 1e-3 // in meters
+      const totalWireLength = (primaryTurns + secondaryTurns) * meanTurnLength
+      const wireResistance = this.calculateWireResistance(parseInt(wireGauge), totalWireLength)
 
       // Calculate total losses (more realistic)
-      const copperLoss = Math.pow(current, 2) * wireResistance;
-      const pTotal = coreLoss + copperLoss;
+      const copperLoss = Math.pow(current, 2) * wireResistance
+      const pTotal = coreLoss + copperLoss
 
       // Temperature rise calculation (corrected)
       // Thermal resistance is in °C/W, power in Watts
-      const tempRise = pTotal * params.core.thermalResistance;
+      const tempRise = pTotal * params.core.thermalResistance
 
       // Check window fit
       const windowValid = this.checkWindowFit(
         primaryTurns,
         secondaryTurns,
         wireGauge,
-        params.core.Wa
+        params.core.Wa,
       )
 
       return {
@@ -751,12 +748,12 @@ export default defineComponent({
           bMax > 0.5 * params.core.Bsat ? 'Core saturation risk' : '',
           tempRise >= 80 ? 'Excessive temperature rise' : '',
           !windowValid ? 'Windings exceed core window' : '',
-          copperLoss > params.powerW * 0.1 ? 'High copper losses' : ''
+          copperLoss > params.powerW * 0.1 ? 'High copper losses' : '',
         ].filter(Boolean),
         thermalRiseC: tempRise,
         fluxDensityT: bMax,
         coreLossW: coreLoss,
-        copperLossW: copperLoss // Added for debugging
+        copperLossW: copperLoss, // Added for debugging
       }
     },
 
@@ -815,10 +812,10 @@ export default defineComponent({
     selectWireGauge(current: number): string {
       // Find all wire gauges that can handle the current
       const suitableWires = this.WIRE_GAUGE.filter((w) => w.maxCurrent >= current)
-      
+
       // Sort by diameter (ascending) to find the thinnest suitable wire
       const sortedWires = suitableWires.sort((a, b) => a.diameter - b.diameter)
-      
+
       // Return the thinnest wire that can handle the current
       return sortedWires.length > 0 ? `${sortedWires[0].awg} AWG` : 'Unknown'
     },

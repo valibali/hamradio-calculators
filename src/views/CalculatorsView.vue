@@ -38,8 +38,7 @@ export default defineComponent({
         {
           id: 'impedance-transformers',
           name: 'Impedance Transformers',
-          description:
-            'Design baluns and ununs for impedance transformation in RF applications',
+          description: 'Design baluns and ununs for impedance transformation in RF applications',
           calculators: [
             {
               id: 'balun',
@@ -73,6 +72,18 @@ export default defineComponent({
               id: 'singleconductor',
               name: 'Single Conductor Above Ground',
               description: 'Calculate impedance for single wire above ground plane',
+            },
+          ],
+        },
+        {
+          id: 'baluns',
+          name: 'Baluns & Transformers',
+          description: 'Design baluns, ununs, and impedance transformers for RF applications',
+          calculators: [
+            {
+              id: 'balun',
+              name: 'Balun Calculator',
+              description: 'Design balanced-to-unbalanced transformers for antenna systems',
             },
           ],
         },
@@ -165,7 +176,6 @@ export default defineComponent({
     const calculator = urlParams.get('calculator')
     const category = urlParams.get('category')
 
-
     // Flatten all calculators to check if the requested one exists
     const allCalculators = this.categories.flatMap((category: Category) =>
       category.calculators.map((calc: Calculator) => calc.id),
@@ -188,27 +198,26 @@ export default defineComponent({
     }
   },
   methods: {
-
     selectCategory(categoryId: string): void {
       this.activeCategory = categoryId
 
       // Update URL without reloading the page
       const url = new URL(window.location.href)
       url.searchParams.set('category', categoryId)
-      
+
       // Always select the first calculator in the category
-      const category = this.categories.find(c => c.id === categoryId)
+      const category = this.categories.find((c) => c.id === categoryId)
       if (category && category.calculators.length > 0) {
         // Get the first calculator in this category
         const firstCalculator = category.calculators[0]
-        
+
         // Update the active calculator
         this.activeCalculator = firstCalculator.id
-        
+
         // Add calculator to URL
         url.searchParams.set('calculator', firstCalculator.id)
       }
-      
+
       window.history.pushState({}, '', url)
 
       // Only scroll to the nav area on mobile devices
@@ -278,14 +287,12 @@ export default defineComponent({
       )
     },
   },
-
 })
 </script>
 
 <template>
   <div class="calculators">
     <h1>HAM Radio Calculators</h1>
-
 
     <div class="category-tiles">
       <div
@@ -342,6 +349,7 @@ export default defineComponent({
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
+        <BalunCalculator v-else-if="activeCalculator === 'balun'" />
       </div>
     </div>
   </div>
@@ -587,14 +595,13 @@ h1 {
     height: 100%;
     min-height: 80px;
   }
-  
+
   .calculator-container {
     width: 100%;
     padding: 0;
     margin-bottom: 100px; /* Add space at the bottom for action buttons */
   }
 }
-
 
 .coming-soon-message {
   text-align: center;
@@ -629,6 +636,5 @@ h1 {
   .category-badge {
     align-self: flex-start;
   }
-
 }
 </style>
