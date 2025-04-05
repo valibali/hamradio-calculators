@@ -45,7 +45,11 @@ interface DesignResult {
   thermalRiseC: number
   fluxDensityT: number
   coreLossW: number
-  hybridParts?: DesignResult[]
+  designType?: 'simple' | 'hybrid'
+  components?: {
+    balun?: DesignResult
+    unun?: DesignResult
+  }
 }
 
 export default defineComponent({
@@ -534,48 +538,86 @@ export default defineComponent({
       console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
       console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
 
+      return this.designCore(params)
+    },
+
+    shouldUseHybrid(zw: number, targetZw: number): boolean {
+      // Only use hybrid if geometric mean isn't 50Ω or 100Ω
+      return ![50, 100].includes(Math.round(zw)) && targetZw === 100
+    },
+
+    designCore(params: DesignParameters): DesignResult {
       const zw = Math.sqrt(params.zin * params.zout)
       const targetZw = params.wireType === '50-ohm' ? 50 : 100
 
-      if (Math.abs(zw - targetZw) > 5) {
+      if (this.shouldUseHybrid(zw, targetZw)) {
+        // Hybrid design requirements
+        if (params.zin !== 50) {
+          console.warn('Hybrid designs work best with 50Ω input')
+        }
+
         console.log('Designing hybrid configuration...')
-        return this.createHybridDesign(params, zw, targetZw)
+        return this.createHybridDesign(params, zw)
       }
 
-      const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
-      const optimized = this.optimizeTurns(params, turnsRatio, zw)
-      return optimized
+      // Direct design when geometric mean matches standard impedances
+      return this.createSimpleDesign(params, zw)
     },
 
-    createHybridDesign(params: DesignParameters, zw: number, targetZw: number): DesignResult {
+    createSimpleDesign(params: DesignParameters, zw: number): DesignResult {
+      const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
+      const result = this.optimizeTurns(params, turnsRatio, zw)
+      return {
+        ...result,
+        designType: 'simple'
+      }
+    },
+
+    createHybridDesign(params: DesignParameters, zw: number): DesignResult {
+      // Balun: 1:1 Current Balun at antenna side (100Ω)
       const balunParams: DesignParameters = {
         ...params,
-        zin: targetZw,
-        zout: targetZw,
-        type: 'voltage-balun',
+        zin: 100,   // Balun input (transformed by UNUN)
+        zout: 100,  // Balun output (antenna side)
+        type: 'current-balun',
+        wireType: '100-ohm',
+        freqMinHz: params.freqMinHz,
+        freqMaxHz: params.freqMaxHz,
+        powerW: params.powerW
       }
 
-      const ununRatio =
-        params.type === 'voltage-balun'
-          ? Math.sqrt(params.zout / targetZw)
-          : Math.sqrt(targetZw / params.zin)
-
+      // UNUN: Impedance transformer at radio side (50Ω → target impedance)
       const ununParams: DesignParameters = {
         ...params,
-        zin: targetZw,
-        zout: ununRatio * targetZw,
+        zin: 50,    // Radio input
+        zout: 100,  // Balun input
         type: 'unun',
+        wireType: '50-ohm',
+        freqMinHz: params.freqMinHz,
+        freqMaxHz: params.freqMaxHz,
+        powerW: params.powerW
       }
 
-      const balunDesign = this.createDesign(balunParams)
-      const ununDesign = this.createDesign(ununParams)
+      const balunDesign = this.createSimpleDesign(balunParams, Math.sqrt(balunParams.zin * balunParams.zout))
+      const ununDesign = this.createSimpleDesign(ununParams, Math.sqrt(ununParams.zin * ununParams.zout))
 
       return {
-        ...balunDesign,
         parameters: params,
-        hybridParts: [balunDesign, ununDesign],
+        designType: 'hybrid',
+        components: {
+          balun: balunDesign,
+          unun: ununDesign
+        },
+        turnsRatio: 1, // Dummy value for hybrid
+        primaryTurns: 0,
+        secondaryTurns: 0,
+        wireGauge: 'N/A',
+        core: params.core,
         isValid: balunDesign.isValid && ununDesign.isValid,
         warnings: [...balunDesign.warnings, ...ununDesign.warnings],
+        thermalRiseC: (balunDesign.thermalRiseC + ununDesign.thermalRiseC) * 0.7,
+        fluxDensityT: Math.max(balunDesign.fluxDensityT, ununDesign.fluxDensityT),
+        coreLossW: balunDesign.coreLossW + ununDesign.coreLossW
       }
     },
 
@@ -776,7 +818,12 @@ export default defineComponent({
     },
 
     calculateTurnsRatio(type: TransformerType, zin: number, zout: number): number {
-      return type === 'voltage-balun' ? Math.sqrt(zout / zin) : Math.sqrt(zin / zout)
+      if (type === 'current-balun') {
+        // Current balun ratio: N = √(Zin/Zout)
+        return Math.sqrt(zin / zout)
+      }
+      // Voltage balun/unun ratio: N = √(Zout/Zin)
+      return Math.sqrt(zout / zin)
     },
 
     resetForm() {
@@ -1004,35 +1051,86 @@ export default defineComponent({
       </div>
 
       <!-- Hybrid Design Results (if applicable) -->
-      <div v-if="designResult.hybridParts" class="hybrid-design">
+      <div v-if="designResult.designType === 'hybrid' && designResult.components" class="hybrid-design">
         <h4>Hybrid Design Components</h4>
         <p class="hybrid-note">
           This design requires a hybrid approach using both a balun and an unun for optimal
           performance.
         </p>
 
-        <div v-for="(part, index) in designResult.hybridParts" :key="index" class="hybrid-part">
-          <h5>Component {{ index + 1 }}: {{ part.parameters.type }}</h5>
+        <!-- Unun Component -->
+        <div v-if="designResult.components.unun" class="hybrid-part">
+          <h5>Component 1: Unun (Radio Side)</h5>
 
           <div class="hybrid-specs">
             <div class="hybrid-spec">
               <span class="spec-label">Impedance:</span>
-              <span class="spec-value"
-                >{{ part.parameters.zin }}Ω → {{ part.parameters.zout }}Ω</span
-              >
+              <span class="spec-value">
+                {{ designResult.components.unun.parameters.zin }}Ω → 
+                {{ designResult.components.unun.parameters.zout }}Ω
+              </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Turns:</span>
-              <span class="spec-value">{{ part.primaryTurns }} : {{ part.secondaryTurns }}</span>
+              <span class="spec-value">
+                {{ designResult.components.unun.primaryTurns }} : 
+                {{ designResult.components.unun.secondaryTurns }}
+              </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Core:</span>
-              <span class="spec-value">{{ part.core.partNumber }}-{{ part.core.material }}</span>
+              <span class="spec-value">
+                {{ designResult.components.unun.core.partNumber }}-
+                {{ designResult.components.unun.core.material }}
+              </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Status:</span>
-              <span class="spec-value" :class="{ valid: part.isValid, invalid: !part.isValid }">
-                {{ part.isValid ? 'Valid' : 'Invalid' }}
+              <span class="spec-value" 
+                :class="{ 
+                  valid: designResult.components.unun.isValid, 
+                  invalid: !designResult.components.unun.isValid 
+                }">
+                {{ designResult.components.unun.isValid ? 'Valid' : 'Invalid' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Balun Component -->
+        <div v-if="designResult.components.balun" class="hybrid-part">
+          <h5>Component 2: Balun (Antenna Side)</h5>
+
+          <div class="hybrid-specs">
+            <div class="hybrid-spec">
+              <span class="spec-label">Impedance:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.parameters.zin }}Ω → 
+                {{ designResult.components.balun.parameters.zout }}Ω
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Turns:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.primaryTurns }} : 
+                {{ designResult.components.balun.secondaryTurns }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Core:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.core.partNumber }}-
+                {{ designResult.components.balun.core.material }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Status:</span>
+              <span class="spec-value" 
+                :class="{ 
+                  valid: designResult.components.balun.isValid, 
+                  invalid: !designResult.components.balun.isValid 
+                }">
+                {{ designResult.components.balun.isValid ? 'Valid' : 'Invalid' }}
               </span>
             </div>
           </div>
