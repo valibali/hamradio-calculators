@@ -1065,32 +1065,6 @@ export default defineComponent({
           current balun provides balanced output at the antenna side.
         </p>
 
-        <!-- Overall Performance Metrics -->
-        <div class="hybrid-overall">
-          <h5>Overall Performance</h5>
-          <div class="result-section">
-            <div class="result-item">
-              <span class="result-label">Total Temperature Rise:</span>
-              <span class="result-value" :class="{ warning: designResult.thermalRiseC >= 80 }">
-                {{ designResult.thermalRiseC.toFixed(1) }} °C
-              </span>
-            </div>
-            <div class="result-item">
-              <span class="result-label">Max Flux Density:</span>
-              <span class="result-value" :class="{ warning: designResult.fluxDensityT > 0.5 * designResult.core.Bsat }">
-                {{ designResult.fluxDensityT.toFixed(3) }} T
-              </span>
-            </div>
-            <div class="result-item">
-              <span class="result-label">Total Core Loss:</span>
-              <span class="result-value">{{ designResult.coreLossW.toFixed(2) }} W</span>
-            </div>
-            <div class="result-item">
-              <span class="result-label">Suggested Wire Type:</span>
-              <span class="result-value">{{ determineWireType(designResult.components.balun.parameters.zin, designResult.components.balun.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
-            </div>
-          </div>
-        </div>
 
         <!-- Unun Component -->
         <div v-if="designResult.components.unun" class="hybrid-part">
@@ -1227,6 +1201,12 @@ export default defineComponent({
               <span class="spec-label">Temperature Rise:</span>
               <span class="spec-value" :class="{ warning: designResult.components.balun.thermalRiseC >= 80 }">
                 {{ designResult.components.balun.thermalRiseC.toFixed(1) }} °C
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Suggested Wire Type:</span>
+              <span class="spec-value">
+                {{ determineWireType(designResult.components.balun.parameters.zin, designResult.components.balun.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1545,19 +1525,6 @@ select {
   color: var(--color-heading);
 }
 
-.hybrid-overall {
-  background-color: var(--color-background);
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid hsla(160, 100%, 37%, 0.8);
-}
-
-.hybrid-overall h5 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-heading);
-}
 
 .hybrid-specs {
   display: grid;
