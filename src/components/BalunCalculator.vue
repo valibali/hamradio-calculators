@@ -51,7 +51,7 @@ interface DesignResult {
 }
 
 export default defineComponent({
-  name: 'UnunCalculator',
+  name: 'BalunCalculator',
   components: {
     RouterLink,
   },
@@ -59,8 +59,8 @@ export default defineComponent({
     return {
       // Input parameters
       zin: 50,
-      zout: 450,
-      transformerType: 'unun' as TransformerType,
+      zout: 200,
+      transformerType: 'voltage-balun' as TransformerType,
       selectedCore: 'FT-240-#43',
       freqMinMHz: 3.5,
       freqMaxMHz: 30,
@@ -495,9 +495,6 @@ export default defineComponent({
     },
     freqMaxHz(): number {
       return this.freqMaxMHz * 1e6
-    },
-    impedanceRatio(): number {
-      return this.zout / this.zin
     }
   },
   methods: {
@@ -533,10 +530,10 @@ export default defineComponent({
       console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
       console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
 
-      const zw = Math.sqrt(params.zin * params.zout)
       const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
+      const zw = Math.sqrt(params.zin * params.zout)
       const optimized = this.optimizeTurns(params, turnsRatio, zw)
-      return optimized // Already validated in optimizeTurns
+      return optimized
     },
 
     optimizeTurns(params: DesignParameters, ratio: number, zw: number): DesignResult {
@@ -720,8 +717,8 @@ export default defineComponent({
     
     resetForm() {
       this.zin = 50
-      this.zout = 450
-      this.transformerType = 'unun'
+      this.zout = 200
+      this.transformerType = 'voltage-balun'
       this.selectedCore = 'FT-240-#43'
       this.freqMinMHz = 3.5
       this.freqMaxMHz = 30
@@ -738,38 +735,36 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="unun-calculator">
+  <div class="balun-calculator">
     <div class="calculator-introduction">
-      <h2>Unun Designer: RF Impedance Transformer Calculator</h2>
+      <h2>Balun Designer: RF Impedance Transformer Calculator</h2>
       
       <p>
-        Design unbalanced-to-unbalanced (unun) transformers for RF applications with precise
+        Design balanced-to-unbalanced (balun) transformers for RF applications with precise
         impedance transformation ratios. This calculator helps you determine the optimal number
-        of turns, wire gauge, and core specifications for your unun design.
+        of turns, wire gauge, and core specifications for your balun design.
       </p>
       
       <div class="introduction-details">
-        <h3>What is an Unun?</h3>
+        <h3>What is a Balun?</h3>
         <p>
-          An unun (unbalanced-to-unbalanced) transformer is used to match impedances between two unbalanced
-          systems, such as connecting a coaxial feedline to an end-fed antenna or matching a transmitter
-          to a non-resonant antenna system.
+          A balun (balanced-to-unbalanced) transformer is used to connect balanced lines (like dipole antennas)
+          to unbalanced lines (like coaxial cable). Baluns can also perform impedance transformation,
+          matching different impedances for maximum power transfer.
         </p>
         
-        <h3>Common Unun Applications</h3>
+        <h3>Types of Baluns</h3>
         <p>
-          Ununs are commonly used in:
+          This calculator supports two main types of baluns:
         </p>
         <ul>
-          <li><strong>End-fed antennas:</strong> 9:1 ununs for matching 450Ω end-fed wires to 50Ω coax</li>
-          <li><strong>Antenna tuners:</strong> Various ratios for impedance transformation</li>
-          <li><strong>Receiving applications:</strong> Matching antennas to receivers</li>
-          <li><strong>Transmission line transformers:</strong> Creating specific impedance transformations</li>
+          <li><strong>Voltage Balun:</strong> Provides good common-mode isolation but may have limited power handling</li>
+          <li><strong>Current Balun:</strong> Offers excellent common-mode isolation and typically better power handling</li>
         </ul>
         
         <p>
           The calculator uses ferrite core data from manufacturers to ensure accurate designs that
-          avoid core saturation, excessive heating, and other common issues in unun construction.
+          avoid core saturation, excessive heating, and other common issues in balun construction.
         </p>
       </div>
     </div>
@@ -790,26 +785,21 @@ export default defineComponent({
           </div>
         </div>
         
-        <div class="impedance-ratio">
-          <span class="ratio-label">Impedance Ratio:</span>
-          <span class="ratio-value">{{ impedanceRatio }}:1</span>
-        </div>
-        
         <div class="form-row">
+          <div class="form-group">
+            <label for="transformer-type">Transformer Type:</label>
+            <select id="transformer-type" v-model="transformerType">
+              <option value="voltage-balun">Voltage Balun</option>
+              <option value="current-balun">Current Balun</option>
+            </select>
+          </div>
+          
           <div class="form-group">
             <label for="core-type">Core Type:</label>
             <select id="core-type" v-model="selectedCore">
               <option v-for="option in coreOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="wire-type">Wire Type:</label>
-            <select id="wire-type" v-model="wireType">
-              <option value="50-ohm">50Ω Transmission Line</option>
-              <option value="100-ohm">100Ω Transmission Line</option>
             </select>
           </div>
         </div>
@@ -830,6 +820,14 @@ export default defineComponent({
           <div class="form-group">
             <label for="power">Power (W):</label>
             <input type="number" id="power" v-model="powerW" min="1" step="1" />
+          </div>
+          
+          <div class="form-group">
+            <label for="wire-type">Wire Type:</label>
+            <select id="wire-type" v-model="wireType">
+              <option value="50-ohm">50Ω Transmission Line</option>
+              <option value="100-ohm">100Ω Transmission Line</option>
+            </select>
           </div>
         </div>
         
@@ -931,13 +929,16 @@ export default defineComponent({
         </div>
       </div>
       
-      
       <div class="construction-notes">
         <h4>Construction Notes</h4>
         <ul>
           <li>Wind {{ designResult.primaryTurns }} turns for the primary winding using {{ designResult.wireGauge }} wire.</li>
           <li>Wind {{ designResult.secondaryTurns }} turns for the secondary winding.</li>
-          <li>For a {{ designResult.parameters.type }}, use a bifilar winding technique with the appropriate taps.</li>
+          <li>
+            For a {{ designResult.parameters.type }}, use a 
+            {{ designResult.parameters.type === 'voltage-balun' ? 'bifilar' : 'trifilar' }} 
+            winding technique.
+          </li>
           <li>Ensure adequate ventilation if operating near maximum power.</li>
           <li>
             The design is optimized for {{ designResult.parameters.freqMinHz / 1e6 }}MHz to 
@@ -945,34 +946,12 @@ export default defineComponent({
           </li>
         </ul>
       </div>
-      
-      <div class="common-configurations">
-        <h4>Common Unun Configurations</h4>
-        <div class="config-grid">
-          <div class="config-item">
-            <h5>1:1 Unun (Choke)</h5>
-            <p>Used for common-mode current suppression without impedance transformation.</p>
-          </div>
-          <div class="config-item">
-            <h5>4:1 Unun</h5>
-            <p>Common for matching 200Ω loads to 50Ω systems.</p>
-          </div>
-          <div class="config-item">
-            <h5>9:1 Unun</h5>
-            <p>Popular for end-fed half-wave antennas, matching 450Ω to 50Ω.</p>
-          </div>
-          <div class="config-item">
-            <h5>16:1 Unun</h5>
-            <p>Used for very high impedance matching scenarios.</p>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.unun-calculator {
+.balun-calculator {
   max-width: 100%;
   margin: 0 auto;
 }
@@ -1036,27 +1015,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.impedance-ratio {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-background-mute);
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-}
-
-.ratio-label {
-  font-weight: bold;
-  margin-right: 0.5rem;
-}
-
-.ratio-value {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: hsla(160, 100%, 37%, 1);
 }
 
 label {
@@ -1234,52 +1192,6 @@ input, select {
   color: var(--color-text-light);
 }
 
-.hybrid-design {
-  background-color: var(--color-background-mute);
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-top: 2rem;
-}
-
-.hybrid-design h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-heading);
-}
-
-.hybrid-note {
-  font-style: italic;
-  margin-bottom: 1.5rem;
-  color: var(--color-text-light);
-}
-
-.hybrid-part {
-  background-color: var(--color-background);
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.hybrid-part h5 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-heading);
-}
-
-.hybrid-specs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.hybrid-spec {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-background-soft);
-  padding: 0.75rem;
-  border-radius: 4px;
-}
-
 .construction-notes {
   margin-top: 2rem;
   background-color: var(--color-background-mute);
@@ -1300,43 +1212,6 @@ input, select {
 
 .construction-notes li {
   margin-bottom: 0.5rem;
-}
-
-.common-configurations {
-  margin-top: 2rem;
-  background-color: var(--color-background-mute);
-  padding: 1.5rem;
-  border-radius: 8px;
-}
-
-.common-configurations h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-heading);
-}
-
-.config-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.config-item {
-  background-color: var(--color-background);
-  padding: 1rem;
-  border-radius: 4px;
-}
-
-.config-item h5 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  color: var(--color-heading);
-}
-
-.config-item p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--color-text-light);
 }
 
 .valid {
@@ -1363,15 +1238,7 @@ input, select {
     gap: 1.5rem;
   }
   
-  .hybrid-specs {
-    grid-template-columns: 1fr;
-  }
-  
   .core-specs {
-    grid-template-columns: 1fr;
-  }
-  
-  .config-grid {
     grid-template-columns: 1fr;
   }
 }
