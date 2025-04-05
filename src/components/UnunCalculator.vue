@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 
 type CoreMaterial = '#31' | '#43' | '#61'
 type TransformerType = 'voltage-balun' | 'current-balun' | 'unun'
-type WireType = '50-ohm' | '100-ohm'
+// Wire type will be determined by the algorithm
 
 interface CoreSpec {
   partNumber: string
@@ -34,7 +34,6 @@ interface DesignParameters {
   freqMinHz: number
   freqMaxHz: number
   powerW: number
-  wireType: WireType
 }
 
 interface DesignResult {
@@ -66,7 +65,6 @@ export default defineComponent({
       freqMinMHz: 3.5,
       freqMaxMHz: 30,
       powerW: 100,
-      wireType: '50-ohm' as WireType,
       
       // Core database
       CORE_DB: {
@@ -522,8 +520,7 @@ export default defineComponent({
         core: this.selectedCoreObj,
         freqMinHz: this.freqMinHz,
         freqMaxHz: this.freqMaxHz,
-        powerW: this.powerW,
-        wireType: this.wireType
+        powerW: this.powerW
       }
       
       // Perform the design calculation
@@ -606,6 +603,8 @@ export default defineComponent({
     ): DesignResult {
       const secondaryTurns = Math.ceil(primaryTurns * ratio)
       const current = Math.sqrt(params.powerW / Math.min(params.zin, params.zout))
+      // Determine wire type based on impedance
+      const wireType = this.determineWireType(params.zin, params.zout)
       const wireGauge = this.selectWireGauge(current)
 
       // Calculate flux density
@@ -748,6 +747,12 @@ export default defineComponent({
       return type === 'voltage-balun' ? Math.sqrt(zout / zin) : Math.sqrt(zin / zout)
     },
     
+    determineWireType(zin: number, zout: number): string {
+      // Determine wire type based on impedance
+      const zw = Math.sqrt(zin * zout)
+      return zw > 75 ? '100-ohm' : '50-ohm'
+    },
+    
     resetForm() {
       this.zin = 50
       this.zout = 450
@@ -756,7 +761,6 @@ export default defineComponent({
       this.freqMinMHz = 3.5
       this.freqMaxMHz = 30
       this.powerW = 100
-      this.wireType = '50-ohm'
       this.designResult = null
     }
   },

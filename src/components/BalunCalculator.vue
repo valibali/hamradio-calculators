@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 
 type CoreMaterial = '#31' | '#43' | '#61'
 type TransformerType = 'voltage-balun' | 'current-balun' | 'unun'
-type WireType = '50-ohm' | '100-ohm'
+// Wire type will be determined by the algorithm
 
 interface CoreSpec {
   partNumber: string
@@ -30,7 +30,6 @@ interface DesignParameters {
   freqMinHz: number
   freqMaxHz: number
   powerW: number
-  wireType: WireType
 }
 
 interface DesignResult {
@@ -64,7 +63,6 @@ export default defineComponent({
       freqMinMHz: 3.5,
       freqMaxMHz: 30,
       powerW: 100,
-      wireType: '50-ohm' as WireType,
 
       // Core database
       CORE_DB: {
@@ -518,7 +516,6 @@ export default defineComponent({
         freqMinHz: this.freqMinHz,
         freqMaxHz: this.freqMaxHz,
         powerW: this.powerW,
-        wireType: this.wireType,
       }
 
       // Perform the design calculation
@@ -547,6 +544,12 @@ export default defineComponent({
       // 2. Input is 50Ω (radio side)
       const isStandardImpedance = [50, 100].some((std) => Math.abs(zw - std) <= 5)
       return !isStandardImpedance && zin === 50
+    },
+    
+    determineWireType(zin: number, zout: number): string {
+      // Determine wire type based on impedance
+      const zw = Math.sqrt(zin * zout)
+      return zw > 75 ? '100-ohm' : '50-ohm'
     },
 
     createDesign(params: DesignParameters): DesignResult {
@@ -590,7 +593,6 @@ export default defineComponent({
         zin: 50,
         zout: 100,
         type: 'unun',
-        wireType: '50-ohm',
       }
       const ununDesign = this.optimizeTurns(ununParams, ununRatio, 100)
 
@@ -600,7 +602,6 @@ export default defineComponent({
         zin: 100,
         zout: params.zout,
         type: 'current-balun',
-        wireType: '100-ohm',
       }
       const balunDesign = this.optimizeTurns(balunParams, balunRatio, Math.sqrt(100 * params.zout))
 
@@ -691,6 +692,8 @@ export default defineComponent({
     ): DesignResult {
       const secondaryTurns = Math.ceil(primaryTurns * ratio)
       const current = Math.sqrt(params.powerW / Math.min(params.zin, params.zout))
+      // Determine wire type based on impedance
+      const wireType = this.determineWireType(params.zin, params.zout)
       const wireGauge = this.selectWireGauge(current)
 
       // Calculate flux density
@@ -837,7 +840,6 @@ export default defineComponent({
       this.freqMinMHz = 3.5
       this.freqMaxMHz = 30
       this.powerW = 100
-      this.wireType = '50-ohm'
       this.designResult = null
     },
   },
@@ -940,13 +942,6 @@ export default defineComponent({
             <input type="number" id="power" v-model="powerW" min="1" step="1" />
           </div>
 
-          <div class="form-group">
-            <label for="wire-type">Wire Type:</label>
-            <select id="wire-type" v-model="wireType">
-              <option value="50-ohm">50Ω Transmission Line</option>
-              <option value="100-ohm">100Ω Transmission Line</option>
-            </select>
-          </div>
         </div>
 
         <div class="form-actions">
