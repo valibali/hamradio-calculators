@@ -618,7 +618,7 @@ export default defineComponent({
         core: params.core,
         isValid: balunDesign.isValid && ununDesign.isValid,
         warnings: [...balunDesign.warnings, ...ununDesign.warnings],
-        thermalRiseC: (balunDesign.thermalRiseC + ununDesign.thermalRiseC) * 0.7,
+        thermalRiseC: Math.sqrt(Math.pow(balunDesign.thermalRiseC, 2) + Math.pow(ununDesign.thermalRiseC, 2)),
         fluxDensityT: Math.max(balunDesign.fluxDensityT, ununDesign.fluxDensityT),
         coreLossW: balunDesign.coreLossW + ununDesign.coreLossW,
       }
