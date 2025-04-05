@@ -480,7 +480,7 @@ export default defineComponent({
         { awg: 20, diameter: 0.81, maxCurrent: 1.5 },
         { awg: 22, diameter: 0.64, maxCurrent: 0.92 },
         { awg: 24, diameter: 0.51, maxCurrent: 0.58 },
-        { awg: 26, diameter: 0.40, maxCurrent: 0.37 },
+        { awg: 26, diameter: 0.4, maxCurrent: 0.37 },
         { awg: 28, diameter: 0.32, maxCurrent: 0.23 },
         { awg: 30, diameter: 0.25, maxCurrent: 0.14 },
       ],
@@ -553,7 +553,7 @@ export default defineComponent({
       const isStandardImpedance = [50, 100].some((std) => Math.abs(zw - std) <= 5)
       return !isStandardImpedance && zin === 50
     },
-    
+
     determineWireType(zin: number, zout: number): string {
       // Determine wire type based on impedance
       const zw = Math.sqrt(zin * zout)
@@ -592,7 +592,7 @@ export default defineComponent({
       // For hybrid designs:
       // 1. Unun transforms impedance (50Ω → 100Ω)
       // 2. Balun is always 1:1 current balun for balancing only (100Ω → 100Ω)
-      
+
       // Calculate required UNUN ratio (50Ω → target impedance)
       const ununRatio = Math.sqrt(params.zout / 50)
 
@@ -628,7 +628,9 @@ export default defineComponent({
         core: params.core,
         isValid: balunDesign.isValid && ununDesign.isValid,
         warnings: [...balunDesign.warnings, ...ununDesign.warnings],
-        thermalRiseC: Math.sqrt(Math.pow(balunDesign.thermalRiseC, 2) + Math.pow(ununDesign.thermalRiseC, 2)),
+        thermalRiseC: Math.sqrt(
+          Math.pow(balunDesign.thermalRiseC, 2) + Math.pow(ununDesign.thermalRiseC, 2),
+        ),
         fluxDensityT: Math.max(balunDesign.fluxDensityT, ununDesign.fluxDensityT),
         coreLossW: balunDesign.coreLossW + ununDesign.coreLossW,
       }
@@ -950,7 +952,6 @@ export default defineComponent({
             <label for="power">Power (W):</label>
             <input type="number" id="power" v-model="powerW" min="1" step="1" />
           </div>
-
         </div>
 
         <div class="form-actions">
@@ -1032,7 +1033,15 @@ export default defineComponent({
           </div>
           <div class="result-item">
             <span class="result-label">Suggested Wire Type:</span>
-            <span class="result-value">{{ determineWireType(designResult.parameters.zin, designResult.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
+            <span class="result-value"
+              >{{
+                determineWireType(designResult.parameters.zin, designResult.parameters.zout) ===
+                '50-ohm'
+                  ? '50Ω'
+                  : '100Ω'
+              }}
+              Transmission Line</span
+            >
           </div>
         </div>
 
@@ -1069,10 +1078,9 @@ export default defineComponent({
         <h4>Hybrid Design Components</h4>
         <p class="hybrid-note">
           This design requires a hybrid approach using both a balun and an unun for optimal
-          performance. The unun transforms impedance at the radio side (50Ω input), while the 
+          performance. The unun transforms impedance at the radio side (50Ω input), while the
           current balun provides balanced output at the antenna side.
         </p>
-
 
         <!-- Unun Component -->
         <div v-if="designResult.components.unun" class="hybrid-part">
@@ -1119,7 +1127,14 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Flux Density:</span>
-              <span class="spec-value" :class="{ warning: designResult.components.unun.fluxDensityT > 0.5 * designResult.components.unun.core.Bsat }">
+              <span
+                class="spec-value"
+                :class="{
+                  warning:
+                    designResult.components.unun.fluxDensityT >
+                    0.5 * designResult.components.unun.core.Bsat,
+                }"
+              >
                 {{ designResult.components.unun.fluxDensityT.toFixed(3) }} T
               </span>
             </div>
@@ -1131,7 +1146,10 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Temperature Rise:</span>
-              <span class="spec-value" :class="{ warning: designResult.components.unun.thermalRiseC >= 80 }">
+              <span
+                class="spec-value"
+                :class="{ warning: designResult.components.unun.thermalRiseC >= 80 }"
+              >
                 {{ designResult.components.unun.thermalRiseC.toFixed(1) }} °C
               </span>
             </div>
@@ -1195,7 +1213,14 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Flux Density:</span>
-              <span class="spec-value" :class="{ warning: designResult.components.balun.fluxDensityT > 0.5 * designResult.components.balun.core.Bsat }">
+              <span
+                class="spec-value"
+                :class="{
+                  warning:
+                    designResult.components.balun.fluxDensityT >
+                    0.5 * designResult.components.balun.core.Bsat,
+                }"
+              >
                 {{ designResult.components.balun.fluxDensityT.toFixed(3) }} T
               </span>
             </div>
@@ -1207,14 +1232,25 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Temperature Rise:</span>
-              <span class="spec-value" :class="{ warning: designResult.components.balun.thermalRiseC >= 80 }">
+              <span
+                class="spec-value"
+                :class="{ warning: designResult.components.balun.thermalRiseC >= 80 }"
+              >
                 {{ designResult.components.balun.thermalRiseC.toFixed(1) }} °C
               </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Suggested Wire Type:</span>
               <span class="spec-value">
-                {{ determineWireType(designResult.components.balun.parameters.zin, designResult.components.balun.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line
+                {{
+                  determineWireType(
+                    designResult.components.balun.parameters.zin,
+                    designResult.components.balun.parameters.zout,
+                  ) === '50-ohm'
+                    ? '50Ω'
+                    : '100Ω'
+                }}
+                Transmission Line
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1532,7 +1568,6 @@ select {
   margin-bottom: 1rem;
   color: var(--color-heading);
 }
-
 
 .hybrid-specs {
   display: grid;
