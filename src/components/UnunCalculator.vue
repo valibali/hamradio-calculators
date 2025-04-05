@@ -731,8 +731,14 @@ export default defineComponent({
     },
 
     selectWireGauge(current: number): string {
-      const wire = this.WIRE_GAUGE.find((w) => w.maxCurrent >= current)
-      return wire ? `${wire.awg} AWG` : 'Unknown'
+      // Find all wire gauges that can handle the current
+      const suitableWires = this.WIRE_GAUGE.filter((w) => w.maxCurrent >= current)
+      
+      // Sort by diameter (ascending) to find the thinnest suitable wire
+      const sortedWires = suitableWires.sort((a, b) => a.diameter - b.diameter)
+      
+      // Return the thinnest wire that can handle the current
+      return sortedWires.length > 0 ? `${sortedWires[0].awg} AWG` : 'Unknown'
     },
 
     checkWindowFit(
