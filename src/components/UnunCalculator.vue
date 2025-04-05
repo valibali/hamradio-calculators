@@ -474,9 +474,17 @@ export default defineComponent({
       
       // Wire gauge data
       WIRE_GAUGE: [
-        { awg: 18, diameter: 1.02, maxCurrent: 3.2 },
-        { awg: 20, diameter: 0.81, maxCurrent: 2.2 },
-        { awg: 22, diameter: 0.64, maxCurrent: 1.5 },
+        { awg: 10, diameter: 2.59, maxCurrent: 15.0 },
+        { awg: 12, diameter: 2.05, maxCurrent: 9.3 },
+        { awg: 14, diameter: 1.63, maxCurrent: 5.9 },
+        { awg: 16, diameter: 1.29, maxCurrent: 3.7 },
+        { awg: 18, diameter: 1.02, maxCurrent: 2.3 },
+        { awg: 20, diameter: 0.81, maxCurrent: 1.5 },
+        { awg: 22, diameter: 0.64, maxCurrent: 0.92 },
+        { awg: 24, diameter: 0.51, maxCurrent: 0.58 },
+        { awg: 26, diameter: 0.40, maxCurrent: 0.37 },
+        { awg: 28, diameter: 0.32, maxCurrent: 0.23 },
+        { awg: 30, diameter: 0.25, maxCurrent: 0.14 },
       ],
       
       // Constants
