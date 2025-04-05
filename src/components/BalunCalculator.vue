@@ -541,9 +541,15 @@ export default defineComponent({
       console.log(`\n=== Designing ${params.type} for ${params.zin}Ω → ${params.zout}Ω ===`)
       console.log(`Core: ${params.core.partNumber}-${params.core.material}`)
       console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
-      console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
+      console.log(`Power: ${params.powerW}W`)
 
-      return this.designCore(params)
+      const zw = Math.sqrt(params.zin * params.zout)
+      const targetZw = 100 // Always target 100Ω for balun in hybrid designs
+
+      if (this.shouldUseHybridDesign(zw, params.zin)) {
+        return this.createHybridDesign(params)
+      }
+      return this.createSimpleDesign(params, zw)
     },
 
     shouldUseHybridDesign(zw: number, zin: number): boolean {
@@ -560,20 +566,6 @@ export default defineComponent({
       return zw > 75 ? '100-ohm' : '50-ohm'
     },
 
-    createDesign(params: DesignParameters): DesignResult {
-      console.log(`\n=== Designing ${params.type} for ${params.zin}Ω → ${params.zout}Ω ===`)
-      console.log(`Core: ${params.core.partNumber}-${params.core.material}`)
-      console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
-      console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
-
-      const zw = Math.sqrt(params.zin * params.zout)
-      const targetZw = 100 // Always target 100Ω for balun in hybrid designs
-
-      if (this.shouldUseHybridDesign(zw, params.zin)) {
-        return this.createHybridDesign(params)
-      }
-      return this.createSimpleDesign(params, zw)
-    },
 
     createSimpleDesign(params: DesignParameters, zw: number): DesignResult {
       const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
