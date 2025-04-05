@@ -581,29 +581,30 @@ export default defineComponent({
         throw new Error('Hybrid designs require 50Ω input')
       }
 
-      // Calculate required UNUN ratio (50Ω → 100Ω)
-      const ununRatio = Math.sqrt(100 / 50) // 1.414:1 (50→100Ω)
+      // For hybrid designs:
+      // 1. Unun transforms impedance (50Ω → 100Ω)
+      // 2. Balun is always 1:1 current balun for balancing only (100Ω → 100Ω)
+      
+      // Calculate required UNUN ratio (50Ω → target impedance)
+      const ununRatio = Math.sqrt(params.zout / 50)
 
-      // Balun: 1:1 Current Balun (100Ω → target impedance)
-      const balunRatio = Math.sqrt(params.zout / 100)
-
-      // Design UNUN (50Ω → 100Ω)
+      // Design UNUN (50Ω → target impedance)
       const ununParams: DesignParameters = {
         ...params,
         zin: 50,
-        zout: 100,
+        zout: params.zout,
         type: 'unun',
       }
-      const ununDesign = this.optimizeTurns(ununParams, ununRatio, 100)
+      const ununDesign = this.optimizeTurns(ununParams, ununRatio, Math.sqrt(50 * params.zout))
 
-      // Design Balun (100Ω → target Z)
+      // Design Balun (always 1:1 current balun)
       const balunParams: DesignParameters = {
         ...params,
-        zin: 100,
-        zout: params.zout,
+        zin: params.zout,
+        zout: params.zout, // Same impedance (1:1 ratio)
         type: 'current-balun',
       }
-      const balunDesign = this.optimizeTurns(balunParams, balunRatio, Math.sqrt(100 * params.zout))
+      const balunDesign = this.optimizeTurns(balunParams, 1, params.zout) // 1:1 ratio
 
       return {
         parameters: params,
@@ -1021,6 +1022,10 @@ export default defineComponent({
             <span class="result-label">Wire Gauge:</span>
             <span class="result-value">{{ designResult.wireGauge }}</span>
           </div>
+          <div class="result-item">
+            <span class="result-label">Suggested Wire Type:</span>
+            <span class="result-value">{{ determineWireType(designResult.parameters.zin, designResult.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
+          </div>
         </div>
 
         <div class="result-section">
@@ -1056,12 +1061,13 @@ export default defineComponent({
         <h4>Hybrid Design Components</h4>
         <p class="hybrid-note">
           This design requires a hybrid approach using both a balun and an unun for optimal
-          performance.
+          performance. The unun transforms impedance at the radio side (50Ω input), while the 
+          current balun provides balanced output at the antenna side.
         </p>
 
         <!-- Unun Component -->
         <div v-if="designResult.components.unun" class="hybrid-part">
-          <h5>Component 1: Unun (Radio Side)</h5>
+          <h5>Component 1: Unun (Radio Side - Impedance Transformer)</h5>
 
           <div class="hybrid-specs">
             <div class="hybrid-spec">
@@ -1102,7 +1108,7 @@ export default defineComponent({
 
         <!-- Balun Component -->
         <div v-if="designResult.components.balun" class="hybrid-part">
-          <h5>Component 2: Balun (Antenna Side)</h5>
+          <h5>Component 2: Balun (Antenna Side - Current Balancer)</h5>
 
           <div class="hybrid-specs">
             <div class="hybrid-spec">
