@@ -9,10 +9,11 @@ type WireType = '50-ohm' | '100-ohm'
 interface CoreSpec {
   partNumber: string
   Ae: number // Cross-section (mm²)
-  le: number // Path length (mm)
+  le: number // Magnetic path length (mm)
   Wa: number // Window area (mm²)
   Bsat: number // Saturation flux density (T)
   material: CoreMaterial
+  thermalResistance: number // °C/W (updated values)
 }
 
 interface FrequencyDependentMu {
@@ -76,6 +77,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-240-#61': {
           partNumber: 'FT-240',
@@ -84,6 +86,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-240-#31': {
           partNumber: 'FT-240',
@@ -92,6 +95,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-140-#43': {
           partNumber: 'FT-140',
@@ -100,6 +104,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-140-#61': {
           partNumber: 'FT-140',
@@ -108,6 +113,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-140-#31': {
           partNumber: 'FT-140',
@@ -116,6 +122,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-114-#43': {
           partNumber: 'FT-114',
@@ -124,6 +131,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-114-#61': {
           partNumber: 'FT-114',
@@ -132,6 +140,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 22,
         },
         'FT-114-#31': {
           partNumber: 'FT-114',
@@ -140,6 +149,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 22,
         },
       },
       
@@ -611,11 +621,19 @@ export default defineComponent({
         params.core.le,
       )
 
-      // Calculate thermal rise
-      const wireResistance = 0.01 // Assuming 0.01Ω wire resistance (more realistic)
-      const copperLoss = Math.pow(current, 2) * wireResistance
-      const pTotal = coreLoss + copperLoss
-      const tempRise = pTotal * 20 // 20°C/W thermal resistance (more realistic for ferrite cores)
+      // Calculate wire resistance
+      const lengthPerTurn_m = params.core.le * 1e-3 // Magnetic path length in meters
+      const wireResistance = this.calculateWireResistance(
+        parseInt(wireGauge),
+        primaryTurns + secondaryTurns,
+        lengthPerTurn_m,
+      )
+
+      // Calculate total losses
+      const pTotal = coreLoss + Math.pow(current, 2) * wireResistance
+
+      // Temperature rise with core-specific thermal resistance
+      const tempRise = pTotal * params.core.thermalResistance
 
       // Check window fit
       const windowValid = this.checkWindowFit(primaryTurns, secondaryTurns, wireGauge, params.core.Wa)
@@ -639,6 +657,17 @@ export default defineComponent({
       }
     },
 
+    calculateWireResistance(awg: number, turns: number, lengthPerTurn_m: number): number {
+      const wire = this.WIRE_GAUGE.find((w) => w.awg === awg)
+      if (!wire) return 0
+
+      const diameter_m = wire.diameter * 1e-3
+      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2)
+      const resistivity = 1.68e-8 // Copper resistivity (Ω·m)
+
+      return (resistivity * (turns * lengthPerTurn_m)) / area_m2
+    },
+
     calculateCoreLoss(
       material: CoreMaterial,
       freqHz: number,
@@ -646,21 +675,17 @@ export default defineComponent({
       ae_mm2: number,
       le_mm: number,
     ): number {
-      const { muPrime, muDoublePrime } = this.interpolateMu(
+      const { muDoublePrime } = this.interpolateMu(
         this.MATERIAL_DATA[material].muCurve,
         freqHz,
       )
 
+      // Convert units to meters
       const ae_m2 = ae_mm2 * 1e-6
       const le_m = le_mm * 1e-3
-      const volume = ae_m2 * le_m
 
-      // Improved core loss calculation using the loss tangent
-      // P = π × f × B² × μ₀ × μ" × Volume / μ'
-      return (
-        (Math.PI * freqHz * Math.pow(bMax, 2) * this.MU0 * muDoublePrime * volume) /
-        muPrime
-      ) * 0.1 // Scale factor to get more realistic values
+      // Core loss formula using Steinmetz parameters
+      return Math.PI * this.MU0 * muDoublePrime * freqHz * Math.pow(bMax, 2) * ae_m2 * le_m
     },
 
     interpolateMu(

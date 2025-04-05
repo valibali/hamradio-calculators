@@ -541,26 +541,26 @@ export default defineComponent({
       return this.designCore(params)
     },
 
-    shouldUseHybrid(zw: number, targetZw: number): boolean {
-      // Only use hybrid if geometric mean isn't 50Ω or 100Ω
-      return ![50, 100].includes(Math.round(zw)) && targetZw === 100
+    shouldUseHybridDesign(zw: number, zin: number): boolean {
+      // Use hybrid when:
+      // 1. Geometric mean isn't 50Ω or 100Ω (±5Ω tolerance)
+      // 2. Input is 50Ω (radio side)
+      const isStandardImpedance = [50, 100].some((std) => Math.abs(zw - std) <= 5)
+      return !isStandardImpedance && zin === 50
     },
 
-    designCore(params: DesignParameters): DesignResult {
+    createDesign(params: DesignParameters): DesignResult {
+      console.log(`\n=== Designing ${params.type} for ${params.zin}Ω → ${params.zout}Ω ===`)
+      console.log(`Core: ${params.core.partNumber}-${params.core.material}`)
+      console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
+      console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
+
       const zw = Math.sqrt(params.zin * params.zout)
-      const targetZw = params.wireType === '50-ohm' ? 50 : 100
+      const targetZw = 100 // Always target 100Ω for balun in hybrid designs
 
-      if (this.shouldUseHybrid(zw, targetZw)) {
-        // Hybrid design requirements
-        if (params.zin !== 50) {
-          console.warn('Hybrid designs work best with 50Ω input')
-        }
-
-        console.log('Designing hybrid configuration...')
-        return this.createHybridDesign(params, zw)
+      if (this.shouldUseHybridDesign(zw, params.zin)) {
+        return this.createHybridDesign(params)
       }
-
-      // Direct design when geometric mean matches standard impedances
       return this.createSimpleDesign(params, zw)
     },
 
@@ -573,39 +573,36 @@ export default defineComponent({
       }
     },
 
-    createHybridDesign(params: DesignParameters, zw: number): DesignResult {
-      // Balun: 1:1 Current Balun at antenna side (100Ω)
-      const balunParams: DesignParameters = {
-        ...params,
-        zin: 100, // Balun input (transformed by UNUN)
-        zout: 100, // Balun output (antenna side)
-        type: 'current-balun',
-        wireType: '100-ohm',
-        freqMinHz: params.freqMinHz,
-        freqMaxHz: params.freqMaxHz,
-        powerW: params.powerW,
+    createHybridDesign(params: DesignParameters): DesignResult {
+      if (params.zin !== 50) {
+        throw new Error('Hybrid designs require 50Ω input')
       }
 
-      // UNUN: Impedance transformer at radio side (50Ω → target impedance)
+      // Calculate required UNUN ratio (50Ω → 100Ω)
+      const ununRatio = Math.sqrt(100 / 50) // 1.414:1 (50→100Ω)
+
+      // Balun: 1:1 Current Balun (100Ω → target impedance)
+      const balunRatio = Math.sqrt(params.zout / 100)
+
+      // Design UNUN (50Ω → 100Ω)
       const ununParams: DesignParameters = {
         ...params,
-        zin: 50, // Radio input
-        zout: 100, // Balun input
+        zin: 50,
+        zout: 100,
         type: 'unun',
         wireType: '50-ohm',
-        freqMinHz: params.freqMinHz,
-        freqMaxHz: params.freqMaxHz,
-        powerW: params.powerW,
       }
+      const ununDesign = this.optimizeTurns(ununParams, ununRatio, 100)
 
-      const balunDesign = this.createSimpleDesign(
-        balunParams,
-        Math.sqrt(balunParams.zin * balunParams.zout),
-      )
-      const ununDesign = this.createSimpleDesign(
-        ununParams,
-        Math.sqrt(ununParams.zin * ununParams.zout),
-      )
+      // Design Balun (100Ω → target Z)
+      const balunParams: DesignParameters = {
+        ...params,
+        zin: 100,
+        zout: params.zout,
+        type: 'current-balun',
+        wireType: '100-ohm',
+      }
+      const balunDesign = this.optimizeTurns(balunParams, balunRatio, Math.sqrt(100 * params.zout))
 
       return {
         parameters: params,
