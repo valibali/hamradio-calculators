@@ -544,7 +544,6 @@ export default defineComponent({
       console.log(`Power: ${params.powerW}W`)
 
       const zw = Math.sqrt(params.zin * params.zout)
-      const targetZw = 100 // Always target 100Ω for balun in hybrid designs
 
       if (this.shouldUseHybridDesign(zw, params.zin)) {
         return this.createHybridDesign(params)
@@ -565,7 +564,6 @@ export default defineComponent({
       const zw = Math.sqrt(zin * zout)
       return zw > 75 ? '100-ohm' : '50-ohm'
     },
-
 
     createSimpleDesign(params: DesignParameters, zw: number): DesignResult {
       const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
