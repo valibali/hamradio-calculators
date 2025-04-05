@@ -76,7 +76,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 25, // °C/W (realistic for large toroid with no forced air)
         },
         'FT-240-#61': {
           partNumber: 'FT-240',
@@ -85,7 +85,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 23, // °C/W (realistic for large toroid with no forced air)
         },
         'FT-240-#31': {
           partNumber: 'FT-240',
@@ -94,7 +94,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 27, // °C/W (realistic for large toroid with no forced air)
         },
         'FT-140-#43': {
           partNumber: 'FT-140',
@@ -103,7 +103,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 40, // °C/W (smaller core runs hotter)
         },
         'FT-140-#61': {
           partNumber: 'FT-140',
@@ -112,7 +112,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 38, // °C/W (smaller core runs hotter)
         },
         'FT-140-#31': {
           partNumber: 'FT-140',
@@ -121,7 +121,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 42, // °C/W (smaller core runs hotter)
         },
         'FT-114-#43': {
           partNumber: 'FT-114',
@@ -130,7 +130,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 50, // °C/W (smallest core runs hottest)
         },
         'FT-114-#61': {
           partNumber: 'FT-114',
@@ -139,7 +139,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 48, // °C/W (smallest core runs hottest)
         },
         'FT-114-#31': {
           partNumber: 'FT-114',
@@ -148,7 +148,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
-          thermalResistance: 22,
+          thermalResistance: 52, // °C/W (smallest core runs hottest)
         },
       },
       
