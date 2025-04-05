@@ -277,7 +277,7 @@ onMounted(() => {
 
 .calculator-badge {
   top: 2.5rem;
-  background-color: #ff6b6b;
+  background-color: #ff9933;
 }
 
 .category-card:hover {
