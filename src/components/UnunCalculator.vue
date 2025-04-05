@@ -934,10 +934,6 @@ export default defineComponent({
             <span class="result-label">Wire Gauge:</span>
             <span class="result-value">{{ designResult.wireGauge }}</span>
           </div>
-          <div class="result-item">
-            <span class="result-label">Suggested Wire Type:</span>
-            <span class="result-value">{{ determineWireType(designResult.parameters.zin, designResult.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
-          </div>
         </div>
         
         <div class="result-section">

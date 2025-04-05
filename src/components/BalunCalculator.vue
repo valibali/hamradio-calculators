@@ -1003,7 +1003,7 @@ export default defineComponent({
         </ul>
       </div>
 
-      <div class="result-grid">
+      <div v-if="designResult.designType !== 'hybrid'" class="result-grid">
         <div class="result-section">
           <h4>Transformer Configuration</h4>
           <div class="result-item">
@@ -1065,6 +1065,33 @@ export default defineComponent({
           current balun provides balanced output at the antenna side.
         </p>
 
+        <!-- Overall Performance Metrics -->
+        <div class="hybrid-overall">
+          <h5>Overall Performance</h5>
+          <div class="result-section">
+            <div class="result-item">
+              <span class="result-label">Total Temperature Rise:</span>
+              <span class="result-value" :class="{ warning: designResult.thermalRiseC >= 80 }">
+                {{ designResult.thermalRiseC.toFixed(1) }} °C
+              </span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Max Flux Density:</span>
+              <span class="result-value" :class="{ warning: designResult.fluxDensityT > 0.5 * designResult.core.Bsat }">
+                {{ designResult.fluxDensityT.toFixed(3) }} T
+              </span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Total Core Loss:</span>
+              <span class="result-value">{{ designResult.coreLossW.toFixed(2) }} W</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Suggested Wire Type:</span>
+              <span class="result-value">{{ determineWireType(designResult.parameters.zin, designResult.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Unun Component -->
         <div v-if="designResult.components.unun" class="hybrid-part">
           <h5>Component 1: Unun (Radio Side - Impedance Transformer)</h5>
@@ -1078,10 +1105,27 @@ export default defineComponent({
               </span>
             </div>
             <div class="hybrid-spec">
-              <span class="spec-label">Turns:</span>
+              <span class="spec-label">Turns Ratio:</span>
               <span class="spec-value">
-                {{ designResult.components.unun.primaryTurns }} :
+                {{ designResult.components.unun.turnsRatio.toFixed(2) }}:1
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Primary Turns:</span>
+              <span class="spec-value">
+                {{ designResult.components.unun.primaryTurns }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Secondary Turns:</span>
+              <span class="spec-value">
                 {{ designResult.components.unun.secondaryTurns }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Wire Gauge:</span>
+              <span class="spec-value">
+                {{ designResult.components.unun.wireGauge }}
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1089,6 +1133,24 @@ export default defineComponent({
               <span class="spec-value">
                 {{ designResult.components.unun.core.partNumber }}-
                 {{ designResult.components.unun.core.material }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Flux Density:</span>
+              <span class="spec-value" :class="{ warning: designResult.components.unun.fluxDensityT > 0.5 * designResult.components.unun.core.Bsat }">
+                {{ designResult.components.unun.fluxDensityT.toFixed(3) }} T
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Core Loss:</span>
+              <span class="spec-value">
+                {{ designResult.components.unun.coreLossW.toFixed(2) }} W
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Temperature Rise:</span>
+              <span class="spec-value" :class="{ warning: designResult.components.unun.thermalRiseC >= 80 }">
+                {{ designResult.components.unun.thermalRiseC.toFixed(1) }} °C
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1119,10 +1181,27 @@ export default defineComponent({
               </span>
             </div>
             <div class="hybrid-spec">
-              <span class="spec-label">Turns:</span>
+              <span class="spec-label">Turns Ratio:</span>
               <span class="spec-value">
-                {{ designResult.components.balun.primaryTurns }} :
+                {{ designResult.components.balun.turnsRatio.toFixed(2) }}:1
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Primary Turns:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.primaryTurns }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Secondary Turns:</span>
+              <span class="spec-value">
                 {{ designResult.components.balun.secondaryTurns }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Wire Gauge:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.wireGauge }}
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1130,6 +1209,24 @@ export default defineComponent({
               <span class="spec-value">
                 {{ designResult.components.balun.core.partNumber }}-
                 {{ designResult.components.balun.core.material }}
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Flux Density:</span>
+              <span class="spec-value" :class="{ warning: designResult.components.balun.fluxDensityT > 0.5 * designResult.components.balun.core.Bsat }">
+                {{ designResult.components.balun.fluxDensityT.toFixed(3) }} T
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Core Loss:</span>
+              <span class="spec-value">
+                {{ designResult.components.balun.coreLossW.toFixed(2) }} W
+              </span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Temperature Rise:</span>
+              <span class="spec-value" :class="{ warning: designResult.components.balun.thermalRiseC >= 80 }">
+                {{ designResult.components.balun.thermalRiseC.toFixed(1) }} °C
               </span>
             </div>
             <div class="hybrid-spec">
@@ -1443,6 +1540,20 @@ select {
 }
 
 .hybrid-part h5 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.hybrid-overall {
+  background-color: var(--color-background);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid hsla(160, 100%, 37%, 0.8);
+}
+
+.hybrid-overall h5 {
   margin-top: 0;
   margin-bottom: 1rem;
   color: var(--color-heading);
