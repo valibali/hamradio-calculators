@@ -839,13 +839,6 @@ export default defineComponent({
             </select>
           </div>
           
-          <div class="form-group">
-            <label for="wire-type">Wire Type:</label>
-            <select id="wire-type" v-model="wireType">
-              <option value="50-ohm">50Ω Transmission Line</option>
-              <option value="100-ohm">100Ω Transmission Line</option>
-            </select>
-          </div>
         </div>
         
         <div class="form-row">
