@@ -504,7 +504,7 @@ export default defineComponent({
       }))
     },
     selectedCoreObj(): CoreSpec {
-      return this.CORE_DB[this.selectedCore]
+      return this.CORE_DB[this.selectedCore as keyof typeof this.CORE_DB]
     },
     freqMinHz(): number {
       return this.freqMinMHz * 1e6
