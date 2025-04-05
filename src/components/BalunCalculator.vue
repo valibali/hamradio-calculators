@@ -48,6 +48,7 @@ interface DesignResult {
   thermalRiseC: number
   fluxDensityT: number
   coreLossW: number
+  hybridParts?: DesignResult[]
 }
 
 export default defineComponent({
@@ -530,10 +531,49 @@ export default defineComponent({
       console.log(`Frequency: ${params.freqMinHz / 1e6}MHz to ${params.freqMaxHz / 1e6}MHz`)
       console.log(`Power: ${params.powerW}W, Wire: ${params.wireType}`)
 
-      const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
       const zw = Math.sqrt(params.zin * params.zout)
+      const targetZw = params.wireType === '50-ohm' ? 50 : 100
+
+      if (Math.abs(zw - targetZw) > 5) {
+        console.log('Designing hybrid configuration...')
+        return this.createHybridDesign(params, zw, targetZw)
+      }
+
+      const turnsRatio = this.calculateTurnsRatio(params.type, params.zin, params.zout)
       const optimized = this.optimizeTurns(params, turnsRatio, zw)
       return optimized
+    },
+
+    createHybridDesign(params: DesignParameters, zw: number, targetZw: number): DesignResult {
+      const balunParams: DesignParameters = {
+        ...params,
+        zin: targetZw,
+        zout: targetZw,
+        type: 'voltage-balun',
+      }
+
+      const ununRatio =
+        params.type === 'voltage-balun'
+          ? Math.sqrt(params.zout / targetZw)
+          : Math.sqrt(targetZw / params.zin)
+
+      const ununParams: DesignParameters = {
+        ...params,
+        zin: targetZw,
+        zout: ununRatio * targetZw,
+        type: 'unun',
+      }
+
+      const balunDesign = this.createDesign(balunParams)
+      const ununDesign = this.createDesign(ununParams)
+
+      return {
+        ...balunDesign,
+        parameters: params,
+        hybridParts: [balunDesign, ununDesign],
+        isValid: balunDesign.isValid && ununDesign.isValid,
+        warnings: [...balunDesign.warnings, ...ununDesign.warnings],
+      }
     },
 
     optimizeTurns(params: DesignParameters, ratio: number, zw: number): DesignResult {
@@ -934,6 +974,39 @@ export default defineComponent({
         </div>
       </div>
       
+      <!-- Hybrid Design Results (if applicable) -->
+      <div v-if="designResult.hybridParts" class="hybrid-design">
+        <h4>Hybrid Design Components</h4>
+        <p class="hybrid-note">
+          This design requires a hybrid approach using both a balun and an unun for optimal performance.
+        </p>
+        
+        <div v-for="(part, index) in designResult.hybridParts" :key="index" class="hybrid-part">
+          <h5>Component {{ index + 1 }}: {{ part.parameters.type }}</h5>
+          
+          <div class="hybrid-specs">
+            <div class="hybrid-spec">
+              <span class="spec-label">Impedance:</span>
+              <span class="spec-value">{{ part.parameters.zin }}Ω → {{ part.parameters.zout }}Ω</span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Turns:</span>
+              <span class="spec-value">{{ part.primaryTurns }} : {{ part.secondaryTurns }}</span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Core:</span>
+              <span class="spec-value">{{ part.core.partNumber }}-{{ part.core.material }}</span>
+            </div>
+            <div class="hybrid-spec">
+              <span class="spec-label">Status:</span>
+              <span class="spec-value" :class="{ valid: part.isValid, invalid: !part.isValid }">
+                {{ part.isValid ? 'Valid' : 'Invalid' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="construction-notes">
         <h4>Construction Notes</h4>
         <ul>
@@ -1195,6 +1268,52 @@ input, select {
   display: block;
   font-size: 0.8rem;
   color: var(--color-text-light);
+}
+
+.hybrid-design {
+  background-color: var(--color-background-mute);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.hybrid-design h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.hybrid-note {
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-light);
+}
+
+.hybrid-part {
+  background-color: var(--color-background);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.hybrid-part h5 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.hybrid-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.hybrid-spec {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background-soft);
+  padding: 0.75rem;
+  border-radius: 4px;
 }
 
 .construction-notes {
