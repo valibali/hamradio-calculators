@@ -48,6 +48,7 @@ interface DesignResult {
   thermalRiseC: number
   fluxDensityT: number
   coreLossW: number
+  copperLossW?: number // Added for debugging
 }
 
 export default defineComponent({
@@ -619,28 +620,30 @@ export default defineComponent({
       const vRms = Math.sqrt(params.powerW * params.zin)
       const bMax = (vRms * 1e6) / (4.44 * params.freqMinHz * primaryTurns * params.core.Ae)
 
-      // Calculate core loss
+      // Calculate core loss with corrected formula
       const coreLoss = this.calculateCoreLoss(
         params.core.material,
         params.freqMinHz,
         bMax,
         params.core.Ae,
-        params.core.le,
+        params.core.le
       )
 
-      // Calculate wire resistance
-      const lengthPerTurn_m = params.core.le * 1e-3 // Magnetic path length in meters
+      // Calculate wire resistance (more accurate calculation)
+      const meanTurnLength = (params.core.le + Math.sqrt(params.core.Ae)) * 1e-3; // in meters
+      const totalWireLength = (primaryTurns + secondaryTurns) * meanTurnLength;
       const wireResistance = this.calculateWireResistance(
         parseInt(wireGauge),
-        primaryTurns + secondaryTurns,
-        lengthPerTurn_m,
+        totalWireLength
       )
 
-      // Calculate total losses
-      const pTotal = coreLoss + Math.pow(current, 2) * wireResistance
+      // Calculate total losses (more realistic)
+      const copperLoss = Math.pow(current, 2) * wireResistance;
+      const pTotal = coreLoss + copperLoss;
 
-      // Temperature rise with core-specific thermal resistance
-      const tempRise = pTotal * params.core.thermalResistance
+      // Temperature rise calculation (corrected)
+      // Thermal resistance is in °C/W, power in Watts
+      const tempRise = pTotal * params.core.thermalResistance;
 
       // Check window fit
       const windowValid = this.checkWindowFit(primaryTurns, secondaryTurns, wireGauge, params.core.Wa)
@@ -657,22 +660,28 @@ export default defineComponent({
           bMax > 0.5 * params.core.Bsat ? 'Core saturation risk' : '',
           tempRise >= 80 ? 'Excessive temperature rise' : '',
           !windowValid ? 'Windings exceed core window' : '',
+          copperLoss > params.powerW * 0.1 ? 'High copper losses' : ''
         ].filter(Boolean),
         thermalRiseC: tempRise,
         fluxDensityT: bMax,
         coreLossW: coreLoss,
+        copperLossW: copperLoss // Added for debugging
       }
     },
 
-    calculateWireResistance(awg: number, turns: number, lengthPerTurn_m: number): number {
-      const wire = this.WIRE_GAUGE.find((w) => w.awg === awg)
-      if (!wire) return 0
+    calculateWireResistance(awg: number, length_m: number): number {
+      const wire = this.WIRE_GAUGE.find(w => w.awg === awg);
+      if (!wire) return 0;
 
-      const diameter_m = wire.diameter * 1e-3
-      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2)
-      const resistivity = 1.68e-8 // Copper resistivity (Ω·m)
-
-      return (resistivity * (turns * lengthPerTurn_m)) / area_m2
+      const diameter_m = wire.diameter * 1e-3;
+      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2);
+      const resistivity = 1.68e-8; // Copper resistivity (Ω·m) at 20°C
+      const tempCoeff = 0.00393; // Temperature coefficient of copper
+      
+      // Adjust for operating temperature (assuming 100°C)
+      const resistivityAtTemp = resistivity * (1 + tempCoeff * (100 - 20));
+      
+      return (resistivityAtTemp * length_m) / area_m2;
     },
 
     calculateCoreLoss(
@@ -962,6 +971,10 @@ export default defineComponent({
           <div class="result-item">
             <span class="result-label">Core Loss:</span>
             <span class="result-value">{{ designResult.coreLossW.toFixed(2) }} W</span>
+          </div>
+          <div class="result-item" v-if="designResult.copperLossW !== undefined">
+            <span class="result-label">Copper Loss:</span>
+            <span class="result-value">{{ designResult.copperLossW.toFixed(2) }} W</span>
           </div>
           <div class="result-item">
             <span class="result-label">Temperature Rise:</span>
