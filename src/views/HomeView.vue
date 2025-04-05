@@ -74,6 +74,7 @@ onMounted(() => {
       <div class="category-grid">
         <div class="category-card">
           <div class="category-badge">Featured</div>
+          <div class="category-badge calculator-badge">New Balun/Unun Calculator!</div>
           <div class="category-icon">🧮</div>
           <h3>Calculators</h3>
           <p>
@@ -272,6 +273,11 @@ onMounted(() => {
   border-radius: 0 8px 0 8px;
   font-size: 0.8rem;
   font-weight: bold;
+}
+
+.calculator-badge {
+  top: 2.5rem;
+  background-color: #ff6b6b;
 }
 
 .category-card:hover {
