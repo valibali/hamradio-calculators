@@ -3,6 +3,8 @@ import { defineComponent } from 'vue'
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
+import BalunCalculator from '../components/BalunCalculator.vue'
+import UnunCalculator from '../components/UnunCalculator.vue'
 
 interface Calculator {
   id: string
@@ -25,12 +27,32 @@ export default defineComponent({
     TwinLeadCharImp,
     TwistedPairCharImp,
     SingleConductorAboveGroundPlane,
+    BalunCalculator,
+    UnunCalculator,
   },
   data() {
     return {
       activeCalculator: 'twinlead',
       activeCategory: 'transmission-lines',
       categories: [
+        {
+          id: 'impedance-transformers',
+          name: 'Impedance Transformers',
+          description:
+            'Design baluns and ununs for impedance transformation in RF applications',
+          calculators: [
+            {
+              id: 'balun',
+              name: 'Balun Designer',
+              description: 'Design balanced-to-unbalanced transformers for RF applications',
+            },
+            {
+              id: 'unun',
+              name: 'Unun Designer',
+              description: 'Design unbalanced-to-unbalanced transformers for RF applications',
+            },
+          ],
+        },
         {
           id: 'transmission-lines',
           name: 'Transmission Lines',
@@ -315,6 +337,8 @@ export default defineComponent({
           <h3>Stay tuned, this will update soon!</h3>
           <p>We're working on adding calculators for this category.</p>
         </div>
+        <BalunCalculator v-else-if="activeCalculator === 'balun'" />
+        <UnunCalculator v-else-if="activeCalculator === 'unun'" />
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
