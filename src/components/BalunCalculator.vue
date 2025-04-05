@@ -9,20 +9,17 @@ type WireType = '50-ohm' | '100-ohm'
 interface CoreSpec {
   partNumber: string
   Ae: number // Cross-section (mm²)
-  le: number // Path length (mm)
+  le: number // Magnetic path length (mm)
   Wa: number // Window area (mm²)
   Bsat: number // Saturation flux density (T)
   material: CoreMaterial
+  thermalResistance: number // °C/W
 }
 
 interface FrequencyDependentMu {
   frequency: number
   muPrime: number
   muDoublePrime: number
-}
-
-interface CoreMaterialData {
-  muCurve: FrequencyDependentMu[]
 }
 
 interface DesignParameters {
@@ -53,9 +50,6 @@ interface DesignResult {
 
 export default defineComponent({
   name: 'BalunCalculator',
-  components: {
-    RouterLink,
-  },
   data() {
     return {
       // Input parameters
@@ -67,7 +61,7 @@ export default defineComponent({
       freqMaxMHz: 30,
       powerW: 100,
       wireType: '50-ohm' as WireType,
-      
+
       // Core database
       CORE_DB: {
         'FT-240-#43': {
@@ -77,6 +71,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 3, // Realistic thermal resistance
         },
         'FT-240-#61': {
           partNumber: 'FT-240',
@@ -85,6 +80,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 1.9, // Realistic thermal resistance
         },
         'FT-240-#31': {
           partNumber: 'FT-240',
@@ -93,6 +89,7 @@ export default defineComponent({
           Wa: 480,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 3.7, // Realistic thermal resistance
         },
         'FT-140-#43': {
           partNumber: 'FT-140',
@@ -101,6 +98,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 5.1, // Realistic thermal resistance
         },
         'FT-140-#61': {
           partNumber: 'FT-140',
@@ -109,6 +107,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 3.2, // Realistic thermal resistance
         },
         'FT-140-#31': {
           partNumber: 'FT-140',
@@ -117,6 +116,7 @@ export default defineComponent({
           Wa: 130,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 6.4, // Realistic thermal resistance
         },
         'FT-114-#43': {
           partNumber: 'FT-114',
@@ -125,6 +125,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.4,
           material: '#43' as CoreMaterial,
+          thermalResistance: 7.2, // Realistic thermal resistance
         },
         'FT-114-#61': {
           partNumber: 'FT-114',
@@ -133,6 +134,7 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.35,
           material: '#61' as CoreMaterial,
+          thermalResistance: 4.5, // Realistic thermal resistance
         },
         'FT-114-#31': {
           partNumber: 'FT-114',
@@ -141,9 +143,10 @@ export default defineComponent({
           Wa: 90,
           Bsat: 0.47,
           material: '#31' as CoreMaterial,
+          thermalResistance: 9, // Realistic thermal resistance
         },
       },
-      
+
       // Material data
       MATERIAL_DATA: {
         '#31': {
@@ -464,17 +467,17 @@ export default defineComponent({
           ],
         },
       },
-      
+
       // Wire gauge data
       WIRE_GAUGE: [
         { awg: 18, diameter: 1.02, maxCurrent: 3.2 },
         { awg: 20, diameter: 0.81, maxCurrent: 2.2 },
         { awg: 22, diameter: 0.64, maxCurrent: 1.5 },
       ],
-      
+
       // Constants
       MU0: 4 * Math.PI * 1e-7, // Permeability of free space (H/m)
-      
+
       // Results
       designResult: null as DesignResult | null,
       isCalculating: false,
@@ -483,9 +486,9 @@ export default defineComponent({
   },
   computed: {
     coreOptions() {
-      return Object.keys(this.CORE_DB).map(key => ({
+      return Object.keys(this.CORE_DB).map((key) => ({
         value: key,
-        label: key
+        label: key,
       }))
     },
     selectedCoreObj(): CoreSpec {
@@ -496,12 +499,12 @@ export default defineComponent({
     },
     freqMaxHz(): number {
       return this.freqMaxMHz * 1e6
-    }
+    },
   },
   methods: {
     calculateDesign() {
       this.isCalculating = true
-      
+
       // Create design parameters
       const params: DesignParameters = {
         zin: this.zin,
@@ -511,9 +514,9 @@ export default defineComponent({
         freqMinHz: this.freqMinHz,
         freqMaxHz: this.freqMaxHz,
         powerW: this.powerW,
-        wireType: this.wireType
+        wireType: this.wireType,
       }
-      
+
       // Perform the design calculation
       try {
         this.designResult = this.createDesign(params)
@@ -524,7 +527,7 @@ export default defineComponent({
         this.isCalculating = false
       }
     },
-    
+
     createDesign(params: DesignParameters): DesignResult {
       console.log(`\n=== Designing ${params.type} for ${params.zin}Ω → ${params.zout}Ω ===`)
       console.log(`Core: ${params.core.partNumber}-${params.core.material}`)
@@ -618,11 +621,21 @@ export default defineComponent({
 
       // Calculate minimum turns needed to achieve L_min
       const nMin = Math.sqrt(
-        (lMin * params.core.le * 1e-3) /
-          (this.MU0 * mu * params.core.Ae * 1e-6),
+        (lMin * params.core.le * 1e-3) / (this.MU0 * mu * params.core.Ae * 1e-6),
       )
 
       return Math.max(1, Math.ceil(nMin))
+    },
+
+    calculateWireResistance(awg: number, turns: number, lengthPerTurn_m: number): number {
+      const wire = this.WIRE_GAUGE.find((w) => w.awg === awg)
+      if (!wire) return 0
+
+      const diameter_m = wire.diameter * 1e-3
+      const area_m2 = Math.PI * Math.pow(diameter_m / 2, 2)
+      const resistivity = 1.68e-8 // Copper resistivity (Ω·m)
+
+      return (resistivity * (turns * lengthPerTurn_m)) / area_m2
     },
 
     createTestDesign(
@@ -639,7 +652,7 @@ export default defineComponent({
       const vRms = Math.sqrt(params.powerW * params.zin)
       const bMax = (vRms * 1e6) / (4.44 * params.freqMinHz * primaryTurns * params.core.Ae)
 
-      // Calculate core loss
+      // Calculate core loss with corrected formula
       const coreLoss = this.calculateCoreLoss(
         params.core.material,
         params.freqMinHz,
@@ -648,14 +661,27 @@ export default defineComponent({
         params.core.le,
       )
 
-      // Calculate thermal rise
-      const wireResistance = 0.01 // Assuming 0.01Ω wire resistance (more realistic)
-      const copperLoss = Math.pow(current, 2) * wireResistance
-      const pTotal = coreLoss + copperLoss
-      const tempRise = pTotal * 20 // 20°C/W thermal resistance (more realistic for ferrite cores)
+      // Calculate wire resistance
+      const lengthPerTurn_m = params.core.le * 1e-3 // Magnetic path length in meters
+      const wireResistance = this.calculateWireResistance(
+        parseInt(wireGauge),
+        primaryTurns + secondaryTurns,
+        lengthPerTurn_m,
+      )
+
+      // Calculate total losses
+      const pTotal = coreLoss + Math.pow(current, 2) * wireResistance
+
+      // Temperature rise with core-specific thermal resistance
+      const tempRise = pTotal * params.core.thermalResistance
 
       // Check window fit
-      const windowValid = this.checkWindowFit(primaryTurns, secondaryTurns, wireGauge, params.core.Wa)
+      const windowValid = this.checkWindowFit(
+        primaryTurns,
+        secondaryTurns,
+        wireGauge,
+        params.core.Wa,
+      )
 
       return {
         parameters: params,
@@ -683,21 +709,14 @@ export default defineComponent({
       ae_mm2: number,
       le_mm: number,
     ): number {
-      const { muPrime, muDoublePrime } = this.interpolateMu(
-        this.MATERIAL_DATA[material].muCurve,
-        freqHz,
-      )
+      const { muDoublePrime } = this.interpolateMu(this.MATERIAL_DATA[material].muCurve, freqHz)
 
+      // Convert units to meters
       const ae_m2 = ae_mm2 * 1e-6
       const le_m = le_mm * 1e-3
-      const volume = ae_m2 * le_m
 
-      // Improved core loss calculation using the loss tangent
-      // P = π × f × B² × μ₀ × μ" × Volume / μ'
-      return (
-        (Math.PI * freqHz * Math.pow(bMax, 2) * this.MU0 * muDoublePrime * volume) /
-        muPrime
-      ) * 0.1 // Scale factor to get more realistic values
+      // Correct core loss formula using Steinmetz parameters
+      return Math.PI * this.MU0 * muDoublePrime * freqHz * Math.pow(bMax, 2) * ae_m2 * le_m
     },
 
     interpolateMu(
@@ -759,7 +778,7 @@ export default defineComponent({
     calculateTurnsRatio(type: TransformerType, zin: number, zout: number): number {
       return type === 'voltage-balun' ? Math.sqrt(zout / zin) : Math.sqrt(zin / zout)
     },
-    
+
     resetForm() {
       this.zin = 50
       this.zout = 200
@@ -770,12 +789,12 @@ export default defineComponent({
       this.powerW = 100
       this.wireType = '50-ohm'
       this.designResult = null
-    }
+    },
   },
   mounted() {
     // Calculate a design with default parameters on component mount
     this.calculateDesign()
-  }
+  },
 })
 </script>
 
@@ -783,30 +802,34 @@ export default defineComponent({
   <div class="balun-calculator">
     <div class="calculator-introduction">
       <h2>Balun Designer: RF Impedance Transformer Calculator</h2>
-      
+
       <p>
         Design balanced-to-unbalanced (balun) transformers for RF applications with precise
-        impedance transformation ratios. This calculator helps you determine the optimal number
-        of turns, wire gauge, and core specifications for your balun design.
+        impedance transformation ratios. This calculator helps you determine the optimal number of
+        turns, wire gauge, and core specifications for your balun design.
       </p>
-      
+
       <div class="introduction-details">
         <h3>What is a Balun?</h3>
         <p>
-          A balun (balanced-to-unbalanced) transformer is used to connect balanced lines (like dipole antennas)
-          to unbalanced lines (like coaxial cable). Baluns can also perform impedance transformation,
-          matching different impedances for maximum power transfer.
+          A balun (balanced-to-unbalanced) transformer is used to connect balanced lines (like
+          dipole antennas) to unbalanced lines (like coaxial cable). Baluns can also perform
+          impedance transformation, matching different impedances for maximum power transfer.
         </p>
-        
+
         <h3>Types of Baluns</h3>
-        <p>
-          This calculator supports two main types of baluns:
-        </p>
+        <p>This calculator supports two main types of baluns:</p>
         <ul>
-          <li><strong>Voltage Balun:</strong> Provides good common-mode isolation but may have limited power handling</li>
-          <li><strong>Current Balun:</strong> Offers excellent common-mode isolation and typically better power handling</li>
+          <li>
+            <strong>Voltage Balun:</strong> Provides good common-mode isolation but may have limited
+            power handling
+          </li>
+          <li>
+            <strong>Current Balun:</strong> Offers excellent common-mode isolation and typically
+            better power handling
+          </li>
         </ul>
-        
+
         <p>
           The calculator uses ferrite core data from manufacturers to ensure accurate designs that
           avoid core saturation, excessive heating, and other common issues in balun construction.
@@ -817,19 +840,19 @@ export default defineComponent({
     <div class="calculator-form">
       <div class="form-section">
         <h3>Design Parameters</h3>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="zin">Input Impedance (Ω):</label>
             <input type="number" id="zin" v-model="zin" min="1" step="1" />
           </div>
-          
+
           <div class="form-group">
             <label for="zout">Output Impedance (Ω):</label>
             <input type="number" id="zout" v-model="zout" min="1" step="1" />
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="transformer-type">Transformer Type:</label>
@@ -838,7 +861,7 @@ export default defineComponent({
               <option value="current-balun">Current Balun</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="core-type">Core Type:</label>
             <select id="core-type" v-model="selectedCore">
@@ -848,25 +871,25 @@ export default defineComponent({
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="freq-min">Min Frequency (MHz):</label>
             <input type="number" id="freq-min" v-model="freqMinMHz" min="0.1" step="0.1" />
           </div>
-          
+
           <div class="form-group">
             <label for="freq-max">Max Frequency (MHz):</label>
             <input type="number" id="freq-max" v-model="freqMaxMHz" min="0.1" step="0.1" />
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="power">Power (W):</label>
             <input type="number" id="power" v-model="powerW" min="1" step="1" />
           </div>
-          
+
           <div class="form-group">
             <label for="wire-type">Wire Type:</label>
             <select id="wire-type" v-model="wireType">
@@ -875,7 +898,7 @@ export default defineComponent({
             </select>
           </div>
         </div>
-        
+
         <div class="form-actions">
           <button @click="calculateDesign" :disabled="isCalculating" class="primary-button">
             <span v-if="isCalculating">Calculating...</span>
@@ -884,7 +907,7 @@ export default defineComponent({
           <button @click="resetForm" class="secondary-button">Reset</button>
         </div>
       </div>
-      
+
       <div class="form-section">
         <h3>Core Specifications</h3>
         <div class="core-specs" v-if="selectedCoreObj">
@@ -915,22 +938,25 @@ export default defineComponent({
         </div>
       </div>
     </div>
-    
+
     <div v-if="designResult" class="design-results">
       <h3>Design Results</h3>
-      
-      <div class="result-status" :class="{ valid: designResult.isValid, invalid: !designResult.isValid }">
+
+      <div
+        class="result-status"
+        :class="{ valid: designResult.isValid, invalid: !designResult.isValid }"
+      >
         <span v-if="designResult.isValid">✓ VALID DESIGN</span>
         <span v-else>✗ INVALID DESIGN</span>
       </div>
-      
+
       <div v-if="designResult.warnings && designResult.warnings.length > 0" class="warnings">
         <h4>Warnings:</h4>
         <ul>
           <li v-for="(warning, index) in designResult.warnings" :key="index">{{ warning }}</li>
         </ul>
       </div>
-      
+
       <div class="result-grid">
         <div class="result-section">
           <h4>Transformer Configuration</h4>
@@ -951,12 +977,15 @@ export default defineComponent({
             <span class="result-value">{{ designResult.wireGauge }}</span>
           </div>
         </div>
-        
+
         <div class="result-section">
           <h4>Performance Metrics</h4>
           <div class="result-item">
             <span class="result-label">Flux Density:</span>
-            <span class="result-value" :class="{ warning: designResult.fluxDensityT > 0.5 * designResult.core.Bsat }">
+            <span
+              class="result-value"
+              :class="{ warning: designResult.fluxDensityT > 0.5 * designResult.core.Bsat }"
+            >
               {{ designResult.fluxDensityT.toFixed(3) }} T
               <small>(Max: {{ (0.5 * designResult.core.Bsat).toFixed(3) }} T)</small>
             </span>
@@ -973,21 +1002,24 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      
+
       <!-- Hybrid Design Results (if applicable) -->
       <div v-if="designResult.hybridParts" class="hybrid-design">
         <h4>Hybrid Design Components</h4>
         <p class="hybrid-note">
-          This design requires a hybrid approach using both a balun and an unun for optimal performance.
+          This design requires a hybrid approach using both a balun and an unun for optimal
+          performance.
         </p>
-        
+
         <div v-for="(part, index) in designResult.hybridParts" :key="index" class="hybrid-part">
           <h5>Component {{ index + 1 }}: {{ part.parameters.type }}</h5>
-          
+
           <div class="hybrid-specs">
             <div class="hybrid-spec">
               <span class="spec-label">Impedance:</span>
-              <span class="spec-value">{{ part.parameters.zin }}Ω → {{ part.parameters.zout }}Ω</span>
+              <span class="spec-value"
+                >{{ part.parameters.zin }}Ω → {{ part.parameters.zout }}Ω</span
+              >
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Turns:</span>
@@ -1006,20 +1038,23 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      
+
       <div class="construction-notes">
         <h4>Construction Notes</h4>
         <ul>
-          <li>Wind {{ designResult.primaryTurns }} turns for the primary winding using {{ designResult.wireGauge }} wire.</li>
+          <li>
+            Wind {{ designResult.primaryTurns }} turns for the primary winding using
+            {{ designResult.wireGauge }} wire.
+          </li>
           <li>Wind {{ designResult.secondaryTurns }} turns for the secondary winding.</li>
           <li>
-            For a {{ designResult.parameters.type }}, use a 
-            {{ designResult.parameters.type === 'voltage-balun' ? 'bifilar' : 'trifilar' }} 
+            For a {{ designResult.parameters.type }}, use a
+            {{ designResult.parameters.type === 'voltage-balun' ? 'bifilar' : 'trifilar' }}
             winding technique.
           </li>
           <li>Ensure adequate ventilation if operating near maximum power.</li>
           <li>
-            The design is optimized for {{ designResult.parameters.freqMinHz / 1e6 }}MHz to 
+            The design is optimized for {{ designResult.parameters.freqMinHz / 1e6 }}MHz to
             {{ designResult.parameters.freqMaxHz / 1e6 }}MHz operation.
           </li>
         </ul>
@@ -1100,7 +1135,8 @@ label {
   color: var(--color-heading);
 }
 
-input, select {
+input,
+select {
   padding: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -1115,7 +1151,8 @@ input, select {
   margin-top: 1.5rem;
 }
 
-.primary-button, .secondary-button {
+.primary-button,
+.secondary-button {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -1351,17 +1388,17 @@ input, select {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .form-row {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .result-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .core-specs {
     grid-template-columns: 1fr;
   }
