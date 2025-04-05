@@ -569,7 +569,7 @@ export default defineComponent({
       const result = this.optimizeTurns(params, turnsRatio, zw)
       return {
         ...result,
-        designType: 'simple'
+        designType: 'simple',
       }
     },
 
@@ -577,36 +577,42 @@ export default defineComponent({
       // Balun: 1:1 Current Balun at antenna side (100Ω)
       const balunParams: DesignParameters = {
         ...params,
-        zin: 100,   // Balun input (transformed by UNUN)
-        zout: 100,  // Balun output (antenna side)
+        zin: 100, // Balun input (transformed by UNUN)
+        zout: 100, // Balun output (antenna side)
         type: 'current-balun',
         wireType: '100-ohm',
         freqMinHz: params.freqMinHz,
         freqMaxHz: params.freqMaxHz,
-        powerW: params.powerW
+        powerW: params.powerW,
       }
 
       // UNUN: Impedance transformer at radio side (50Ω → target impedance)
       const ununParams: DesignParameters = {
         ...params,
-        zin: 50,    // Radio input
-        zout: 100,  // Balun input
+        zin: 50, // Radio input
+        zout: 100, // Balun input
         type: 'unun',
         wireType: '50-ohm',
         freqMinHz: params.freqMinHz,
         freqMaxHz: params.freqMaxHz,
-        powerW: params.powerW
+        powerW: params.powerW,
       }
 
-      const balunDesign = this.createSimpleDesign(balunParams, Math.sqrt(balunParams.zin * balunParams.zout))
-      const ununDesign = this.createSimpleDesign(ununParams, Math.sqrt(ununParams.zin * ununParams.zout))
+      const balunDesign = this.createSimpleDesign(
+        balunParams,
+        Math.sqrt(balunParams.zin * balunParams.zout),
+      )
+      const ununDesign = this.createSimpleDesign(
+        ununParams,
+        Math.sqrt(ununParams.zin * ununParams.zout),
+      )
 
       return {
         parameters: params,
         designType: 'hybrid',
         components: {
           balun: balunDesign,
-          unun: ununDesign
+          unun: ununDesign,
         },
         turnsRatio: 1, // Dummy value for hybrid
         primaryTurns: 0,
@@ -617,7 +623,7 @@ export default defineComponent({
         warnings: [...balunDesign.warnings, ...ununDesign.warnings],
         thermalRiseC: (balunDesign.thermalRiseC + ununDesign.thermalRiseC) * 0.7,
         fluxDensityT: Math.max(balunDesign.fluxDensityT, ununDesign.fluxDensityT),
-        coreLossW: balunDesign.coreLossW + ununDesign.coreLossW
+        coreLossW: balunDesign.coreLossW + ununDesign.coreLossW,
       }
     },
 
@@ -1051,7 +1057,10 @@ export default defineComponent({
       </div>
 
       <!-- Hybrid Design Results (if applicable) -->
-      <div v-if="designResult.designType === 'hybrid' && designResult.components" class="hybrid-design">
+      <div
+        v-if="designResult.designType === 'hybrid' && designResult.components"
+        class="hybrid-design"
+      >
         <h4>Hybrid Design Components</h4>
         <p class="hybrid-note">
           This design requires a hybrid approach using both a balun and an unun for optimal
@@ -1066,14 +1075,14 @@ export default defineComponent({
             <div class="hybrid-spec">
               <span class="spec-label">Impedance:</span>
               <span class="spec-value">
-                {{ designResult.components.unun.parameters.zin }}Ω → 
+                {{ designResult.components.unun.parameters.zin }}Ω →
                 {{ designResult.components.unun.parameters.zout }}Ω
               </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Turns:</span>
               <span class="spec-value">
-                {{ designResult.components.unun.primaryTurns }} : 
+                {{ designResult.components.unun.primaryTurns }} :
                 {{ designResult.components.unun.secondaryTurns }}
               </span>
             </div>
@@ -1086,11 +1095,13 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Status:</span>
-              <span class="spec-value" 
-                :class="{ 
-                  valid: designResult.components.unun.isValid, 
-                  invalid: !designResult.components.unun.isValid 
-                }">
+              <span
+                class="spec-value"
+                :class="{
+                  valid: designResult.components.unun.isValid,
+                  invalid: !designResult.components.unun.isValid,
+                }"
+              >
                 {{ designResult.components.unun.isValid ? 'Valid' : 'Invalid' }}
               </span>
             </div>
@@ -1105,14 +1116,14 @@ export default defineComponent({
             <div class="hybrid-spec">
               <span class="spec-label">Impedance:</span>
               <span class="spec-value">
-                {{ designResult.components.balun.parameters.zin }}Ω → 
+                {{ designResult.components.balun.parameters.zin }}Ω →
                 {{ designResult.components.balun.parameters.zout }}Ω
               </span>
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Turns:</span>
               <span class="spec-value">
-                {{ designResult.components.balun.primaryTurns }} : 
+                {{ designResult.components.balun.primaryTurns }} :
                 {{ designResult.components.balun.secondaryTurns }}
               </span>
             </div>
@@ -1125,11 +1136,13 @@ export default defineComponent({
             </div>
             <div class="hybrid-spec">
               <span class="spec-label">Status:</span>
-              <span class="spec-value" 
-                :class="{ 
-                  valid: designResult.components.balun.isValid, 
-                  invalid: !designResult.components.balun.isValid 
-                }">
+              <span
+                class="spec-value"
+                :class="{
+                  valid: designResult.components.balun.isValid,
+                  invalid: !designResult.components.balun.isValid,
+                }"
+              >
                 {{ designResult.components.balun.isValid ? 'Valid' : 'Invalid' }}
               </span>
             </div>
