@@ -1087,7 +1087,7 @@ export default defineComponent({
             </div>
             <div class="result-item">
               <span class="result-label">Suggested Wire Type:</span>
-              <span class="result-value">{{ determineWireType(designResult.parameters.zin, designResult.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
+              <span class="result-value">{{ determineWireType(designResult.components.balun.parameters.zin, designResult.components.balun.parameters.zout) === '50-ohm' ? '50Ω' : '100Ω' }} Transmission Line</span>
             </div>
           </div>
         </div>
