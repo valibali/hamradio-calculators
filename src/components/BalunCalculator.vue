@@ -1,5 +1,6 @@
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
+import { WindingStyleCalculator, WindingStyleInfo } from './winding-style-calculator'
 
 // Enums and interfaces
 enum OperationMode {
@@ -78,6 +79,7 @@ interface BalunResults {
   characteristicImpedance: number
   recommendedWireGauge: number
   calculatedPowerRating: number
+  windingInfo?: WindingStyleInfo
   alternativeConfigurations?: BalunResults[]
 }
 
@@ -255,6 +257,7 @@ export default defineComponent({
     const showBandCoverage = ref(false)
     const showWireInfo = ref(false)
     const showPerformanceDetails = ref(false)
+    const showWindingInstructions = ref(false)
     const showReport = ref(false)
     const designResults = ref<BalunResults | null>(null)
     const hybridComponents = ref<HybridComponents | null>(null)
@@ -623,6 +626,12 @@ export default defineComponent({
       const withinCoreLossLimits = coreLoss <= maxCoreLoss
       const fluxDensityInLinearRegion = fluxDensity <= constants.maxLinearFluxDensity
 
+      // Determine winding style information
+      const windingInfo = WindingStyleCalculator.determineWindingAndBuildStyle(
+        config.inputImpedance,
+        config.outputImpedance
+      )
+
       // Return the results
       return {
         config,
@@ -641,6 +650,7 @@ export default defineComponent({
         characteristicImpedance,
         recommendedWireGauge,
         calculatedPowerRating,
+        windingInfo,
       }
     }
 
@@ -704,6 +714,21 @@ export default defineComponent({
           message:
             `Characteristic impedance (${idealCharZ.toFixed(1)} Ω) is not close to standard values (50Ω or 100Ω). ` +
             `Consider a hybrid design for better performance.`,
+        })
+      }
+      
+      // Check if winding style suggests a hybrid design
+      if (
+        results.windingInfo && 
+        results.windingInfo.construction === 'autotransformer' && 
+        !results.config.useHybridDesign && 
+        WindingStyleCalculator.shouldUseHybridDesign(results.config.inputImpedance, results.config.outputImpedance)
+      ) {
+        messages.push({
+          type: 'warning',
+          message:
+            `This impedance ratio (1:${(results.config.outputImpedance / results.config.inputImpedance).toFixed(1)}) ` +
+            `requires a complex ${results.windingInfo.style} winding. Consider using a hybrid design for simpler construction.`,
         })
       }
 
@@ -829,9 +854,27 @@ export default defineComponent({
 
       // Alternative 2: Hybrid design if not already using it
       if (!config.useHybridDesign) {
-        const hybridConfig = designHybridBalun(config)
-        const hybridResults = calculateBalunDesign(hybridConfig)
-        alternatives.push(hybridResults)
+        // Check if winding style suggests a hybrid design
+        const windingInfo = WindingStyleCalculator.determineWindingAndBuildStyle(
+          config.inputImpedance,
+          config.outputImpedance
+        )
+        
+        const shouldUseHybrid = WindingStyleCalculator.shouldUseHybridDesign(
+          config.inputImpedance,
+          config.outputImpedance
+        )
+        
+        if (windingInfo.construction === 'autotransformer' || shouldUseHybrid) {
+          const hybridConfig = designHybridBalun(config)
+          const hybridResults = calculateBalunDesign(hybridConfig)
+          alternatives.push(hybridResults)
+        } else {
+          // Still add a hybrid design as an alternative, but with lower priority
+          const hybridConfig = designHybridBalun(config)
+          const hybridResults = calculateBalunDesign(hybridConfig)
+          alternatives.push(hybridResults)
+        }
       }
 
       // Return the results with alternatives
@@ -880,10 +923,27 @@ export default defineComponent({
       // Construction details
       report += `## Construction Details\n\n`
       report += `- Primary Turns: ${results.config.primaryTurns}\n`
-      report += `- Secondary Turns: ${results.config.primaryTurns * Math.sqrt(results.config.outputImpedance / results.config.inputImpedance)}\n`
+      report += `- Secondary Turns: ${Math.round(results.config.primaryTurns * Math.sqrt(results.config.outputImpedance / results.config.inputImpedance))}\n`
       report += `- Wire Gauge: AWG ${results.recommendedWireGauge}\n`
       report += `- Winding Length: ${results.windingLengthCm.toFixed(1)} cm\n`
       report += `- Characteristic Impedance: ${results.characteristicImpedance.toFixed(1)} Ω\n\n`
+
+      // Add winding instructions if available
+      if (results.windingInfo) {
+        report += `## Winding and Construction Details\n\n`
+        report += `- Winding Style: ${results.windingInfo.style}\n`
+        report += `- Construction Method: ${results.windingInfo.construction}\n`
+        report += `- Connection Method: ${results.windingInfo.connectionDetails}\n\n`
+        
+        // Generate detailed winding instructions
+        const instructions = WindingStyleCalculator.generateWindingInstructions(
+          results.windingInfo,
+          results.config.primaryTurns,
+          results.coreModel.id
+        )
+        
+        report += instructions + '\n'
+      }
 
       // Performance details
       report += `## Performance Details\n\n`
@@ -903,6 +963,18 @@ export default defineComponent({
       report += validation.valid
         ? `This design is valid and should perform well across the specified frequency range.\n`
         : `This design has issues that should be addressed before construction.\n`
+
+      // Add suggestion for hybrid design if appropriate
+      if (
+        results.windingInfo && 
+        results.windingInfo.construction === 'autotransformer' && 
+        !results.config.useHybridDesign && 
+        WindingStyleCalculator.shouldUseHybridDesign(results.config.inputImpedance, results.config.outputImpedance)
+      ) {
+        report += '\n## Construction Suggestion\n\n'
+        report += 'For this non-standard impedance ratio, consider using a hybrid design (1:1 current balun + unun) '
+        report += 'instead of the autotransformer approach for better performance and simpler construction.\n'
+      }
 
       // Add band coverage
       report += `\n## Ham Band Coverage\n\n`
@@ -1384,6 +1456,26 @@ export default defineComponent({
       // Calculate after applying preset
       calculateBalun()
     }
+    
+    function formatInstructions(instructions: string): string {
+      // Convert markdown headers to HTML
+      let formatted = instructions.replace(/### (.*?)\n/g, '<h5>$1</h5>');
+      
+      // Convert markdown lists to HTML
+      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>');
+      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>');
+      formatted = formatted.replace(/<\/ul><ul>/g, '');
+      
+      // Convert numbered lists
+      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$2</li>');
+      formatted = formatted.replace(/<li>/g, '<ol><li>').replace(/<\/li>(?!<li>)/g, '</li></ol>');
+      formatted = formatted.replace(/<\/ol><ol>/g, '');
+      
+      // Convert line breaks
+      formatted = formatted.replace(/\n\n/g, '<br><br>');
+      
+      return formatted;
+    }
 
     return {
       // Form inputs
@@ -1404,6 +1496,7 @@ export default defineComponent({
       showBandCoverage,
       showWireInfo,
       showPerformanceDetails,
+      showWindingInstructions,
       showReport,
       
       // Computed properties
@@ -1430,6 +1523,8 @@ export default defineComponent({
       resetForm,
       presets,
       applyPreset,
+      formatInstructions,
+      WindingStyleCalculator,
     }
   }
 })
@@ -1790,6 +1885,9 @@ export default defineComponent({
           <button @click="showPerformanceDetails = !showPerformanceDetails">
             {{ showPerformanceDetails ? 'Hide Performance Details' : 'Show Performance Details' }}
           </button>
+          <button v-if="designResults?.windingInfo" @click="showWindingInstructions = !showWindingInstructions">
+            {{ showWindingInstructions ? 'Hide Winding Instructions' : 'Show Winding Instructions' }}
+          </button>
         </div>
         
         <div v-if="showBandCoverage" class="band-coverage">
@@ -1833,6 +1931,49 @@ export default defineComponent({
               <strong>Note:</strong> For bifilar windings, use two identical wires twisted together.
               For optimal performance, use insulated wire (enamel, PTFE, etc.) to prevent shorts.
             </p>
+          </div>
+        </div>
+        
+        <div v-if="showWindingInstructions && designResults?.windingInfo" class="winding-instructions">
+          <h4>Winding Instructions</h4>
+          <div class="winding-details">
+            <div class="winding-info-grid">
+              <div class="winding-info-item">
+                <span class="winding-info-label">Winding Style:</span>
+                <span class="winding-info-value">{{ designResults.windingInfo.style }}</span>
+              </div>
+              <div class="winding-info-item">
+                <span class="winding-info-label">Construction Method:</span>
+                <span class="winding-info-value">{{ designResults.windingInfo.construction === 'classical' ? 'Classical Transformer' : 'Autotransformer' }}</span>
+              </div>
+              <div class="winding-info-item">
+                <span class="winding-info-label">Wire Count:</span>
+                <span class="winding-info-value">{{ designResults.windingInfo.wireCount }}</span>
+              </div>
+              <div class="winding-info-item">
+                <span class="winding-info-label">Connection Type:</span>
+                <span class="winding-info-value">{{ designResults.windingInfo.connectionDetails }}</span>
+              </div>
+            </div>
+            
+            <div class="winding-instructions-content" v-html="formatInstructions(WindingStyleCalculator.generateWindingInstructions(
+              designResults.windingInfo,
+              designResults.config.primaryTurns,
+              designResults.coreModel.id
+            ))"></div>
+            
+            <div v-if="designResults.windingInfo.construction === 'autotransformer' && 
+                      !designResults.config.useHybridDesign && 
+                      WindingStyleCalculator.shouldUseHybridDesign(
+                        designResults.config.inputImpedance, 
+                        designResults.config.outputImpedance)" 
+                 class="winding-suggestion">
+              <div class="suggestion-icon">💡</div>
+              <div class="suggestion-text">
+                <strong>Construction Suggestion:</strong> For this non-standard impedance ratio (1:{{ (designResults.config.outputImpedance / designResults.config.inputImpedance).toFixed(1) }}), 
+                consider using a hybrid design (1:1 current balun + unun) instead of the autotransformer approach for better performance and simpler construction.
+              </div>
+            </div>
           </div>
         </div>
         
@@ -2585,6 +2726,91 @@ export default defineComponent({
   border-radius: 4px;
   padding: 1rem;
   font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.winding-instructions {
+  margin-bottom: 1.5rem;
+}
+
+.winding-instructions h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.winding-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.winding-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.winding-info-label {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 0.25rem;
+}
+
+.winding-info-value {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.winding-instructions-content {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.winding-instructions-content h5 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+.winding-instructions-content ul,
+.winding-instructions-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.winding-instructions-content li {
+  margin-bottom: 0.5rem;
+}
+
+.winding-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background-color: rgba(255, 204, 0, 0.1);
+  border: 1px solid rgba(255, 204, 0, 0.5);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.suggestion-icon {
+  font-size: 1.5rem;
+}
+
+.suggestion-text {
+  flex: 1;
+  font-size: 0.95rem;
   line-height: 1.5;
 }
 
