@@ -1182,6 +1182,9 @@ export default defineComponent({
       isCalculating,
       calculationError,
 
+      // Constants
+      dutyCycleFactor,
+
       // Methods
       calculateUnun,
       resetForm,
