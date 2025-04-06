@@ -1536,6 +1536,7 @@ export default defineComponent({
       formatInstructions,
       WindingStyleCalculator,
       getRecommendedWireGauge,
+      calculateRecommendedWireGauge: calculateRecommendedWireGauge,
     }
   },
 })
@@ -2284,7 +2285,7 @@ export default defineComponent({
             <li>
               Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar turns
               of AWG
-              {{ getRecommendedWireGauge(power, hybridComponents.balun.inputImpedance) }} wire.
+              {{ calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance) }} wire.
             </li>
             <li>
               Construct the unun transformer with {{ hybridComponents.unun.turns.primary }} primary
