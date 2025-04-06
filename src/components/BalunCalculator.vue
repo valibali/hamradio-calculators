@@ -1392,7 +1392,7 @@ export default defineComponent({
         },
       },
       {
-        name: '1:4 Voltage Balun (50Ω to 200Ω)',
+        name: '1:4 Current Balun (50Ω to 200Ω)',
         config: {
           inputImpedance: 50,
           outputImpedance: 200,
@@ -1406,7 +1406,7 @@ export default defineComponent({
         },
       },
       {
-        name: '1:9 Balun (50Ω to 450Ω)',
+        name: '1:9 Current Balun (50Ω to 450Ω)',
         config: {
           inputImpedance: 50,
           outputImpedance: 450,
@@ -1420,7 +1420,7 @@ export default defineComponent({
         },
       },
       {
-        name: 'High Power 1:4 Balun (200W)',
+        name: 'High Power Current 1:4 Balun (200W)',
         config: {
           inputImpedance: 50,
           outputImpedance: 200,
@@ -1434,7 +1434,7 @@ export default defineComponent({
         },
       },
       {
-        name: '160m-10m 1:4 Balun',
+        name: 'Wide-range 1:4 Current Balun',
         config: {
           inputImpedance: 50,
           outputImpedance: 200,
