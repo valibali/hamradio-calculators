@@ -1070,10 +1070,10 @@ export default defineComponent({
         },
       },
       {
-        name: '4:1 Unun (200Ω to 50Ω)',
+        name: '1:2 Unun (50Ω to 100Ω)',
         config: {
-          inputImpedance: 200,
-          outputImpedance: 50,
+          inputImpedance: 50,
+          outputImpedance: 100,
           power: 100,
           minFrequency: 3.5,
           maxFrequency: 30,
@@ -1081,33 +1081,8 @@ export default defineComponent({
           coreCount: 1,
           primaryTurns: 0,
         },
-      },
-      {
-        name: 'High Power 1:4 Unun (200W)',
-        config: {
-          inputImpedance: 50,
-          outputImpedance: 200,
-          power: 200,
-          minFrequency: 3.5,
-          maxFrequency: 30,
-          operationMode: OperationMode.CW,
-          coreCount: 1,
-          primaryTurns: 0,
-        },
-      },
-      {
-        name: '160m-10m 1:4 Unun',
-        config: {
-          inputImpedance: 50,
-          outputImpedance: 200,
-          power: 100,
-          minFrequency: 1.8,
-          maxFrequency: 30,
-          operationMode: OperationMode.SSB,
-          coreCount: 1,
-          primaryTurns: 0,
-        },
-      },
+      }
+      
     ]
 
     function applyPreset(preset: any) {
