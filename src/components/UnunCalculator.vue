@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue'
-import { WindingStyleCalculator, WindingStyleInfo } from './winding-style-calculator'
+import { WindingStyleCalculator, type WindingStyleInfo } from './winding-style-calculator'
 
 // Enums and interfaces
 enum OperationMode {
@@ -263,7 +263,7 @@ export default defineComponent({
     })
 
     const selectedCore = computed(() => {
-      return coreModels.find(core => core.id === selectedCoreModel.value) || coreModels[0]
+      return coreModels.find((core) => core.id === selectedCoreModel.value) || coreModels[0]
     })
 
     const operationModeOptions = computed(() => {
@@ -272,44 +272,44 @@ export default defineComponent({
         { value: OperationMode.CW, label: 'CW (Morse)' },
         { value: OperationMode.DIGITAL, label: 'Digital Modes (FT8, etc.)' },
         { value: OperationMode.FIFTY_PERCENT, label: '50% Duty Cycle' },
-        { value: OperationMode.CONTINUOUS, label: 'Continuous (100% Duty Cycle)' }
+        { value: OperationMode.CONTINUOUS, label: 'Continuous (100% Duty Cycle)' },
       ]
     })
 
     const coreModelOptions = computed(() => {
-      return coreModels.map(core => ({
+      return coreModels.map((core) => ({
         value: core.id,
-        label: `${core.id} (${core.mix} Mix)`
+        label: `${core.id} (${core.mix} Mix)`,
       }))
     })
 
     const bandCoverage = computed(() => {
       if (!designResults.value) return []
-      
+
       const maxFreq = Math.min(
         designResults.value.config.maxFrequency,
-        designResults.value.maxFreqBasedOnLength
+        designResults.value.maxFreqBasedOnLength,
       )
-      
-      return hamBands.map(band => ({
+
+      return hamBands.map((band) => ({
         ...band,
-        covered: band.min >= designResults.value!.config.minFrequency && band.max <= maxFreq
+        covered: band.min >= designResults.value!.config.minFrequency && band.max <= maxFreq,
       }))
     })
 
     const recommendedWireInfo = computed(() => {
       if (!designResults.value) return null
-      
+
       const wireGauge = designResults.value.recommendedWireGauge
-      const wireSpec = wireSpecs.find(w => w.awg === wireGauge)
-      
+      const wireSpec = wireSpecs.find((w) => w.awg === wireGauge)
+
       if (!wireSpec) return null
-      
+
       return {
         gauge: wireSpec.awg,
         diameter: wireSpec.diameterMm,
         area: wireSpec.areaMm2,
-        currentCapacity: wireSpec.currentCapacity
+        currentCapacity: wireSpec.currentCapacity,
       }
     })
 
@@ -393,7 +393,13 @@ export default defineComponent({
 
       // R(f) = 2π × f × n² × μ"(f) × C [Ω]
       return (
-        2 * Math.PI * freqMHz * 1e6 * Math.pow(turns, 2) * permeabilityData.muDoublePrime * formFactor
+        2 *
+        Math.PI *
+        freqMHz *
+        1e6 *
+        Math.pow(turns, 2) *
+        permeabilityData.muDoublePrime *
+        formFactor
       )
     }
 
@@ -535,11 +541,11 @@ export default defineComponent({
 
     function calculateUnunDesign(config: UnunConfig): UnunResults {
       // Find the best core for the requirements
-      const core = coreModels.find(c => c.id === selectedCoreModel.value) || findBestCore(config)
+      const core = coreModels.find((c) => c.id === selectedCoreModel.value) || findBestCore(config)
 
       // Calculate turns ratio
       const turnsRatio = Math.sqrt(config.outputImpedance / config.inputImpedance)
-      
+
       // Calculate secondary turns
       const secondaryTurns = Math.round(config.primaryTurns * turnsRatio)
 
@@ -616,7 +622,7 @@ export default defineComponent({
       // Determine winding style information
       const windingInfo = WindingStyleCalculator.determineWindingAndBuildStyle(
         config.inputImpedance,
-        config.outputImpedance
+        config.outputImpedance,
       )
 
       // Return the results
@@ -693,8 +699,8 @@ export default defineComponent({
 
       // Check if winding style suggests a complex construction
       if (
-        results.windingInfo && 
-        results.windingInfo.construction === 'autotransformer' && 
+        results.windingInfo &&
+        results.windingInfo.construction === 'autotransformer' &&
         results.windingInfo.wireCount > 3
       ) {
         messages.push({
@@ -719,7 +725,7 @@ export default defineComponent({
     }
 
     function optimizeUnunDesign(config: UnunConfig): UnunResults {
-      const core = coreModels.find(c => c.id === selectedCoreModel.value) || findBestCore(config)
+      const core = coreModels.find((c) => c.id === selectedCoreModel.value) || findBestCore(config)
 
       // Step 1: Optimize turn count
       // Start with the minimum number of turns that satisfies the Rule of 4
@@ -801,12 +807,7 @@ export default defineComponent({
         for (const freq of [1.8, 3.5, 5.0]) {
           if (freq <= config.minFrequency) continue
 
-          const altTurns = calculateMinimumTurnsForRuleOfFour(
-            core,
-            freq,
-            config.inputImpedance,
-            1,
-          )
+          const altTurns = calculateMinimumTurnsForRuleOfFour(core, freq, config.inputImpedance, 1)
 
           const altConfig = {
             ...config,
@@ -828,7 +829,7 @@ export default defineComponent({
       // Alternative 2: Different turns ratio approximation
       // Try to find a simpler turns ratio that's close to the desired impedance ratio
       const targetTurnsRatio = Math.sqrt(config.outputImpedance / config.inputImpedance)
-      
+
       // Try some common ratios
       const commonRatios = [
         { primary: 1, secondary: 2 }, // 1:4 impedance
@@ -837,32 +838,32 @@ export default defineComponent({
         { primary: 1, secondary: 4 }, // 1:16 impedance
         { primary: 3, secondary: 4 }, // 9:16 impedance
       ]
-      
+
       // Find the closest common ratio
       let bestRatio = commonRatios[0]
-      let bestDiff = Math.abs(targetTurnsRatio - (bestRatio.secondary / bestRatio.primary))
-      
+      let bestDiff = Math.abs(targetTurnsRatio - bestRatio.secondary / bestRatio.primary)
+
       for (const ratio of commonRatios) {
-        const diff = Math.abs(targetTurnsRatio - (ratio.secondary / ratio.primary))
+        const diff = Math.abs(targetTurnsRatio - ratio.secondary / ratio.primary)
         if (diff < bestDiff) {
           bestDiff = diff
           bestRatio = ratio
         }
       }
-      
+
       // If the best common ratio is close enough (within 10%)
       if (bestDiff / targetTurnsRatio < 0.1) {
         // Calculate the actual impedance ratio this would give
         const actualImpedanceRatio = Math.pow(bestRatio.secondary / bestRatio.primary, 2)
         const actualOutputImpedance = config.inputImpedance * actualImpedanceRatio
-        
+
         // Create an alternative with this simpler ratio
         const simplifiedConfig = {
           ...config,
           outputImpedance: actualOutputImpedance,
           primaryTurns: bestRatio.primary * minTurns,
         }
-        
+
         const simplifiedResults = calculateUnunDesign(simplifiedConfig)
         alternatives.push(simplifiedResults)
       }
@@ -901,14 +902,14 @@ export default defineComponent({
         report += `- Winding Style: ${results.windingInfo.style}\n`
         report += `- Construction Method: ${results.windingInfo.construction}\n`
         report += `- Connection Method: ${results.windingInfo.connectionDetails}\n\n`
-        
+
         // Generate detailed winding instructions
         const instructions = WindingStyleCalculator.generateWindingInstructions(
           results.windingInfo,
           results.config.primaryTurns,
-          results.coreModel.id
+          results.coreModel.id,
         )
-        
+
         report += instructions + '\n'
       }
 
@@ -1118,29 +1119,29 @@ export default defineComponent({
       operationMode.value = preset.config.operationMode
       coreCount.value = preset.config.coreCount
       primaryTurns.value = preset.config.primaryTurns
-      
+
       // Calculate after applying preset
       calculateUnun()
     }
-    
+
     function formatInstructions(instructions: string): string {
       // Convert markdown headers to HTML
-      let formatted = instructions.replace(/### (.*?)\n/g, '<h5>$1</h5>');
-      
+      let formatted = instructions.replace(/### (.*?)\n/g, '<h5>$1</h5>')
+
       // Convert markdown lists to HTML
-      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>');
-      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>');
-      formatted = formatted.replace(/<\/ul><ul>/g, '');
-      
+      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>')
+      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>')
+      formatted = formatted.replace(/<\/ul><ul>/g, '')
+
       // Convert numbered lists
-      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$2</li>');
-      formatted = formatted.replace(/<li>/g, '<ol><li>').replace(/<\/li>(?!<li>)/g, '</li></ol>');
-      formatted = formatted.replace(/<\/ol><ol>/g, '');
-      
+      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$2</li>')
+      formatted = formatted.replace(/<li>/g, '<ol><li>').replace(/<\/li>(?!<li>)/g, '</li></ol>')
+      formatted = formatted.replace(/<\/ol><ol>/g, '')
+
       // Convert line breaks
-      formatted = formatted.replace(/\n\n/g, '<br><br>');
-      
-      return formatted;
+      formatted = formatted.replace(/\n\n/g, '<br><br>')
+
+      return formatted
     }
 
     return {
@@ -1162,7 +1163,7 @@ export default defineComponent({
       showPerformanceDetails,
       showWindingInstructions,
       showReport,
-      
+
       // Computed properties
       impedanceRatio,
       turnsRatio,
@@ -1173,14 +1174,14 @@ export default defineComponent({
       coreModelOptions,
       bandCoverage,
       recommendedWireInfo,
-      
+
       // Results
       designResults,
       validationResult,
       designReport,
       isCalculating,
       calculationError,
-      
+
       // Methods
       calculateUnun,
       resetForm,
@@ -1189,7 +1190,7 @@ export default defineComponent({
       formatInstructions,
       WindingStyleCalculator,
     }
-  }
+  },
 })
 </script>
 
@@ -1198,44 +1199,62 @@ export default defineComponent({
     <div class="calculator-intro">
       <h3>Unun Designer</h3>
       <p>
-        Design unbalanced-to-unbalanced transformers (ununs) for RF applications. This calculator helps you
-        determine the optimal core type, turns count, and wire gauge for your specific requirements.
+        Design unbalanced-to-unbalanced transformers (ununs) for RF applications. This calculator
+        helps you determine the optimal core type, turns count, and wire gauge for your specific
+        requirements.
       </p>
-      
+
       <div class="design-steps" v-if="showDesignSteps">
         <h4>Design Process Overview</h4>
         <ol>
           <li>
-            <strong>Specify Requirements:</strong> Input impedance, output impedance, power handling, and frequency range.
+            <strong>Specify Requirements:</strong> Input impedance, output impedance, power
+            handling, and frequency range.
+          </li>
+          <li><strong>Core Selection:</strong> Based on power requirements and frequency range.</li>
+          <li>
+            <strong>Turns Calculation:</strong> Determined by the "Rule of 4" (XL ≥ 4×Z) at the
+            lowest frequency and the impedance ratio.
           </li>
           <li>
-            <strong>Core Selection:</strong> Based on power requirements and frequency range.
-          </li>
-          <li>
-            <strong>Turns Calculation:</strong> Determined by the "Rule of 4" (XL ≥ 4×Z) at the lowest frequency and the impedance ratio.
-          </li>
-          <li>
-            <strong>Design Validation:</strong> Check core loss, flux density, and winding length constraints.
+            <strong>Design Validation:</strong> Check core loss, flux density, and winding length
+            constraints.
           </li>
           <li>
             <strong>Optimization:</strong> Adjust parameters if needed to meet all requirements.
           </li>
           <li>
-            <strong>Winding Style:</strong> Determine the appropriate winding style based on the impedance ratio.
+            <strong>Winding Style:</strong> Determine the appropriate winding style based on the
+            impedance ratio.
           </li>
         </ol>
         <div class="info-box">
           <h5>Key Design Principles</h5>
           <ul>
-            <li><strong>Rule of 4:</strong> The inductive reactance should be at least 4 times the input impedance at the lowest frequency.</li>
-            <li><strong>Core Loss:</strong> Must be within the core's thermal limits for the selected operation mode.</li>
-            <li><strong>Flux Density:</strong> Should remain in the linear region (&lt;50mT) to prevent saturation.</li>
-            <li><strong>Winding Length:</strong> Should be less than λ/10 at the highest frequency to prevent transmission line effects.</li>
-            <li><strong>Turns Ratio:</strong> The square root of the impedance ratio determines the turns ratio.</li>
+            <li>
+              <strong>Rule of 4:</strong> The inductive reactance should be at least 4 times the
+              input impedance at the lowest frequency.
+            </li>
+            <li>
+              <strong>Core Loss:</strong> Must be within the core's thermal limits for the selected
+              operation mode.
+            </li>
+            <li>
+              <strong>Flux Density:</strong> Should remain in the linear region (&lt;50mT) to
+              prevent saturation.
+            </li>
+            <li>
+              <strong>Winding Length:</strong> Should be less than λ/10 at the highest frequency to
+              prevent transmission line effects.
+            </li>
+            <li>
+              <strong>Turns Ratio:</strong> The square root of the impedance ratio determines the
+              turns ratio.
+            </li>
           </ul>
         </div>
       </div>
-      
+
       <button class="toggle-button" @click="showDesignSteps = !showDesignSteps">
         {{ showDesignSteps ? 'Hide Design Process' : 'Show Design Process' }}
       </button>
@@ -1245,9 +1264,9 @@ export default defineComponent({
       <div class="presets-section">
         <h4>Common Configurations</h4>
         <div class="presets-container">
-          <button 
-            v-for="(preset, index) in presets" 
-            :key="index" 
+          <button
+            v-for="(preset, index) in presets"
+            :key="index"
             class="preset-button"
             @click="applyPreset(preset)"
           >
@@ -1258,94 +1277,90 @@ export default defineComponent({
 
       <div class="form-section">
         <h4>Basic Parameters</h4>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="inputImpedance">Input Impedance (Ω)</label>
-            <input 
-              id="inputImpedance" 
-              v-model.number="inputImpedance" 
-              type="number" 
-              min="1" 
+            <input
+              id="inputImpedance"
+              v-model.number="inputImpedance"
+              type="number"
+              min="1"
               max="600"
             />
           </div>
-          
+
           <div class="form-group">
             <label for="outputImpedance">Output Impedance (Ω)</label>
-            <input 
-              id="outputImpedance" 
-              v-model.number="outputImpedance" 
-              type="number" 
-              min="1" 
+            <input
+              id="outputImpedance"
+              v-model.number="outputImpedance"
+              type="number"
+              min="1"
               max="600"
             />
           </div>
-          
+
           <div class="form-group">
             <label>Impedance Ratio</label>
             <div class="calculated-value">1:{{ impedanceRatio.toFixed(1) }}</div>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Turns Ratio</label>
             <div class="calculated-value">1:{{ turnsRatio.toFixed(2) }}</div>
           </div>
-          
+
           <div class="form-group">
             <label>Primary:Secondary</label>
             <div class="calculated-value">
-              {{ primaryTurns === 0 ? 'Auto' : primaryTurns }}:{{ secondaryTurns === 0 ? 'Auto' : secondaryTurns }}
+              {{ primaryTurns === 0 ? 'Auto' : primaryTurns }}:{{
+                secondaryTurns === 0 ? 'Auto' : secondaryTurns
+              }}
             </div>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="minFrequency">Min Frequency (MHz)</label>
-            <input 
-              id="minFrequency" 
-              v-model.number="minFrequency" 
-              type="number" 
-              min="0.1" 
-              max="100" 
+            <input
+              id="minFrequency"
+              v-model.number="minFrequency"
+              type="number"
+              min="0.1"
+              max="100"
               step="0.1"
             />
           </div>
-          
+
           <div class="form-group">
             <label for="maxFrequency">Max Frequency (MHz)</label>
-            <input 
-              id="maxFrequency" 
-              v-model.number="maxFrequency" 
-              type="number" 
-              min="0.1" 
-              max="100" 
+            <input
+              id="maxFrequency"
+              v-model.number="maxFrequency"
+              type="number"
+              min="0.1"
+              max="100"
               step="0.1"
             />
           </div>
-          
+
           <div class="form-group">
             <label for="power">Power (W)</label>
-            <input 
-              id="power" 
-              v-model.number="power" 
-              type="number" 
-              min="1" 
-              max="2000"
-            />
+            <input id="power" v-model.number="power" type="number" min="1" max="2000" />
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="operationMode">Operation Mode</label>
             <select id="operationMode" v-model="operationMode">
-              <option 
-                v-for="option in operationModeOptions" 
-                :key="option.value" 
+              <option
+                v-for="option in operationModeOptions"
+                :key="option.value"
                 :value="option.value"
               >
                 {{ option.label }}
@@ -1354,24 +1369,20 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      
+
       <div class="form-section" v-if="showAdvancedOptions">
         <h4>Advanced Options</h4>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="selectedCoreModel">Core Model</label>
             <select id="selectedCoreModel" v-model="selectedCoreModel">
-              <option 
-                v-for="option in coreModelOptions" 
-                :key="option.value" 
-                :value="option.value"
-              >
+              <option v-for="option in coreModelOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="coreCount">Core Count</label>
             <select id="coreCount" v-model.number="coreCount">
@@ -1379,19 +1390,13 @@ export default defineComponent({
               <option :value="2">Stacked Cores (2x)</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="primaryTurns">Primary Turns (0 = Auto)</label>
-            <input 
-              id="primaryTurns" 
-              v-model.number="primaryTurns" 
-              type="number" 
-              min="0" 
-              max="30"
-            />
+            <input id="primaryTurns" v-model.number="primaryTurns" type="number" min="0" max="30" />
           </div>
         </div>
-        
+
         <div class="core-info" v-if="selectedCore">
           <h5>Selected Core Properties</h5>
           <div class="core-properties">
@@ -1413,16 +1418,25 @@ export default defineComponent({
             </div>
             <div class="property">
               <span class="property-label">Dimensions:</span>
-              <span class="property-value">OD={{ selectedCore.dimensions.od }}mm, ID={{ selectedCore.dimensions.id }}mm, H={{ selectedCore.dimensions.height }}mm</span>
+              <span class="property-value"
+                >OD={{ selectedCore.dimensions.od }}mm, ID={{ selectedCore.dimensions.id }}mm, H={{
+                  selectedCore.dimensions.height
+                }}mm</span
+              >
             </div>
             <div class="property">
               <span class="property-label">Recommended Freq:</span>
-              <span class="property-value">{{ selectedCore.recommendedFreqRange.min }}-{{ selectedCore.recommendedFreqRange.max }} MHz</span>
+              <span class="property-value"
+                >{{ selectedCore.recommendedFreqRange.min }}-{{
+                  selectedCore.recommendedFreqRange.max
+                }}
+                MHz</span
+              >
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="form-actions">
         <button class="toggle-advanced" @click="showAdvancedOptions = !showAdvancedOptions">
           {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Show Advanced Options' }}
@@ -1440,11 +1454,11 @@ export default defineComponent({
 
     <div v-if="designResults && showReport" class="results-section">
       <h3>Unun Design Results</h3>
-      
+
       <div class="validation-messages" v-if="validationResult">
         <h4>Validation</h4>
-        <div 
-          v-for="(message, index) in validationResult.messages" 
+        <div
+          v-for="(message, index) in validationResult.messages"
           :key="index"
           :class="['validation-message', `message-${message.type}`]"
         >
@@ -1453,44 +1467,76 @@ export default defineComponent({
           </span>
           <span class="message-text">{{ message.message }}</span>
         </div>
-        
+
         <div class="validation-summary" :class="validationResult.valid ? 'valid' : 'invalid'">
           <span class="summary-icon">{{ validationResult.valid ? '✅' : '❌' }}</span>
           <span class="summary-text">
-            {{ validationResult.valid ? 'This design is valid and should perform well.' : 'This design has issues that should be addressed.' }}
+            {{
+              validationResult.valid
+                ? 'This design is valid and should perform well.'
+                : 'This design has issues that should be addressed.'
+            }}
           </span>
         </div>
       </div>
-      
+
       <div class="results-grid">
         <div class="result-card">
           <h4>Basic Design</h4>
           <div class="result-item">
             <span class="result-label">Impedance Ratio:</span>
-            <span class="result-value">{{ designResults.config.inputImpedance }}Ω:{{ designResults.config.outputImpedance }}Ω (1:{{ (designResults.config.outputImpedance / designResults.config.inputImpedance).toFixed(1) }})</span>
+            <span class="result-value"
+              >{{ designResults.config.inputImpedance }}Ω:{{
+                designResults.config.outputImpedance
+              }}Ω (1:{{
+                (
+                  designResults.config.outputImpedance / designResults.config.inputImpedance
+                ).toFixed(1)
+              }})</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Turns Ratio:</span>
-            <span class="result-value">{{ designResults.turnsRatio.toFixed(2) }} ({{ designResults.config.primaryTurns }}:{{ designResults.secondaryTurns }})</span>
+            <span class="result-value"
+              >{{ designResults.turnsRatio.toFixed(2) }} ({{ designResults.config.primaryTurns }}:{{
+                designResults.secondaryTurns
+              }})</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Frequency Range:</span>
-            <span class="result-value">{{ designResults.config.minFrequency }}-{{ Math.min(designResults.config.maxFrequency, designResults.maxFreqBasedOnLength).toFixed(1) }} MHz</span>
+            <span class="result-value"
+              >{{ designResults.config.minFrequency }}-{{
+                Math.min(
+                  designResults.config.maxFrequency,
+                  designResults.maxFreqBasedOnLength,
+                ).toFixed(1)
+              }}
+              MHz</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Power Rating:</span>
-            <span class="result-value">{{ designResults.calculatedPowerRating.toFixed(1) }} W ({{ designResults.config.operationMode }})</span>
+            <span class="result-value"
+              >{{ designResults.calculatedPowerRating.toFixed(1) }} W ({{
+                designResults.config.operationMode
+              }})</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Core:</span>
-            <span class="result-value">{{ designResults.coreModel.id }} ({{ designResults.config.coreCount }}x)</span>
+            <span class="result-value"
+              >{{ designResults.coreModel.id }} ({{ designResults.config.coreCount }}x)</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Characteristic Z:</span>
-            <span class="result-value">{{ designResults.characteristicImpedance.toFixed(1) }} Ω</span>
+            <span class="result-value"
+              >{{ designResults.characteristicImpedance.toFixed(1) }} Ω</span
+            >
           </div>
         </div>
-        
+
         <div class="result-card">
           <h4>Performance Metrics</h4>
           <div class="result-item">
@@ -1500,18 +1546,24 @@ export default defineComponent({
             </span>
           </div>
           <div class="result-item">
-            <span class="result-label">Reactance at {{ designResults.config.minFrequency }} MHz:</span>
+            <span class="result-label"
+              >Reactance at {{ designResults.config.minFrequency }} MHz:</span
+            >
             <span class="result-value">{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span>
           </div>
           <div class="result-item">
             <span class="result-label">Core Loss:</span>
             <span class="result-value" :class="designResults.withinCoreLossLimits ? 'good' : 'bad'">
-              {{ designResults.coreLossAtMinFreq.toFixed(1) }} W / {{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W max
+              {{ designResults.coreLossAtMinFreq.toFixed(1) }} W /
+              {{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W max
             </span>
           </div>
           <div class="result-item">
             <span class="result-label">Flux Density:</span>
-            <span class="result-value" :class="designResults.fluxDensityInLinearRegion ? 'good' : 'bad'">
+            <span
+              class="result-value"
+              :class="designResults.fluxDensityInLinearRegion ? 'good' : 'bad'"
+            >
               {{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT (Linear: <50 mT)
             </span>
           </div>
@@ -1521,7 +1573,14 @@ export default defineComponent({
           </div>
           <div class="result-item">
             <span class="result-label">Max Frequency (Length):</span>
-            <span class="result-value" :class="designResults.maxFreqBasedOnLength >= designResults.config.maxFrequency ? 'good' : 'bad'">
+            <span
+              class="result-value"
+              :class="
+                designResults.maxFreqBasedOnLength >= designResults.config.maxFrequency
+                  ? 'good'
+                  : 'bad'
+              "
+            >
               {{ designResults.maxFreqBasedOnLength.toFixed(1) }} MHz
             </span>
           </div>
@@ -1531,7 +1590,7 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      
+
       <div class="additional-info">
         <div class="info-toggle">
           <button @click="showBandCoverage = !showBandCoverage">
@@ -1543,16 +1602,21 @@ export default defineComponent({
           <button @click="showPerformanceDetails = !showPerformanceDetails">
             {{ showPerformanceDetails ? 'Hide Performance Details' : 'Show Performance Details' }}
           </button>
-          <button v-if="designResults?.windingInfo" @click="showWindingInstructions = !showWindingInstructions">
-            {{ showWindingInstructions ? 'Hide Winding Instructions' : 'Show Winding Instructions' }}
+          <button
+            v-if="designResults?.windingInfo"
+            @click="showWindingInstructions = !showWindingInstructions"
+          >
+            {{
+              showWindingInstructions ? 'Hide Winding Instructions' : 'Show Winding Instructions'
+            }}
           </button>
         </div>
-        
+
         <div v-if="showBandCoverage" class="band-coverage">
           <h4>Ham Band Coverage</h4>
           <div class="band-grid">
-            <div 
-              v-for="band in bandCoverage" 
+            <div
+              v-for="band in bandCoverage"
               :key="band.name"
               class="band-item"
               :class="{ covered: band.covered }"
@@ -1563,7 +1627,7 @@ export default defineComponent({
             </div>
           </div>
         </div>
-        
+
         <div v-if="showWireInfo && recommendedWireInfo" class="wire-info">
           <h4>Wire Information</h4>
           <div class="wire-details">
@@ -1586,13 +1650,17 @@ export default defineComponent({
           </div>
           <div class="wire-notes">
             <p>
-              <strong>Note:</strong> For optimal performance, use insulated wire (enamel, PTFE, etc.) to prevent shorts.
-              The primary and secondary windings should be wound together for best coupling.
+              <strong>Note:</strong> For optimal performance, use insulated wire (enamel, PTFE,
+              etc.) to prevent shorts. The primary and secondary windings should be wound together
+              for best coupling.
             </p>
           </div>
         </div>
-        
-        <div v-if="showWindingInstructions && designResults?.windingInfo" class="winding-instructions">
+
+        <div
+          v-if="showWindingInstructions && designResults?.windingInfo"
+          class="winding-instructions"
+        >
           <h4>Winding Instructions</h4>
           <div class="winding-details">
             <div class="winding-info-grid">
@@ -1602,7 +1670,11 @@ export default defineComponent({
               </div>
               <div class="winding-info-item">
                 <span class="winding-info-label">Construction Method:</span>
-                <span class="winding-info-value">{{ designResults.windingInfo.construction === 'classical' ? 'Classical Transformer' : 'Autotransformer' }}</span>
+                <span class="winding-info-value">{{
+                  designResults.windingInfo.construction === 'classical'
+                    ? 'Classical Transformer'
+                    : 'Autotransformer'
+                }}</span>
               </div>
               <div class="winding-info-item">
                 <span class="winding-info-label">Wire Count:</span>
@@ -1610,28 +1682,45 @@ export default defineComponent({
               </div>
               <div class="winding-info-item">
                 <span class="winding-info-label">Connection Type:</span>
-                <span class="winding-info-value">{{ designResults.windingInfo.connectionDetails }}</span>
+                <span class="winding-info-value">{{
+                  designResults.windingInfo.connectionDetails
+                }}</span>
               </div>
             </div>
-            
-            <div class="winding-instructions-content" v-html="formatInstructions(WindingStyleCalculator.generateWindingInstructions(
-              designResults.windingInfo,
-              designResults.config.primaryTurns,
-              designResults.coreModel.id
-            ))"></div>
-            
-            <div v-if="designResults.windingInfo.construction === 'autotransformer' && 
-                      designResults.windingInfo.wireCount > 3" 
-                 class="winding-suggestion">
+
+            <div
+              class="winding-instructions-content"
+              v-html="
+                formatInstructions(
+                  WindingStyleCalculator.generateWindingInstructions(
+                    designResults.windingInfo,
+                    designResults.config.primaryTurns,
+                    designResults.coreModel.id,
+                  ),
+                )
+              "
+            ></div>
+
+            <div
+              v-if="
+                designResults.windingInfo.construction === 'autotransformer' &&
+                designResults.windingInfo.wireCount > 3
+              "
+              class="winding-suggestion"
+            >
               <div class="suggestion-icon">💡</div>
               <div class="suggestion-text">
-                <strong>Construction Suggestion:</strong> For this impedance ratio (1:{{ (designResults.config.outputImpedance / designResults.config.inputImpedance).toFixed(1) }}), 
-                consider using a simpler ratio like 1:4 or 1:9 if your application allows for it. This would simplify the winding process.
+                <strong>Construction Suggestion:</strong> For this impedance ratio (1:{{
+                  (
+                    designResults.config.outputImpedance / designResults.config.inputImpedance
+                  ).toFixed(1)
+                }}), consider using a simpler ratio like 1:4 or 1:9 if your application allows for
+                it. This would simplify the winding process.
               </div>
             </div>
           </div>
         </div>
-        
+
         <div v-if="showPerformanceDetails" class="performance-details">
           <h4>Detailed Performance Analysis</h4>
           <div class="performance-grid">
@@ -1651,19 +1740,29 @@ export default defineComponent({
               </div>
               <div class="detail-item">
                 <span class="detail-label">Saturation Flux Density:</span>
-                <span class="detail-value">{{ designResults.coreModel.saturationFluxDensity }} mT</span>
+                <span class="detail-value"
+                  >{{ designResults.coreModel.saturationFluxDensity }} mT</span
+                >
               </div>
             </div>
-            
+
             <div class="performance-item">
               <h5>Electrical Parameters</h5>
               <div class="detail-item">
-                <span class="detail-label">Impedance at {{ designResults.config.minFrequency }} MHz:</span>
-                <span class="detail-value">{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span>
+                <span class="detail-label"
+                  >Impedance at {{ designResults.config.minFrequency }} MHz:</span
+                >
+                <span class="detail-value"
+                  >{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span
+                >
               </div>
               <div class="detail-item">
-                <span class="detail-label">Reactance at {{ designResults.config.minFrequency }} MHz:</span>
-                <span class="detail-value">{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span>
+                <span class="detail-label"
+                  >Reactance at {{ designResults.config.minFrequency }} MHz:</span
+                >
+                <span class="detail-value"
+                  >{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span
+                >
               </div>
               <div class="detail-item">
                 <span class="detail-label">Q Factor:</span>
@@ -1671,10 +1770,12 @@ export default defineComponent({
               </div>
               <div class="detail-item">
                 <span class="detail-label">Flux Density:</span>
-                <span class="detail-value">{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span>
+                <span class="detail-value"
+                  >{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span
+                >
               </div>
             </div>
-            
+
             <div class="performance-item">
               <h5>Thermal Considerations</h5>
               <div class="detail-item">
@@ -1683,47 +1784,74 @@ export default defineComponent({
               </div>
               <div class="detail-item">
                 <span class="detail-label">Max Permissible Loss:</span>
-                <span class="detail-value">{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span>
+                <span class="detail-value"
+                  >{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span
+                >
               </div>
               <div class="detail-item">
                 <span class="detail-label">Loss Ratio:</span>
-                <span class="detail-value">{{ (designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss).toFixed(2) }}</span>
+                <span class="detail-value">{{
+                  (designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss).toFixed(
+                    2,
+                  )
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Duty Cycle Factor:</span>
-                <span class="detail-value">{{ dutyCycleFactor[designResults.config.operationMode] }}x</span>
+                <span class="detail-value"
+                  >{{ dutyCycleFactor[designResults.config.operationMode] }}x</span
+                >
               </div>
             </div>
           </div>
         </div>
       </div>
-      
-      <div v-if="designResults.alternativeConfigurations && designResults.alternativeConfigurations.length > 0" class="alternative-designs">
+
+      <div
+        v-if="
+          designResults.alternativeConfigurations &&
+          designResults.alternativeConfigurations.length > 0
+        "
+        class="alternative-designs"
+      >
         <div class="section-header">
           <h4>Alternative Designs</h4>
           <button @click="showAlternativeDesigns = !showAlternativeDesigns">
             {{ showAlternativeDesigns ? 'Hide' : 'Show' }}
           </button>
         </div>
-        
+
         <div v-if="showAlternativeDesigns" class="alternatives-container">
-          <div 
-            v-for="(alt, index) in designResults.alternativeConfigurations" 
+          <div
+            v-for="(alt, index) in designResults.alternativeConfigurations"
             :key="index"
             class="alternative-card"
           >
             <h5>Alternative {{ index + 1 }}</h5>
             <div class="alt-item">
               <span class="alt-label">Impedance Ratio:</span>
-              <span class="alt-value">{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω (1:{{ (alt.config.outputImpedance / alt.config.inputImpedance).toFixed(1) }})</span>
+              <span class="alt-value"
+                >{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω (1:{{
+                  (alt.config.outputImpedance / alt.config.inputImpedance).toFixed(1)
+                }})</span
+              >
             </div>
             <div class="alt-item">
               <span class="alt-label">Turns Ratio:</span>
-              <span class="alt-value">{{ alt.turnsRatio.toFixed(2) }} ({{ alt.config.primaryTurns }}:{{ alt.secondaryTurns }})</span>
+              <span class="alt-value"
+                >{{ alt.turnsRatio.toFixed(2) }} ({{ alt.config.primaryTurns }}:{{
+                  alt.secondaryTurns
+                }})</span
+              >
             </div>
             <div class="alt-item">
               <span class="alt-label">Frequency Range:</span>
-              <span class="alt-value">{{ alt.config.minFrequency }}-{{ Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1) }} MHz</span>
+              <span class="alt-value"
+                >{{ alt.config.minFrequency }}-{{
+                  Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)
+                }}
+                MHz</span
+              >
             </div>
             <div class="alt-item">
               <span class="alt-label">Cores:</span>
@@ -1736,7 +1864,7 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      
+
       <div class="design-report">
         <div class="report-toggle">
           <button @click="showReport = !showReport">
@@ -1753,7 +1881,15 @@ export default defineComponent({
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
 .calculator-intro {
@@ -2514,25 +2650,25 @@ export default defineComponent({
   .form-group {
     flex: 1 1 100%;
   }
-  
+
   .preset-button {
     flex: 1 1 100%;
   }
-  
+
   .results-grid,
   .performance-grid,
   .alternatives-container {
     grid-template-columns: 1fr;
   }
-  
+
   .band-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .form-actions button {
     width: 100%;
   }
