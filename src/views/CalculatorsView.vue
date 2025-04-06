@@ -76,18 +76,6 @@ export default defineComponent({
           ],
         },
         {
-          id: 'baluns',
-          name: 'Baluns & Transformers',
-          description: 'Design baluns, ununs, and impedance transformers for RF applications',
-          calculators: [
-            {
-              id: 'balun',
-              name: 'Balun Calculator',
-              description: 'Design balanced-to-unbalanced transformers for antenna systems',
-            },
-          ],
-        },
-        {
           id: 'antennas',
           name: 'Antennas',
           description: 'Calculate antenna dimensions, gain, and radiation patterns',
