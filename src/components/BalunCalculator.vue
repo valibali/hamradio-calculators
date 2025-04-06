@@ -1525,6 +1525,9 @@ export default defineComponent({
       isCalculating,
       calculationError,
 
+      // Constants
+      dutyCycleFactor,
+
       // Methods
       calculateBalun,
       resetForm,
@@ -1532,6 +1535,7 @@ export default defineComponent({
       applyPreset,
       formatInstructions,
       WindingStyleCalculator,
+      getRecommendedWireGauge,
     }
   },
 })
