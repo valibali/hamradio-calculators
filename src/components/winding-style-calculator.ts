@@ -19,6 +19,10 @@ export interface WindingStyleInfo {
   connectionDetails: string
   /** Diagram type for visual representation */
   diagramType: string
+  /** Numerator of the turns ratio */
+  numerator: number
+  /** Denominator of the turns ratio */
+  denominator: number
 }
 
 /**
@@ -104,6 +108,8 @@ export class WindingStyleCalculator {
       wireCount,
       connectionDetails,
       diagramType,
+      numerator,
+      denominator,
     }
   }
 
