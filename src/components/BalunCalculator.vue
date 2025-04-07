@@ -370,12 +370,14 @@ export default defineComponent({
       }
     }
 
-    function calculateFormFactor(core: CoreModel, coreCount: number): number {
-      // Calculate air-core inductance factor (L0 = AL * N^2)
-      // Using mu0 * Ae / le formula
-      return (
-        constants.mu0 * ((coreCount * core.dimensions.ae) / core.dimensions.le)
-      )
+    function calculateL0(turns: number, core: CoreModel, coreCount: number): number {
+      // Calculate air-core inductance: L0 = (μ0 * N^2 * Ae) / le [H]
+      // Ae is in cm² and needs to be converted to m²
+      // le is in cm and needs to be converted to m
+      const Ae_m2 = (coreCount * core.dimensions.ae) * 1e-4  // Convert from cm² to m²
+      const le_m = core.dimensions.le * 1e-2                 // Convert from cm to m
+      
+      return (constants.mu0 * Math.pow(turns, 2) * Ae_m2) / le_m  // [H]
     }
 
     function calculateInductance(
@@ -384,12 +386,17 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
+      // Get permeability at the specified frequency
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
-      const formFactor = calculateFormFactor(core, coreCount)
-
-      // L = L0 * μ' where L0 is the air-core inductance
-      // Convert from H to μH by multiplying by 1e6
-      return formFactor * Math.pow(turns, 2) * permeabilityData.muPrime * 1e6
+      
+      // Calculate air-core inductance
+      const L0 = calculateL0(turns, core, coreCount)  // [H]
+      
+      // Calculate actual inductance: Ls = L0 * μ'
+      const Ls = L0 * permeabilityData.muPrime
+      
+      // Convert from H to μH
+      return Ls * 1e6
     }
 
     function calculateInductiveReactance(
@@ -398,10 +405,15 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
-      const inductance = calculateInductance(core, turns, freqMHz, coreCount)
-
-      // XL = 2πfL (with L in μH and f in MHz)
-      return 2 * Math.PI * freqMHz * inductance * 1e-6 * 1e6
+      // Convert frequency to Hz
+      const fHz = freqMHz * 1e6
+      const omega = 2 * Math.PI * fHz
+      
+      // Get inductance in H (not μH)
+      const inductanceH = calculateInductance(core, turns, freqMHz, coreCount) * 1e-6
+      
+      // Calculate reactance: Xs = ω * Ls
+      return omega * inductanceH  // [Ω]
     }
 
     function calculateSeriesResistance(
@@ -410,13 +422,18 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
+      // Get permeability at the specified frequency
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
-      const formFactor = calculateFormFactor(core, coreCount)
+      
+      // Calculate air-core inductance
+      const L0 = calculateL0(turns, core, coreCount)  // [H]
+      
+      // Convert frequency to Hz
       const fHz = freqMHz * 1e6
       const omega = 2 * Math.PI * fHz
-
-      // Rs = ω * L0 * μ" where L0 is the air-core inductance
-      return omega * formFactor * Math.pow(turns, 2) * permeabilityData.muDoublePrime
+      
+      // Calculate series resistance: Rs = ω * L0 * μ"
+      return omega * L0 * permeabilityData.muDoublePrime  // [Ω]
     }
 
     function calculateComplexImpedance(
@@ -425,11 +442,12 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
+      // Calculate reactance and resistance
       const reactance = calculateInductiveReactance(core, turns, freqMHz, coreCount)
       const resistance = calculateSeriesResistance(core, turns, freqMHz, coreCount)
 
-      // Z(f) = √(XL(f)² + R(f)²) [Ω]
-      return Math.sqrt(Math.pow(reactance, 2) + Math.pow(resistance, 2))
+      // Calculate impedance magnitude: Z = √(Xs² + Rs²)
+      return Math.sqrt(Math.pow(reactance, 2) + Math.pow(resistance, 2))  // [Ω]
     }
 
     function calculateCoreLoss(
@@ -480,14 +498,18 @@ export default defineComponent({
       core: CoreModel,
       turns: number,
       freqMHz: number,
-      rmsVoltage: number,
+      power: number,
+      inputImpedance: number,
     ): number {
+      // Calculate input voltage: V_in = sqrt(P_in * Z_source)
+      const inputVoltage = Math.sqrt(power * inputImpedance)
+      
       // B = V / (4.44 * f * N * Ae) [T]
       // Convert to mT by multiplying by 1000
       const fHz = freqMHz * 1e6
       const areaM2 = core.dimensions.ae * 1e-4  // Convert from cm² to m²
       
-      return (rmsVoltage * 1000) / (4.44 * fHz * turns * areaM2)
+      return (inputVoltage * 1000) / (4.44 * fHz * turns * areaM2)
     }
 
     function calculateWindingLength(core: CoreModel, turns: number, coreCount: number): number {
@@ -515,10 +537,6 @@ export default defineComponent({
       return (constants.speedOfLight * 1e-6) / (totalLengthM / constants.maxWindingLengthFraction)
     }
 
-    function calculateRmsVoltage(power: number, impedance: number): number {
-      // U[RMS] = √(P × Z) [V]
-      return Math.sqrt(power * impedance)
-    }
 
     function calculateQFactor(
       core: CoreModel,
@@ -526,9 +544,11 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
+      // Get permeability at the specified frequency
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
       
       // Q = μ' / μ" (directly from the permeability data)
+      // This is equivalent to Xs/Rs in the series model
       return permeabilityData.muPrime / permeabilityData.muDoublePrime
     }
 
@@ -580,8 +600,6 @@ export default defineComponent({
       // Find the best core for the requirements
       const core = coreModels.find((c) => c.id === selectedCoreModel.value) || findBestCore(config)
 
-      // Calculate RMS voltage
-      const rmsVoltage = calculateRmsVoltage(config.power, config.inputImpedance)
 
       // Calculate key parameters
       const reactance = calculateInductiveReactance(
@@ -617,7 +635,8 @@ export default defineComponent({
         core,
         config.primaryTurns,
         config.minFrequency,
-        rmsVoltage,
+        config.power,
+        config.inputImpedance,
       )
 
       const windingLengthCm = calculateWindingLength(core, config.primaryTurns, config.coreCount)
