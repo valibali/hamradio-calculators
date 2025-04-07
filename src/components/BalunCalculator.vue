@@ -455,27 +455,26 @@ export default defineComponent({
       turns: number,
       freqMHz: number,
       coreCount: number,
-      rmsVoltage: number,
+      power: number,
+      inputImpedance: number,
     ): number {
-      // Get impedance components
-      const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
-      const formFactor = calculateFormFactor(core, coreCount)
-      const fHz = freqMHz * 1e6
-      const omega = 2 * Math.PI * fHz
-      
       // For a balun, we need to account for both primary and secondary windings
       // Calculate the total number of turns (primary + secondary)
       const impedanceRatio = Math.sqrt(outputImpedance.value / inputImpedance.value)
       const secondaryTurns = Math.round(turns * impedanceRatio)
       const totalTurns = turns + secondaryTurns
       
-      // Calculate the total core loss using the total turns
-      const totalInductance = Math.pow(totalTurns, 2) * permeabilityData.muPrime * formFactor * 1e-6
-      const totalResistance = omega * formFactor * Math.pow(totalTurns, 2) * permeabilityData.muDoublePrime
-      const totalImpedance = Math.sqrt(Math.pow(omega * totalInductance, 2) + Math.pow(totalResistance, 2))
+      // Get impedance components for the total winding
+      const Ls_uH = calculateInductance(core, totalTurns, freqMHz, coreCount)
+      const Rs = calculateSeriesResistance(core, totalTurns, freqMHz, coreCount)
+      const Xs = calculateInductiveReactance(core, totalTurns, freqMHz, coreCount)
+      const Z = Math.sqrt(Rs**2 + Xs**2)
       
-      // P(f) = U[RMS]² / Z(f) [W]
-      return Math.pow(rmsVoltage, 2) / totalImpedance
+      // Calculate input voltage assuming matched load (P_in = V_in^2 / Z_source)
+      const inputVoltage = Math.sqrt(power * inputImpedance)
+      
+      // Power loss as V_in^2 / Z (approximation when Z >> Z_source)
+      return Math.pow(inputVoltage, 2) / Z
     }
 
     function calculateMaxPermissibleCoreLoss(
@@ -1184,42 +1183,28 @@ export default defineComponent({
       const ununCore =
         coreModels.find((core) => core.id === components.unun.coreType) || coreModels[0]
 
-      // Calculate RMS voltage at input
+      // Calculate input voltage: V_in = sqrt(P_in * Z_source)
       const inputVoltage = Math.sqrt(power * components.balun.inputImpedance)
 
       // Calculate balun complex impedance with total turns (bifilar winding = 2x turns)
-      const balunPermeability = getPermeabilityAtFrequency(balunCore, freqMHz)
-      const balunFormFactor = calculateFormFactor(balunCore, 1)
       const totalBalunTurns = components.balun.turns * 2 // Bifilar winding
-      const fHz = freqMHz * 1e6
-      const omega = 2 * Math.PI * fHz
       
-      const balunInductance =
-        Math.pow(totalBalunTurns, 2) * balunPermeability.muPrime * balunFormFactor * 1e-6
-      const balunReactance = omega * balunInductance
-      const balunResistance =
-        omega *
-        balunFormFactor *
-        Math.pow(totalBalunTurns, 2) *
-        balunPermeability.muDoublePrime
-      const balunImpedance = Math.sqrt(Math.pow(balunReactance, 2) + Math.pow(balunResistance, 2))
+      // Get impedance components for the balun
+      const balunLs = calculateInductance(balunCore, totalBalunTurns, freqMHz, 1) * 1e-6 // Convert to H
+      const balunRs = calculateSeriesResistance(balunCore, totalBalunTurns, freqMHz, 1)
+      const balunXs = calculateInductiveReactance(balunCore, totalBalunTurns, freqMHz, 1)
+      const balunImpedance = Math.sqrt(Math.pow(balunRs, 2) + Math.pow(balunXs, 2))
 
       // Calculate unun complex impedance with total turns (primary + secondary)
-      const ununPermeability = getPermeabilityAtFrequency(ununCore, freqMHz)
-      const ununFormFactor = calculateFormFactor(ununCore, 1)
       const totalUnunTurns = components.unun.turns.primary + components.unun.turns.secondary
       
-      const ununInductance =
-        Math.pow(totalUnunTurns, 2) * ununPermeability.muPrime * ununFormFactor * 1e-6
-      const ununReactance = omega * ununInductance
-      const ununResistance =
-        omega *
-        ununFormFactor *
-        Math.pow(totalUnunTurns, 2) *
-        ununPermeability.muDoublePrime
-      const ununImpedance = Math.sqrt(Math.pow(ununReactance, 2) + Math.pow(ununResistance, 2))
+      // Get impedance components for the unun
+      const ununLs = calculateInductance(ununCore, totalUnunTurns, freqMHz, 1) * 1e-6 // Convert to H
+      const ununRs = calculateSeriesResistance(ununCore, totalUnunTurns, freqMHz, 1)
+      const ununXs = calculateInductiveReactance(ununCore, totalUnunTurns, freqMHz, 1)
+      const ununImpedance = Math.sqrt(Math.pow(ununRs, 2) + Math.pow(ununXs, 2))
 
-      // Calculate core losses
+      // Calculate core losses using input voltage
       const balunLoss = Math.pow(inputVoltage, 2) / balunImpedance
       const ununLoss =
         Math.pow(inputVoltage * (components.unun.turns.primary / components.balun.turns), 2) /
