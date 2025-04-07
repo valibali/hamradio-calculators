@@ -180,11 +180,11 @@ const coreModels: CoreModel[] = [
       max: 50,
     },
     dimensions: {
-      od: 36,
-      id: 23,
+      od: 35.55,
+      id: 23.0,
       height: 12.7,
-      le: 8.9,
-      ae: 0.79,
+      le: Math.PI * (35.55 + 23.0) / 2 / 10, // Effective magnetic path length in cm
+      ae: ((35.55 - 23.0) * 12.7) / 2 / 100, // Effective cross-sectional area in cm²
       volume: 7.65,
       heatConductionCoeff: 0.044,
     },
@@ -371,9 +371,10 @@ export default defineComponent({
     }
 
     function calculateFormFactor(core: CoreModel, coreCount: number): number {
-      // Corrected form factor calculation with proper coreCount and unit handling
+      // Calculate air-core inductance factor (L0 = AL * N^2)
+      // Using mu0 * Ae / le formula
       return (
-        constants.mu0 * ((coreCount * core.dimensions.ae) / core.dimensions.le) * 1e-2 // Correct unit conversion from 1e-2 to 1e-3
+        constants.mu0 * ((coreCount * core.dimensions.ae) / core.dimensions.le)
       )
     }
 
@@ -386,8 +387,9 @@ export default defineComponent({
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
       const formFactor = calculateFormFactor(core, coreCount)
 
+      // L = L0 * μ' where L0 is the air-core inductance
       // Convert from H to μH by multiplying by 1e6
-      return (Math.pow(turns, 2) * permeabilityData.muPrime) / 0.814
+      return formFactor * Math.pow(turns, 2) * permeabilityData.muPrime * 1e6
     }
 
     function calculateInductiveReactance(
@@ -398,8 +400,8 @@ export default defineComponent({
     ): number {
       const inductance = calculateInductance(core, turns, freqMHz, coreCount)
 
-      // Now using correct inductance in μH: XL = 2πfL (with L in μH)
-      return 2 * Math.PI * freqMHz * inductance
+      // XL = 2πfL (with L in μH and f in MHz)
+      return 2 * Math.PI * freqMHz * inductance * 1e-6 * 1e6
     }
 
     function calculateSeriesResistance(
@@ -410,17 +412,11 @@ export default defineComponent({
     ): number {
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
       const formFactor = calculateFormFactor(core, coreCount)
+      const fHz = freqMHz * 1e6
+      const omega = 2 * Math.PI * fHz
 
-      // R(f) = 2π × f × n² × μ"(f) × C [Ω]
-      return (
-        2 *
-        Math.PI *
-        freqMHz *
-        1e6 *
-        Math.pow(turns, 2) *
-        permeabilityData.muDoublePrime *
-        formFactor
-      )
+      // Rs = ω * L0 * μ" where L0 is the air-core inductance
+      return omega * formFactor * Math.pow(turns, 2) * permeabilityData.muDoublePrime
     }
 
     function calculateComplexImpedance(
@@ -446,6 +442,7 @@ export default defineComponent({
       const impedance = calculateComplexImpedance(core, turns, freqMHz, coreCount)
 
       // P(f) = U[RMS]² / Z(f) [W]
+      // This is an approximation when Z >> Z_source
       return Math.pow(rmsVoltage, 2) / impedance
     }
 
@@ -471,16 +468,23 @@ export default defineComponent({
       freqMHz: number,
       rmsVoltage: number,
     ): number {
-      // B(f) = U[RMS] × 10³ / (4.44 × n × f × 10⁶ × Ae × 10⁻⁴) [mT]
-      return (rmsVoltage * 1e3) / (4.44 * turns * freqMHz * 1e6 * core.dimensions.ae * 1e-4)
+      // B = V / (4.44 * f * N * Ae) [T]
+      // Convert to mT by multiplying by 1000
+      const fHz = freqMHz * 1e6
+      const areaM2 = core.dimensions.ae * 1e-4  // Convert from cm² to m²
+      
+      return (rmsVoltage * 1000) / (4.44 * fHz * turns * areaM2)
     }
 
     function calculateWindingLength(core: CoreModel, turns: number, coreCount: number): number {
-      // l_tek = 1.2 × n × ((OD-ID) + (K×2×W)) [mm]
+      // Average circumference of the toroid
+      const avgCircumference = Math.PI * (core.dimensions.od + core.dimensions.id) / 2
+      
+      // Total winding length = turns * average circumference + additional length for stacked cores
       const lengthMm =
         constants.windingLengthFactor *
         turns *
-        (core.dimensions.od - core.dimensions.id + coreCount * 2 * core.dimensions.height)
+        (avgCircumference + coreCount * 2 * core.dimensions.height)
 
       // Convert to centimeters
       return lengthMm / 10
@@ -508,11 +512,10 @@ export default defineComponent({
       freqMHz: number,
       coreCount: number,
     ): number {
-      const reactance = calculateInductiveReactance(core, turns, freqMHz, coreCount)
-      const resistance = calculateSeriesResistance(core, turns, freqMHz, coreCount)
-
-      // Q = XL / R
-      return reactance / resistance
+      const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
+      
+      // Q = μ' / μ" (directly from the permeability data)
+      return permeabilityData.muPrime / permeabilityData.muDoublePrime
     }
 
     function calculateMinimumTurnsForRuleOfFour(
