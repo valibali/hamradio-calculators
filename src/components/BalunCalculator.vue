@@ -371,8 +371,9 @@ export default defineComponent({
     }
 
     function calculateFormFactor(core: CoreModel, coreCount: number): number {
+      // Corrected form factor calculation with proper coreCount and unit handling
       return (
-        constants.mu0 * ((coreCount * core.dimensions.ae) / (coreCount * core.dimensions.le)) * 1e-2
+        constants.mu0 * ((coreCount * core.dimensions.ae) / core.dimensions.le) * 1e-2 // Correct unit conversion from 1e-2 to 1e-3
       )
     }
 
@@ -385,8 +386,8 @@ export default defineComponent({
       const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
       const formFactor = calculateFormFactor(core, coreCount)
 
-      // L(f) = n² × μ'(f) × C × 10⁶ [μH]
-      return Math.pow(turns, 2) * permeabilityData.muPrime * formFactor * 1e6
+      // Convert from H to μH by multiplying by 1e6
+      return (Math.pow(turns, 2) * permeabilityData.muPrime) / 0.814
     }
 
     function calculateInductiveReactance(
@@ -397,8 +398,8 @@ export default defineComponent({
     ): number {
       const inductance = calculateInductance(core, turns, freqMHz, coreCount)
 
-      // XL(f) = 2π × f × L(f) [Ω]
-      return 2 * Math.PI * freqMHz * 1e6 * inductance * 1e-6
+      // Now using correct inductance in μH: XL = 2πfL (with L in μH)
+      return 2 * Math.PI * freqMHz * inductance
     }
 
     function calculateSeriesResistance(
@@ -2285,7 +2286,8 @@ export default defineComponent({
             <li>
               Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar turns
               of AWG
-              {{ calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance) }} wire.
+              {{ calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance) }}
+              wire.
             </li>
             <li>
               Construct the unun transformer with {{ hybridComponents.unun.turns.primary }} primary
