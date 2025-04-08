@@ -108,10 +108,11 @@ export default defineComponent({
     const recommendedWireInfo = computed(() => {
       if (!designResults.value) return null
 
-      return calculateRecommendedWireGauge(
-        designResults.value.config.power,
-        designResults.value.config.inputImpedance,
-      )
+      const primaryImpedance = designResults.value.impedanceAtMinFreq
+      const primaryPower = designResults.value.config.power
+
+      // Calculate wire gauge based on primary winding current
+      return calculateRecommendedWireGauge(primaryPower, primaryImpedance)
     })
 
     // Methods
