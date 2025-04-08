@@ -3,7 +3,7 @@ import { defineComponent } from 'vue'
 import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
-import BalunCalculator from '../components/BalunCalculator.vue'
+import BalunCalculator from '../components/calculators/BalunCalculator.vue'
 import UnunCalculator from '../components/UnunCalculator.vue'
 
 interface Calculator {
