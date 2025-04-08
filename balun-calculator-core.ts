@@ -264,24 +264,37 @@ export class BalunCalculator {
   }
 
   /**
-   * Calculate recommended wire gauge
+   * Calculate the recommended wire gauge based on primary winding current
+   * @param designResults The calculated design results containing current information
+   * @returns Wire information including gauge, diameter, area, and current capacity
    */
-  private static calculateRecommendedWireGauge(power: number, impedance: number): number {
-    // Calculate current
-    const current = Math.sqrt(power / impedance)
+  private static calculateRecommendedWireGauge(designResults: DesignResults): WireInfo {
+    // Get the current in the primary winding from the design results
+    // This would be calculated during the core loss calculation
+    const primaryCurrent = designResults.current // Amps
 
-    // Required cross-sectional area based on current density
-    const requiredArea = current / constants.currentDensity
+    // Add safety margin (typically 50% for RF applications)
+    const currentWithMargin = primaryCurrent * 1.5
 
-    // Find the suitable wire gauge
-    for (const wire of wireSpecs) {
-      if (wire.areaMm2 >= requiredArea) {
-        return wire.awg
+    // Find the appropriate wire gauge that can handle this current
+    let selectedGauge = 30 // Start with thinnest wire
+
+    for (const [gauge, data] of Object.entries(WIRE_DATA)) {
+      if (data.current >= currentWithMargin) {
+        selectedGauge = parseInt(gauge)
+        break
       }
     }
 
-    // If no suitable wire found, return the largest gauge
-    return wireSpecs[0].awg
+    // Get wire data
+    const wireData = WIRE_DATA[selectedGauge]
+
+    return {
+      gauge: selectedGauge,
+      diameter: wireData.diameter,
+      area: wireData.area,
+      currentCapacity: wireData.current,
+    }
   }
 
   /**

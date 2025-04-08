@@ -99,6 +99,7 @@ export interface DesignResults {
   windingLengthCm: number
   maxFreqBasedOnLength: number
   qFactorAtMinFreq: number
+  current: number // Primary winding current [A]
 
   // Validation results
   meetsRuleOfFour: boolean

@@ -76,12 +76,20 @@ export function calculateRecommendedWireGauge(power: number, impedance: number):
   // Calculate maximum current: I = sqrt(P/Z)
   const current = Math.sqrt(power / impedance) * 1.5 // Add 50% safety margin
 
-  // Find the appropriate wire gauge
-  let selectedGauge = 30 // Start with thinnest wire
+  // Get all gauge numbers and sort them in descending order (largest wire first)
+  const gauges = Object.keys(WIRE_DATA)
+    .map((g) => parseInt(g))
+    .sort((a, b) => a - b)
 
-  for (const [gauge, data] of Object.entries(WIRE_DATA)) {
-    if (data.current >= current) {
-      selectedGauge = parseInt(gauge)
+  // Start with largest wire (smallest gauge number)
+  let selectedGauge = gauges[0]
+
+  // Iterate through the gauges from largest to smallest
+  for (const gauge of gauges) {
+    if (WIRE_DATA[gauge].current >= current) {
+      selectedGauge = gauge
+    } else {
+      // Once we find a wire that's too small, stop and use the previous one
       break
     }
   }

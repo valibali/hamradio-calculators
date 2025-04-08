@@ -40,15 +40,18 @@ export class BalunDesignCalculator {
     )
 
     // Calculate losses and other performance metrics
-    const { powerLoss: coreLossAtMinFreq, fluxDensity: fluxDensityAtMinFreq } =
-      CoreCalculator.calculateLosses(
-        config.minFrequency,
-        primaryTurns,
-        coreModel,
-        config.coreCount,
-        config.power,
-        config.inputImpedance,
-      )
+    const {
+      powerLoss: coreLossAtMinFreq,
+      fluxDensity: fluxDensityAtMinFreq,
+      current: primaryCurrent, // Get the current value
+    } = CoreCalculator.calculateLosses(
+      config.minFrequency,
+      primaryTurns,
+      coreModel,
+      config.coreCount,
+      config.power,
+      config.inputImpedance,
+    )
 
     // Calculate the maximum permissible core loss based on operation mode
     const dutyCycleFactor = DUTY_CYCLE_FACTORS[config.operationMode]
@@ -98,6 +101,7 @@ export class BalunDesignCalculator {
       coreModel,
       characteristicImpedance,
       calculatedPowerRating,
+      current: primaryCurrent,
 
       reactanceAtMinFreq,
       impedanceAtMinFreq,
