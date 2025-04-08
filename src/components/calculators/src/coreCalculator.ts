@@ -152,6 +152,7 @@ export class CoreCalculator {
     resistance: number // Resistance [Ω]
     impedance: number // Impedance [Ω]
     fluxDensity: number // Flux density [mT]
+    P_out: number // Power transferred to the output [W]
   } {
     // Get impedance components
     const { Ls, Rs, Xs, Z } = this.calculateImpedance(fMHz, N, core, coreCount)
@@ -165,8 +166,11 @@ export class CoreCalculator {
     // Power dissipation in the core
     const P_loss = V_in ** 2 / Z
 
+    // Calculate power transferred to the output
+    const P_out = power - P_loss
+    
     // Efficiency calculation
-    const efficiency = (1 - P_loss / power) * 100
+    const efficiency = (P_out / power) * 100
 
     // Calculate flux density
     // B = L * I / (N * Ae)
@@ -190,6 +194,7 @@ export class CoreCalculator {
       resistance: Rs,
       impedance: Z,
       fluxDensity: B,
+      P_out: P_out,
     }
   }
 
