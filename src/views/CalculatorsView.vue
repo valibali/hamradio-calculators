@@ -4,7 +4,6 @@ import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
 import BalunCalculator from '../components/calculators/BalunCalculator.vue'
-import UnunCalculator from '../components/UnunCalculator.vue'
 
 interface Calculator {
   id: string
@@ -28,7 +27,6 @@ export default defineComponent({
     TwistedPairCharImp,
     SingleConductorAboveGroundPlane,
     BalunCalculator,
-    UnunCalculator,
   },
   data() {
     return {
@@ -44,11 +42,6 @@ export default defineComponent({
               id: 'balun',
               name: 'Balun Designer',
               description: 'Design balanced-to-unbalanced transformers for RF applications',
-            },
-            {
-              id: 'unun',
-              name: 'Unun Designer',
-              description: 'Design unbalanced-to-unbalanced transformers for RF applications',
             },
           ],
         },
