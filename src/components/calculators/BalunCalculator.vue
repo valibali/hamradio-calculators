@@ -348,6 +348,8 @@ export default defineComponent({
               prevent transmission line effects.
             </li>
           </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -541,7 +543,7 @@ export default defineComponent({
 
       <div class="form-actions">
         <button class="toggle-advanced" @click="showAdvancedOptions = !showAdvancedOptions">
-          {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Show Advanced Options' }}
+          {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Advanced Options' }}
         </button>
         <button class="reset-button" @click="resetForm">Reset</button>
         <button class="calculate-button" @click="calculateBalun" :disabled="isCalculating">
@@ -701,27 +703,15 @@ export default defineComponent({
       </div>
 
       <div class="additional-info">
-        <div class="info-toggle">
-          <button @click="showBandCoverage = !showBandCoverage">
-            {{ showBandCoverage ? 'Hide Band Coverage' : 'Show Band Coverage' }}
-          </button>
-          <button @click="showWireInfo = !showWireInfo">
-            {{ showWireInfo ? 'Hide Wire Information' : 'Show Wire Information' }}
-          </button>
-          <button @click="showPerformanceDetails = !showPerformanceDetails">
-            {{ showPerformanceDetails ? 'Hide Performance Details' : 'Show Performance Details' }}
-          </button>
-          <button
-            v-if="designResults?.windingInfo"
-            @click="showWindingInstructions = !showWindingInstructions"
-          >
-            {{
-              showWindingInstructions ? 'Hide Winding Instructions' : 'Show Winding Instructions'
-            }}
-          </button>
-        </div>
+        <div class="accordion">
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showBandCoverage = !showBandCoverage">
+              <span class="accordion-title">Band Coverage</span>
+              <span class="accordion-icon">{{ showBandCoverage ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showBandCoverage }">
 
-        <div v-if="showBandCoverage" class="band-coverage">
+        <div class="band-coverage">
           <h4>Ham Band Coverage</h4>
           <div class="band-grid">
             <div
@@ -736,8 +726,16 @@ export default defineComponent({
             </div>
           </div>
         </div>
-
-        <div v-if="showWireInfo && recommendedWireInfo" class="wire-info">
+          </div>
+        </div>
+        
+        <div class="accordion-item" v-if="recommendedWireInfo">
+          <div class="accordion-header" @click="showWireInfo = !showWireInfo">
+            <span class="accordion-title">Wire Information</span>
+            <span class="accordion-icon">{{ showWireInfo ? '▼' : '▶' }}</span>
+          </div>
+          <div class="accordion-content" :class="{ 'accordion-open': showWireInfo }">
+            <div class="wire-info">
           <h4>Wire Information</h4>
           <div class="wire-details">
             <div class="wire-item">
@@ -763,12 +761,17 @@ export default defineComponent({
               For optimal performance, use insulated wire (enamel, PTFE, etc.) to prevent shorts.
             </p>
           </div>
+            </div>
+          </div>
         </div>
-
-        <div
-          v-if="showWindingInstructions && designResults?.windingInfo"
-          class="winding-instructions"
-        >
+        
+        <div class="accordion-item" v-if="designResults?.windingInfo">
+          <div class="accordion-header" @click="showWindingInstructions = !showWindingInstructions">
+            <span class="accordion-title">Winding Instructions</span>
+            <span class="accordion-icon">{{ showWindingInstructions ? '▼' : '▶' }}</span>
+          </div>
+          <div class="accordion-content" :class="{ 'accordion-open': showWindingInstructions }">
+            <div class="winding-instructions">
           <h4>Winding Instructions</h4>
           <div class="winding-details">
             <div class="winding-info-grid">
@@ -832,9 +835,17 @@ export default defineComponent({
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
-
-        <div v-if="showPerformanceDetails" class="performance-details">
+        
+        <div class="accordion-item">
+          <div class="accordion-header" @click="showPerformanceDetails = !showPerformanceDetails">
+            <span class="accordion-title">Performance Details</span>
+            <span class="accordion-icon">{{ showPerformanceDetails ? '▼' : '▶' }}</span>
+          </div>
+          <div class="accordion-content" :class="{ 'accordion-open': showPerformanceDetails }">
+            <div class="performance-details">
           <h4>Detailed Performance Analysis</h4>
           <div class="performance-grid">
             <div class="performance-item">
@@ -1193,29 +1204,33 @@ export default defineComponent({
 }
 
 .presets-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }
 
 .preset-button {
   background-color: var(--color-background-mute);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  flex: 1 1 calc(33.333% - 0.75rem);
-  min-width: 200px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
   text-align: center;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .preset-button:hover {
   background-color: hsla(160, 100%, 37%, 0.1);
   border-color: hsla(160, 100%, 37%, 0.5);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-section {
@@ -1343,21 +1358,32 @@ export default defineComponent({
 .reset-button,
 .calculate-button {
   padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .toggle-advanced {
-  background-color: transparent;
+  background-color: var(--color-background-mute);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-advanced::before {
+  content: "⚙️";
+  font-size: 1.1rem;
 }
 
 .toggle-advanced:hover {
-  background-color: var(--color-background-mute);
+  background-color: var(--color-background-soft);
   border-color: hsla(160, 100%, 37%, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .reset-button {
@@ -1537,31 +1563,61 @@ export default defineComponent({
   margin-top: 2rem;
 }
 
-.info-toggle {
+.accordion {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.info-toggle button {
-  background-color: transparent;
+.accordion-item {
   border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--color-background);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.info-toggle button:hover {
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: var(--color-background-soft);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.accordion-header:hover {
   background-color: var(--color-background-mute);
-  border-color: hsla(160, 100%, 37%, 0.5);
+}
+
+.accordion-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-heading);
+}
+
+.accordion-icon {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  transition: transform 0.3s ease;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.accordion-open {
+  max-height: 2000px; /* Large enough to contain content */
+  transition: max-height 0.5s ease-in;
 }
 
 .band-coverage {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .band-coverage h4 {
@@ -1606,7 +1662,7 @@ export default defineComponent({
 }
 
 .wire-info {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .wire-info h4 {
@@ -1647,7 +1703,7 @@ export default defineComponent({
 }
 
 .winding-instructions {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .winding-instructions h4 {
@@ -1732,7 +1788,7 @@ export default defineComponent({
 }
 
 .performance-details {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .performance-details h4 {
