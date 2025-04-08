@@ -348,8 +348,6 @@ export default defineComponent({
               prevent transmission line effects.
             </li>
           </ul>
-            </div>
-          </div>
         </div>
       </div>
 
