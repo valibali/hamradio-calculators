@@ -1,4 +1,3 @@
-// BalunCalculator.vue
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from 'vue'
 import {
@@ -726,7 +725,7 @@ export default defineComponent({
         </div>
           </div>
         </div>
-        
+
         <div class="accordion-item" v-if="recommendedWireInfo">
           <div class="accordion-header" @click="showWireInfo = !showWireInfo">
             <span class="accordion-title">Wire Information</span>
@@ -762,7 +761,7 @@ export default defineComponent({
             </div>
           </div>
         </div>
-        
+
         <div class="accordion-item" v-if="designResults?.windingInfo">
           <div class="accordion-header" @click="showWindingInstructions = !showWindingInstructions">
             <span class="accordion-title">Winding Instructions</span>
@@ -836,7 +835,7 @@ export default defineComponent({
             </div>
           </div>
         </div>
-        
+
         <div class="accordion-item">
           <div class="accordion-header" @click="showPerformanceDetails = !showPerformanceDetails">
             <span class="accordion-title">Performance Details</span>
