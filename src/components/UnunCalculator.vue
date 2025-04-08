@@ -1,1172 +1,267 @@
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue'
-import { WindingStyleCalculator, type WindingStyleInfo } from './winding-style-calculator'
+import { defineComponent, ref, computed, onMounted, watch } from 'vue'
+import {
+  type BalunConfig,
+  type DesignResults,
+  type ValidationResult,
+} from './src/types'
+import {
+  CORE_MODELS,
+  PRESET_CONFIGS,
+  OPERATION_MODE_OPTIONS,
+  DUTY_CYCLE_FACTORS,
+  HAM_BANDS,
+} from './src/constants'
+import {
+  findCoreModel,
+  calculateCharacteristicImpedance,
+  calculateRecommendedWireGauge,
+  determineBandCoverage,
+  formatInstructions,
+} from './src/utils'
+import { BalunDesignCalculator } from './src/balunDesignCalculator'
+import { WindingStyleCalculator } from './src/windingStyleCalculator'
 
-// Enums and interfaces
-enum OperationMode {
-  SSB = 'SSB',
-  CW = 'CW',
-  DIGITAL = 'DIGITAL',
-  FIFTY_PERCENT = '50_PERCENT',
-  CONTINUOUS = 'CONTINUOUS',
-}
-
-interface PermeabilityData {
-  freq: number
-  muPrime: number
-  muDoublePrime: number
-  q: number
-  muComplex: number
-}
-
-interface CoreDimensions {
-  od: number
-  id: number
-  height: number
-  le: number
-  ae: number
-  volume: number
-  heatConductionCoeff: number
-}
-
-interface CoreModel {
-  id: string
-  mix: string
-  initialPermeability: number
-  saturationFluxDensity: number
-  curieTemperature: number
-  recommendedFreqRange: {
-    min: number
-    max: number
-  }
-  dimensions: CoreDimensions
-  permeabilityData: PermeabilityData[]
-}
-
-interface WireSpec {
-  awg: number
-  diameterMm: number
-  areaMm2: number
-  currentCapacity: number
-}
-
-interface UnunConfig {
-  inputImpedance: number
-  outputImpedance: number
-  power: number
-  minFrequency: number
-  maxFrequency: number
-  operationMode: OperationMode
-  coreCount: number
-  primaryTurns: number
-}
-
-interface UnunResults {
-  config: UnunConfig
-  coreModel: CoreModel
-  meetsRuleOfFour: boolean
-  withinCoreLossLimits: boolean
-  fluxDensityInLinearRegion: boolean
-  windingLengthCm: number
-  maxFreqBasedOnLength: number
-  coreLossAtMinFreq: number
-  maxPermissibleCoreLoss: number
-  fluxDensityAtMinFreq: number
-  reactanceAtMinFreq: number
-  impedanceAtMinFreq: number
-  qFactorAtMinFreq: number
-  characteristicImpedance: number
-  recommendedWireGauge: number
-  calculatedPowerRating: number
-  windingInfo?: WindingStyleInfo
-  secondaryTurns: number
-  turnsRatio: number
-  alternativeConfigurations?: UnunResults[]
-}
-
-interface ValidationResult {
-  valid: boolean
-  messages: Array<{
-    type: 'info' | 'warning' | 'error'
-    message: string
-  }>
-}
-
-// Constants
-const constants = {
-  ruleOfFourFactor: 4,
-  maxLinearFluxDensity: 50,
-  maxTempRise: 30,
-  currentDensity: 1.5,
-  speedOfLight: 3e8,
-  windingLengthFactor: 1.2,
-  maxWindingLengthFraction: 0.1,
-  mu0: 4 * Math.PI * 1e-7,
-}
-
-const dutyCycleFactor: Record<OperationMode, number> = {
-  [OperationMode.SSB]: 3.0,
-  [OperationMode.CW]: 3.0,
-  [OperationMode.DIGITAL]: 2.5,
-  [OperationMode.FIFTY_PERCENT]: 1.5,
-  [OperationMode.CONTINUOUS]: 1.0,
-}
-
-// Core models data
-const mix43PermeabilityData: PermeabilityData[] = [
-  { freq: 0.01, muPrime: 791.5, muDoublePrime: 3.5, q: 226.1, muComplex: 791.5 },
-  { freq: 0.05, muPrime: 789.1, muDoublePrime: 3.9, q: 202.3, muComplex: 789.1 },
-  { freq: 0.1, muPrime: 788.0, muDoublePrime: 6.0, q: 131.3, muComplex: 788.0 },
-  { freq: 0.3, muPrime: 790.6, muDoublePrime: 10.9, q: 72.5, muComplex: 790.7 },
-  { freq: 0.5, muPrime: 795.1, muDoublePrime: 17.9, q: 44.4, muComplex: 795.3 },
-  { freq: 0.7, muPrime: 787.8, muDoublePrime: 24.9, q: 31.6, muComplex: 788.2 },
-  { freq: 1.0, muPrime: 747.1, muDoublePrime: 62.8, q: 11.9, muComplex: 749.7 },
-  { freq: 1.17, muPrime: 713.5, muDoublePrime: 83.0, q: 8.6, muComplex: 718.3 },
-  { freq: 1.36, muPrime: 673.6, muDoublePrime: 107.3, q: 6.3, muComplex: 682.1 },
-  { freq: 1.6, muPrime: 637.4, muDoublePrime: 131.6, q: 4.8, muComplex: 650.8 },
-  { freq: 1.84, muPrime: 608.7, muDoublePrime: 155.2, q: 3.9, muComplex: 628.2 },
-  { freq: 2.15, muPrime: 572.3, muDoublePrime: 176.3, q: 3.2, muComplex: 598.8 },
-  { freq: 2.5, muPrime: 544.2, muDoublePrime: 194.4, q: 2.8, muComplex: 577.9 },
-  { freq: 2.92, muPrime: 513.4, muDoublePrime: 208.9, q: 2.5, muComplex: 554.3 },
-  { freq: 3.4, muPrime: 480.6, muDoublePrime: 219.6, q: 2.2, muComplex: 528.4 },
-  { freq: 3.96, muPrime: 446.9, muDoublePrime: 226.8, q: 2.0, muComplex: 501.2 },
-  { freq: 4.62, muPrime: 413.5, muDoublePrime: 230.6, q: 1.8, muComplex: 473.5 },
-  { freq: 5.38, muPrime: 380.8, muDoublePrime: 231.5, q: 1.6, muComplex: 445.6 },
-  { freq: 6.27, muPrime: 349.2, muDoublePrime: 230.3, q: 1.5, muComplex: 418.3 },
-  { freq: 7.31, muPrime: 318.9, muDoublePrime: 227.4, q: 1.4, muComplex: 391.7 },
-  { freq: 8.51, muPrime: 289.8, muDoublePrime: 223.5, q: 1.3, muComplex: 366.0 },
-  { freq: 9.92, muPrime: 261.7, muDoublePrime: 218.7, q: 1.2, muComplex: 341.1 },
-  { freq: 11.6, muPrime: 234.3, muDoublePrime: 212.7, q: 1.1, muComplex: 316.4 },
-  { freq: 13.5, muPrime: 207.7, muDoublePrime: 205.8, q: 1.0, muComplex: 292.4 },
-  { freq: 15.7, muPrime: 182.0, muDoublePrime: 197.6, q: 0.9, muComplex: 268.6 },
-  { freq: 18.3, muPrime: 157.5, muDoublePrime: 188.2, q: 0.8, muComplex: 245.4 },
-  { freq: 21.3, muPrime: 134.6, muDoublePrime: 177.5, q: 0.8, muComplex: 222.8 },
-  { freq: 24.8, muPrime: 113.8, muDoublePrime: 165.8, q: 0.7, muComplex: 201.1 },
-  { freq: 28.9, muPrime: 94.9, muDoublePrime: 153.5, q: 0.6, muComplex: 180.5 },
-  { freq: 33.7, muPrime: 78.7, muDoublePrime: 140.9, q: 0.6, muComplex: 161.4 },
-  { freq: 39.3, muPrime: 64.2, muDoublePrime: 128.3, q: 0.5, muComplex: 143.5 },
-  { freq: 45.8, muPrime: 51.9, muDoublePrime: 116.0, q: 0.4, muComplex: 127.1 },
-  { freq: 53.4, muPrime: 41.5, muDoublePrime: 104.2, q: 0.4, muComplex: 112.2 },
-]
-
-const coreModels: CoreModel[] = [
-  {
-    id: 'FT140-43',
-    mix: '43',
-    initialPermeability: 800,
-    saturationFluxDensity: 290,
-    curieTemperature: 130,
-    recommendedFreqRange: {
-      min: 1,
-      max: 50,
-    },
-    dimensions: {
-      od: 36,
-      id: 23,
-      height: 12.7,
-      le: 8.9,
-      ae: 0.79,
-      volume: 7.65,
-      heatConductionCoeff: 0.044,
-    },
-    permeabilityData: mix43PermeabilityData,
-  },
-  {
-    id: 'FT240-43',
-    mix: '43',
-    initialPermeability: 800,
-    saturationFluxDensity: 290,
-    curieTemperature: 130,
-    recommendedFreqRange: {
-      min: 1,
-      max: 50,
-    },
-    dimensions: {
-      od: 61,
-      id: 35.6,
-      height: 12.7,
-      le: 14.7,
-      ae: 1.33,
-      volume: 19.6,
-      heatConductionCoeff: 0.044,
-    },
-    permeabilityData: mix43PermeabilityData,
-  },
-]
-
-const wireSpecs: WireSpec[] = [
-  { awg: 12, diameterMm: 2.05, areaMm2: 3.31, currentCapacity: 4.97 },
-  { awg: 14, diameterMm: 1.63, areaMm2: 2.08, currentCapacity: 3.12 },
-  { awg: 16, diameterMm: 1.29, areaMm2: 1.31, currentCapacity: 1.97 },
-  { awg: 18, diameterMm: 1.02, areaMm2: 0.82, currentCapacity: 1.23 },
-  { awg: 20, diameterMm: 0.81, areaMm2: 0.52, currentCapacity: 0.78 },
-  { awg: 22, diameterMm: 0.64, areaMm2: 0.33, currentCapacity: 0.49 },
-]
-
-const hamBands = [
-  { name: '160m', min: 1.8, max: 2.0 },
-  { name: '80m', min: 3.5, max: 4.0 },
-  { name: '60m', min: 5.3, max: 5.4 },
-  { name: '40m', min: 7.0, max: 7.3 },
-  { name: '30m', min: 10.1, max: 10.15 },
-  { name: '20m', min: 14.0, max: 14.35 },
-  { name: '17m', min: 18.068, max: 18.168 },
-  { name: '15m', min: 21.0, max: 21.45 },
-  { name: '12m', min: 24.89, max: 24.99 },
-  { name: '10m', min: 28.0, max: 29.7 },
-  { name: '6m', min: 50.0, max: 54.0 },
-]
 
 export default defineComponent({
   name: 'UnunCalculator',
+
   setup() {
-    // Form inputs
-    const inputImpedance = ref(50)
-    const outputImpedance = ref(200)
-    const power = ref(100)
-    const minFrequency = ref(3.5)
-    const maxFrequency = ref(30)
-    const operationMode = ref(OperationMode.SSB)
-    const coreCount = ref(1)
-    const primaryTurns = ref(0) // 0 means auto-calculate
-    const selectedCoreModel = ref(coreModels[0].id)
-    const showAdvancedOptions = ref(false)
+    // State variables
     const showDesignSteps = ref(false)
-    const showAlternativeDesigns = ref(false)
+    const showAdvancedOptions = ref(false)
+    const showReport = ref(false)
     const showBandCoverage = ref(false)
     const showWireInfo = ref(false)
     const showPerformanceDetails = ref(false)
     const showWindingInstructions = ref(false)
-    const showReport = ref(false)
-    const designResults = ref<UnunResults | null>(null)
-    const validationResult = ref<ValidationResult | null>(null)
-    const designReport = ref<string>('')
+    const showAlternativeDesigns = ref(false)
     const isCalculating = ref(false)
-    const calculationError = ref<string | null>(null)
+    const calculationError = ref('')
+
+    // Form values
+    const inputImpedance = ref(50)
+    const outputImpedance = ref(200)
+    const minFrequency = ref(3.5)
+    const maxFrequency = ref(30)
+    const power = ref(100)
+    const operationMode = ref('SSB')
+    const selectedCoreModel = ref('FT-140-43')
+    const coreCount = ref(1)
+    const primaryTurns = ref(0) // 0 means auto-calculate
+
+    // Results
+    const designResults = ref<DesignResults | null>(null)
+    const validationResult = ref<ValidationResult | null>(null)
 
     // Computed properties
     const impedanceRatio = computed(() => {
       return outputImpedance.value / inputImpedance.value
     })
 
-    const turnsRatio = computed(() => {
-      return Math.sqrt(impedanceRatio.value)
-    })
-
-    const secondaryTurns = computed(() => {
-      if (primaryTurns.value === 0) return 0
-      return Math.round(primaryTurns.value * turnsRatio.value)
-    })
-
     const characteristicImpedance = computed(() => {
-      return Math.sqrt(inputImpedance.value * outputImpedance.value)
+      return calculateCharacteristicImpedance(inputImpedance.value, outputImpedance.value)
     })
 
     const selectedCore = computed(() => {
-      return coreModels.find((core) => core.id === selectedCoreModel.value) || coreModels[0]
-    })
-
-    const operationModeOptions = computed(() => {
-      return [
-        { value: OperationMode.SSB, label: 'SSB (Voice)' },
-        { value: OperationMode.CW, label: 'CW (Morse)' },
-        { value: OperationMode.DIGITAL, label: 'Digital Modes (FT8, etc.)' },
-        { value: OperationMode.FIFTY_PERCENT, label: '50% Duty Cycle' },
-        { value: OperationMode.CONTINUOUS, label: 'Continuous (100% Duty Cycle)' },
-      ]
+      return findCoreModel(selectedCoreModel.value)
     })
 
     const coreModelOptions = computed(() => {
-      return coreModels.map((core) => ({
+      return CORE_MODELS.map((core) => ({
+        label: `${core.id} (Mix ${core.mix}, ${core.recommendedFreqRange.min}-${core.recommendedFreqRange.max} MHz)`,
         value: core.id,
-        label: `${core.id} (${core.mix} Mix)`,
       }))
     })
 
-    const bandCoverage = computed(() => {
-      if (!designResults.value) return []
+    const operationModeOptions = computed(() => {
+      return OPERATION_MODE_OPTIONS
+    })
 
+    const presets = computed(() => {
+      // Filter out 1:1 preset
+      return PRESET_CONFIGS.filter(preset => 
+        preset.inputImpedance !== preset.outputImpedance
+      )
+    })
+
+    const bandCoverage = computed(() => {
+      if (!designResults.value) return HAM_BANDS
+
+      const minFreq = designResults.value.config.minFrequency
       const maxFreq = Math.min(
         designResults.value.config.maxFrequency,
         designResults.value.maxFreqBasedOnLength,
       )
 
-      return hamBands.map((band) => ({
-        ...band,
-        covered: band.min >= designResults.value!.config.minFrequency && band.max <= maxFreq,
-      }))
+      return determineBandCoverage(minFreq, maxFreq, HAM_BANDS)
     })
 
     const recommendedWireInfo = computed(() => {
       if (!designResults.value) return null
 
-      const wireGauge = designResults.value.recommendedWireGauge
-      const wireSpec = wireSpecs.find((w) => w.awg === wireGauge)
+      const primaryImpedance = designResults.value.impedanceAtMinFreq
+      const primaryPower = designResults.value.config.power
 
-      if (!wireSpec) return null
-
-      return {
-        gauge: wireSpec.awg,
-        diameter: wireSpec.diameterMm,
-        area: wireSpec.areaMm2,
-        currentCapacity: wireSpec.currentCapacity,
-      }
+      // Calculate wire gauge based on primary winding current
+      return calculateRecommendedWireGauge(primaryPower, primaryImpedance)
     })
 
     // Methods
-    function getPermeabilityAtFrequency(core: CoreModel, freqMHz: number): PermeabilityData {
-      // Sort permeability data by frequency
-      const sortedData = [...core.permeabilityData].sort((a, b) => a.freq - b.freq)
-
-      // Find the closest data points
-      let lowerIndex = 0
-      let upperIndex = sortedData.length - 1
-
-      for (let i = 0; i < sortedData.length; i++) {
-        if (sortedData[i].freq <= freqMHz) {
-          lowerIndex = i
-        } else {
-          upperIndex = i
-          break
-        }
-      }
-
-      // If exact match or at the edges of our data
-      if (sortedData[lowerIndex].freq === freqMHz || lowerIndex === upperIndex) {
-        return sortedData[lowerIndex]
-      }
-
-      // Linear interpolation
-      const lowerPoint = sortedData[lowerIndex]
-      const upperPoint = sortedData[upperIndex]
-      const ratio = (freqMHz - lowerPoint.freq) / (upperPoint.freq - lowerPoint.freq)
-
-      return {
-        freq: freqMHz,
-        muPrime: lowerPoint.muPrime + ratio * (upperPoint.muPrime - lowerPoint.muPrime),
-        muDoublePrime:
-          lowerPoint.muDoublePrime + ratio * (upperPoint.muDoublePrime - lowerPoint.muDoublePrime),
-        q: lowerPoint.q + ratio * (upperPoint.q - lowerPoint.q),
-        muComplex: lowerPoint.muComplex + ratio * (upperPoint.muComplex - lowerPoint.muComplex),
-      }
+    const applyPreset = (preset: any) => {
+      inputImpedance.value = preset.inputImpedance
+      outputImpedance.value = preset.outputImpedance
+      minFrequency.value = preset.minFrequency
+      maxFrequency.value = preset.maxFrequency
+      power.value = preset.power
+      operationMode.value = preset.operationMode
     }
 
-    function calculateFormFactor(core: CoreModel, coreCount: number): number {
-      return (
-        constants.mu0 * ((coreCount * core.dimensions.ae) / (coreCount * core.dimensions.le)) * 1e-2
-      )
+    const resetForm = () => {
+      inputImpedance.value = 50
+      outputImpedance.value = 200
+      minFrequency.value = 3.5
+      maxFrequency.value = 30
+      power.value = 100
+      operationMode.value = 'SSB'
+      selectedCoreModel.value = 'FT-140-43'
+      coreCount.value = 1
+      primaryTurns.value = 0
+      designResults.value = null
+      validationResult.value = null
+      calculationError.value = ''
+      showReport.value = false
     }
 
-    function calculateInductance(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-    ): number {
-      const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
-      const formFactor = calculateFormFactor(core, coreCount)
-
-      // L(f) = n² × μ'(f) × C × 10⁶ [μH]
-      return Math.pow(turns, 2) * permeabilityData.muPrime * formFactor * 1e6
-    }
-
-    function calculateInductiveReactance(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-    ): number {
-      const inductance = calculateInductance(core, turns, freqMHz, coreCount)
-
-      // XL(f) = 2π × f × L(f) [Ω]
-      return 2 * Math.PI * freqMHz * 1e6 * inductance * 1e-6
-    }
-
-    function calculateSeriesResistance(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-    ): number {
-      const permeabilityData = getPermeabilityAtFrequency(core, freqMHz)
-      const formFactor = calculateFormFactor(core, coreCount)
-
-      // R(f) = 2π × f × n² × μ"(f) × C [Ω]
-      return (
-        2 *
-        Math.PI *
-        freqMHz *
-        1e6 *
-        Math.pow(turns, 2) *
-        permeabilityData.muDoublePrime *
-        formFactor
-      )
-    }
-
-    function calculateComplexImpedance(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-    ): number {
-      const reactance = calculateInductiveReactance(core, turns, freqMHz, coreCount)
-      const resistance = calculateSeriesResistance(core, turns, freqMHz, coreCount)
-
-      // Z(f) = √(XL(f)² + R(f)²) [Ω]
-      return Math.sqrt(Math.pow(reactance, 2) + Math.pow(resistance, 2))
-    }
-
-    function calculateCoreLoss(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-      rmsVoltage: number,
-    ): number {
-      const impedance = calculateComplexImpedance(core, turns, freqMHz, coreCount)
-
-      // P(f) = U[RMS]² / Z(f) [W]
-      return Math.pow(rmsVoltage, 2) / impedance
-    }
-
-    function calculateMaxPermissibleCoreLoss(
-      core: CoreModel,
-      coreCount: number,
-      operationMode: OperationMode,
-    ): number {
-      // Calculate total core volume
-      const totalVolume = core.dimensions.volume * coreCount
-
-      // Pmax = ΔT × a × √Vmag [W]
-      const continuousLoss =
-        constants.maxTempRise * core.dimensions.heatConductionCoeff * Math.sqrt(totalVolume)
-
-      // Apply duty cycle factor
-      return continuousLoss * dutyCycleFactor[operationMode]
-    }
-
-    function calculateFluxDensity(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      rmsVoltage: number,
-    ): number {
-      // B(f) = U[RMS] × 10³ / (4.44 × n × f × 10⁶ × Ae × 10⁻⁴) [mT]
-      return (rmsVoltage * 1e3) / (4.44 * turns * freqMHz * 1e6 * core.dimensions.ae * 1e-4)
-    }
-
-    function calculateWindingLength(core: CoreModel, turns: number, coreCount: number): number {
-      // l_tek = 1.2 × n × ((OD-ID) + (K×2×W)) [mm]
-      const lengthMm =
-        constants.windingLengthFactor *
-        turns *
-        (core.dimensions.od - core.dimensions.id + coreCount * 2 * core.dimensions.height)
-
-      // Convert to centimeters
-      return lengthMm / 10
-    }
-
-    function calculateMaxFreqFromWindingLength(windingLengthCm: number): number {
-      // Convert winding length to meters
-      const windingLengthM = windingLengthCm / 100
-
-      // Double for bifilar winding
-      const totalLengthM = windingLengthM * 2
-
-      // f_max = 300 / (10 × totalLength) [MHz]
-      return (constants.speedOfLight * 1e-6) / (totalLengthM / constants.maxWindingLengthFraction)
-    }
-
-    function calculateRmsVoltage(power: number, impedance: number): number {
-      // U[RMS] = √(P × Z) [V]
-      return Math.sqrt(power * impedance)
-    }
-
-    function calculateQFactor(
-      core: CoreModel,
-      turns: number,
-      freqMHz: number,
-      coreCount: number,
-    ): number {
-      const reactance = calculateInductiveReactance(core, turns, freqMHz, coreCount)
-      const resistance = calculateSeriesResistance(core, turns, freqMHz, coreCount)
-
-      // Q = XL / R
-      return reactance / resistance
-    }
-
-    function calculateMinimumTurnsForRuleOfFour(
-      core: CoreModel,
-      freqMHz: number,
-      impedance: number,
-      coreCount: number,
-    ): number {
-      // We need XL(f) ≥ 4 × Z
-      const targetReactance = constants.ruleOfFourFactor * impedance
-
-      // Try increasing turns until we meet the requirement
-      for (let turns = 4; turns <= 20; turns++) {
-        const reactance = calculateInductiveReactance(core, turns, freqMHz, coreCount)
-        if (reactance >= targetReactance) {
-          return turns
-        }
-      }
-
-      // If we couldn't find a solution with 20 turns, return a high value
-      return 21
-    }
-
-    function calculateRecommendedWireGauge(power: number, impedance: number): number {
-      // Calculate current
-      const current = Math.sqrt(power / impedance)
-
-      // Required cross-sectional area based on current density
-      const requiredArea = current / constants.currentDensity
-
-      // Find the suitable wire gauge
-      for (const wire of wireSpecs) {
-        if (wire.areaMm2 >= requiredArea) {
-          return wire.awg
-        }
-      }
-
-      // If no suitable wire found, return the largest gauge
-      return wireSpecs[0].awg
-    }
-
-    function findBestCore(config: UnunConfig): CoreModel {
-      // For now, we'll just use FT140-43 for standard needs and FT240-43 for higher power
-      return config.power > 150 ? coreModels[1] : coreModels[0]
-    }
-
-    function calculateUnunDesign(config: UnunConfig): UnunResults {
-      // Find the best core for the requirements
-      const core = coreModels.find((c) => c.id === selectedCoreModel.value) || findBestCore(config)
-
-      // Calculate turns ratio
-      const turnsRatio = Math.sqrt(config.outputImpedance / config.inputImpedance)
-
-      // Calculate secondary turns
-      const secondaryTurns = Math.round(config.primaryTurns * turnsRatio)
-
-      // Calculate RMS voltage
-      const rmsVoltage = calculateRmsVoltage(config.power, config.inputImpedance)
-
-      // Calculate key parameters
-      const reactance = calculateInductiveReactance(
-        core,
-        config.primaryTurns,
-        config.minFrequency,
-        config.coreCount,
-      )
-
-      const impedance = calculateComplexImpedance(
-        core,
-        config.primaryTurns,
-        config.minFrequency,
-        config.coreCount,
-      )
-
-      const coreLoss = calculateCoreLoss(
-        core,
-        config.primaryTurns,
-        config.minFrequency,
-        config.coreCount,
-        rmsVoltage,
-      )
-
-      const maxCoreLoss = calculateMaxPermissibleCoreLoss(
-        core,
-        config.coreCount,
-        config.operationMode,
-      )
-
-      const fluxDensity = calculateFluxDensity(
-        core,
-        config.primaryTurns,
-        config.minFrequency,
-        rmsVoltage,
-      )
-
-      const windingLengthCm = calculateWindingLength(
-        core,
-        config.primaryTurns + secondaryTurns, // Total turns for winding length
-        config.coreCount,
-      )
-
-      const maxFreqFromLength = calculateMaxFreqFromWindingLength(windingLengthCm)
-
-      const qFactor = calculateQFactor(
-        core,
-        config.primaryTurns,
-        config.minFrequency,
-        config.coreCount,
-      )
-
-      const characteristicImpedance = Math.sqrt(config.inputImpedance * config.outputImpedance)
-
-      const recommendedWireGauge = calculateRecommendedWireGauge(
-        config.power,
-        config.inputImpedance,
-      )
-
-      // Calculate scaled power rating based on core loss
-      const calculatedPowerRating =
-        config.power * (maxCoreLoss / coreLoss < 1 ? maxCoreLoss / coreLoss : 1)
-
-      // Evaluate results
-      const meetsRuleOfFour = reactance >= constants.ruleOfFourFactor * config.inputImpedance
-      const withinCoreLossLimits = coreLoss <= maxCoreLoss
-      const fluxDensityInLinearRegion = fluxDensity <= constants.maxLinearFluxDensity
-
-      // Determine winding style information
-      const windingInfo = WindingStyleCalculator.determineWindingAndBuildStyle(
-        config.inputImpedance,
-        config.outputImpedance,
-      )
-
-      // Return the results
-      return {
-        config,
-        coreModel: core,
-        meetsRuleOfFour,
-        withinCoreLossLimits,
-        fluxDensityInLinearRegion,
-        windingLengthCm,
-        maxFreqBasedOnLength: maxFreqFromLength,
-        coreLossAtMinFreq: coreLoss,
-        maxPermissibleCoreLoss: maxCoreLoss,
-        fluxDensityAtMinFreq: fluxDensity,
-        reactanceAtMinFreq: reactance,
-        impedanceAtMinFreq: impedance,
-        qFactorAtMinFreq: qFactor,
-        characteristicImpedance,
-        recommendedWireGauge,
-        calculatedPowerRating,
-        windingInfo,
-        secondaryTurns,
-        turnsRatio,
-      }
-    }
-
-    function validateUnunDesign(results: UnunResults): ValidationResult {
-      const messages: Array<{ type: 'info' | 'warning' | 'error'; message: string }> = []
-      let valid = true
-
-      // Check Rule of 4
-      if (!results.meetsRuleOfFour) {
-        valid = false
-        messages.push({
-          type: 'error',
-          message:
-            `Rule of 4 not met: reactance at ${results.config.minFrequency} MHz is ${results.reactanceAtMinFreq.toFixed(1)} Ω, ` +
-            `should be at least ${constants.ruleOfFourFactor * results.config.inputImpedance} Ω.`,
-        })
-      }
-
-      // Check core loss
-      if (!results.withinCoreLossLimits) {
-        valid = false
-        messages.push({
-          type: 'error',
-          message:
-            `Core loss too high: ${results.coreLossAtMinFreq.toFixed(1)} W at ${results.config.minFrequency} MHz, ` +
-            `maximum permissible is ${results.maxPermissibleCoreLoss.toFixed(1)} W.`,
-        })
-      }
-
-      // Check flux density
-      if (!results.fluxDensityInLinearRegion) {
-        valid = false
-        messages.push({
-          type: 'error',
-          message:
-            `Flux density exceeds linear region: ${results.fluxDensityAtMinFreq.toFixed(1)} mT at ${results.config.minFrequency} MHz, ` +
-            `should be below ${constants.maxLinearFluxDensity} mT.`,
-        })
-      }
-
-      // Check operating frequency range
-      if (results.config.maxFrequency > results.maxFreqBasedOnLength) {
-        valid = false
-        messages.push({
-          type: 'error',
-          message:
-            `Winding length limits maximum frequency to ${results.maxFreqBasedOnLength.toFixed(1)} MHz, ` +
-            `below the specified ${results.config.maxFrequency} MHz.`,
-        })
-      }
-
-      // Check if winding style suggests a complex construction
-      if (
-        results.windingInfo &&
-        results.windingInfo.construction === 'autotransformer' &&
-        results.windingInfo.wireCount > 3
-      ) {
-        messages.push({
-          type: 'warning',
-          message:
-            `This impedance ratio (1:${(results.config.outputImpedance / results.config.inputImpedance).toFixed(1)}) ` +
-            `requires a complex ${results.windingInfo.style} winding. Consider using a simpler ratio if possible.`,
-        })
-      }
-
-      // Check calculated power rating
-      if (results.calculatedPowerRating < results.config.power) {
-        messages.push({
-          type: 'warning',
-          message:
-            `Design is limited to ${results.calculatedPowerRating.toFixed(1)} W at ${results.config.minFrequency} MHz, ` +
-            `below the specified ${results.config.power} W.`,
-        })
-      }
-
-      return { valid, messages }
-    }
-
-    function optimizeUnunDesign(config: UnunConfig): UnunResults {
-      const core = coreModels.find((c) => c.id === selectedCoreModel.value) || findBestCore(config)
-
-      // Step 1: Optimize turn count
-      // Start with the minimum number of turns that satisfies the Rule of 4
-      const minTurns = calculateMinimumTurnsForRuleOfFour(
-        core,
-        config.minFrequency,
-        config.inputImpedance,
-        config.coreCount,
-      )
-
-      // Create a new config with the optimized turns
-      let optimizedConfig = {
-        ...config,
-        primaryTurns: minTurns,
-      }
-
-      // Calculate the design with optimized turns
-      let results = calculateUnunDesign(optimizedConfig)
-      let validation = validateUnunDesign(results)
-
-      // Step 2: If core loss is too high, try increasing the minimum frequency
-      if (!validation.valid && !results.withinCoreLossLimits) {
-        // Try increasing the minimum frequency stepwise
-        const frequencySteps = [1.8, 3.5, 5.0, 7.0, 10.0, 14.0]
-
-        for (const freq of frequencySteps) {
-          if (freq <= config.minFrequency) continue
-
-          // Recalculate minimum turns for the new frequency
-          const newMinTurns = calculateMinimumTurnsForRuleOfFour(
-            core,
-            freq,
-            config.inputImpedance,
-            config.coreCount,
-          )
-
-          // Update config
-          optimizedConfig = {
-            ...optimizedConfig,
-            minFrequency: freq,
-            primaryTurns: newMinTurns,
-          }
-
-          // Calculate results
-          results = calculateUnunDesign(optimizedConfig)
-          validation = validateUnunDesign(results)
-
-          // If we've found a valid configuration, break
-          if (results.withinCoreLossLimits) {
-            break
-          }
-        }
-      }
-
-      // Step 3: If still not valid, try using stacked cores
-      if (!validation.valid && !results.withinCoreLossLimits && config.coreCount === 1) {
-        // Revert to original minimum frequency but use stacked cores
-        const newMinTurns = calculateMinimumTurnsForRuleOfFour(
-          core,
-          config.minFrequency,
-          config.inputImpedance,
-          2,
-        )
-
-        optimizedConfig = {
-          ...config,
-          coreCount: 2,
-          primaryTurns: newMinTurns,
-        }
-
-        results = calculateUnunDesign(optimizedConfig)
-      }
-
-      // Generate alternative configurations
-      const alternatives: UnunResults[] = []
-
-      // Alternative 1: Single core design with higher min frequency
-      if (config.coreCount === 2 || optimizedConfig.coreCount === 2) {
-        for (const freq of [1.8, 3.5, 5.0]) {
-          if (freq <= config.minFrequency) continue
-
-          const altTurns = calculateMinimumTurnsForRuleOfFour(core, freq, config.inputImpedance, 1)
-
-          const altConfig = {
-            ...config,
-            minFrequency: freq,
-            coreCount: 1,
-            primaryTurns: altTurns,
-          }
-
-          const altResults = calculateUnunDesign(altConfig)
-          const altValidation = validateUnunDesign(altResults)
-
-          if (altValidation.valid) {
-            alternatives.push(altResults)
-            break
-          }
-        }
-      }
-
-      // Alternative 2: Different turns ratio approximation
-      // Try to find a simpler turns ratio that's close to the desired impedance ratio
-      const targetTurnsRatio = Math.sqrt(config.outputImpedance / config.inputImpedance)
-
-      // Try some common ratios
-      const commonRatios = [
-        { primary: 1, secondary: 2 }, // 1:4 impedance
-        { primary: 1, secondary: 3 }, // 1:9 impedance
-        { primary: 2, secondary: 3 }, // 4:9 impedance
-        { primary: 1, secondary: 4 }, // 1:16 impedance
-        { primary: 3, secondary: 4 }, // 9:16 impedance
-      ]
-
-      // Find the closest common ratio
-      let bestRatio = commonRatios[0]
-      let bestDiff = Math.abs(targetTurnsRatio - bestRatio.secondary / bestRatio.primary)
-
-      for (const ratio of commonRatios) {
-        const diff = Math.abs(targetTurnsRatio - ratio.secondary / ratio.primary)
-        if (diff < bestDiff) {
-          bestDiff = diff
-          bestRatio = ratio
-        }
-      }
-
-      // If the best common ratio is close enough (within 10%)
-      if (bestDiff / targetTurnsRatio < 0.1) {
-        // Calculate the actual impedance ratio this would give
-        const actualImpedanceRatio = Math.pow(bestRatio.secondary / bestRatio.primary, 2)
-        const actualOutputImpedance = config.inputImpedance * actualImpedanceRatio
-
-        // Create an alternative with this simpler ratio
-        const simplifiedConfig = {
-          ...config,
-          outputImpedance: actualOutputImpedance,
-          primaryTurns: bestRatio.primary * minTurns,
-        }
-
-        const simplifiedResults = calculateUnunDesign(simplifiedConfig)
-        alternatives.push(simplifiedResults)
-      }
-
-      // Return the results with alternatives
-      return {
-        ...results,
-        alternativeConfigurations: alternatives,
-      }
-    }
-
-    function generateDesignReport(results: UnunResults): string {
-      const validation = validateUnunDesign(results)
-      let report = ''
-
-      // Basic details
-      report += `# Unun Design Report\n\n`
-      report += `## Configuration\n\n`
-      report += `- Impedance Ratio: ${results.config.inputImpedance}Ω:${results.config.outputImpedance}Ω (1:${results.config.outputImpedance / results.config.inputImpedance})\n`
-      report += `- Turns Ratio: ${results.turnsRatio.toFixed(2)} (${results.config.primaryTurns}:${results.secondaryTurns})\n`
-      report += `- Frequency Range: ${results.config.minFrequency}-${Math.min(results.config.maxFrequency, results.maxFreqBasedOnLength).toFixed(1)} MHz\n`
-      report += `- Power Rating: ${results.calculatedPowerRating.toFixed(1)} W (${results.config.operationMode} mode)\n`
-      report += `- Core: ${results.coreModel.id} (${results.config.coreCount}x)\n\n`
-
-      // Construction details
-      report += `## Construction Details\n\n`
-      report += `- Primary Turns: ${results.config.primaryTurns}\n`
-      report += `- Secondary Turns: ${results.secondaryTurns}\n`
-      report += `- Wire Gauge: AWG ${results.recommendedWireGauge}\n`
-      report += `- Winding Length: ${results.windingLengthCm.toFixed(1)} cm\n`
-      report += `- Characteristic Impedance: ${results.characteristicImpedance.toFixed(1)} Ω\n\n`
-
-      // Add winding instructions if available
-      if (results.windingInfo) {
-        report += `## Winding and Construction Details\n\n`
-        report += `- Winding Style: ${results.windingInfo.style}\n`
-        report += `- Construction Method: ${results.windingInfo.construction}\n`
-        report += `- Connection Method: ${results.windingInfo.connectionDetails}\n\n`
-
-        // Generate detailed winding instructions
-        const instructions = WindingStyleCalculator.generateWindingInstructions(
-          results.windingInfo,
-          results.config.primaryTurns,
-          results.coreModel.id,
-        )
-
-        report += instructions + '\n'
-      }
-
-      // Performance details
-      report += `## Performance Details\n\n`
-      report += `- Rule of 4: ${results.meetsRuleOfFour ? 'Met' : 'Not Met'} (${results.reactanceAtMinFreq.toFixed(1)} Ω at ${results.config.minFrequency} MHz)\n`
-      report += `- Core Loss: ${results.coreLossAtMinFreq.toFixed(1)} W of ${results.maxPermissibleCoreLoss.toFixed(1)} W maximum\n`
-      report += `- Flux Density: ${results.fluxDensityAtMinFreq.toFixed(1)} mT (Linear region: <${constants.maxLinearFluxDensity} mT)\n`
-      report += `- Q Factor: ${results.qFactorAtMinFreq.toFixed(1)}\n\n`
-
-      // Validation
-      report += `## Validation\n\n`
-      for (const msg of validation.messages) {
-        report += `- [${msg.type.toUpperCase()}] ${msg.message}\n`
-      }
-
-      // Summary
-      report += `\n## Summary\n\n`
-      report += validation.valid
-        ? `This design is valid and should perform well across the specified frequency range.\n`
-        : `This design has issues that should be addressed before construction.\n`
-
-      // Add band coverage
-      report += `\n## Ham Band Coverage\n\n`
-      for (const band of hamBands) {
-        const covered =
-          band.min >= results.config.minFrequency &&
-          band.max <= Math.min(results.config.maxFrequency, results.maxFreqBasedOnLength)
-        report += `- ${band.name}: ${covered ? '✓' : '✗'}\n`
-      }
-
-      // Alternative configurations
-      if (results.alternativeConfigurations && results.alternativeConfigurations.length > 0) {
-        report += `\n## Alternative Configurations\n\n`
-
-        results.alternativeConfigurations.forEach((alt, index) => {
-          report += `### Alternative ${index + 1}\n\n`
-          report += `- Impedance Ratio: ${alt.config.inputImpedance}Ω:${alt.config.outputImpedance}Ω (1:${(alt.config.outputImpedance / alt.config.inputImpedance).toFixed(1)})\n`
-          report += `- Turns Ratio: ${alt.turnsRatio.toFixed(2)} (${alt.config.primaryTurns}:${alt.secondaryTurns})\n`
-          report += `- Frequency Range: ${alt.config.minFrequency}-${Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)} MHz\n`
-          report += `- Cores: ${alt.config.coreCount}x ${alt.coreModel.id}\n`
-          report += `- Power Rating: ${alt.calculatedPowerRating.toFixed(1)} W\n\n`
-        })
-      }
-
-      return report
-    }
-
-    function getRecommendedWireGauge(power: number, impedance: number): number {
-      // Calculate current
-      const current = Math.sqrt(power / impedance)
-
-      // Required cross-sectional area based on current density
-      const requiredArea = current / constants.currentDensity
-
-      // Find the suitable wire gauge
-      for (const wire of wireSpecs) {
-        if (wire.areaMm2 >= requiredArea) {
-          return wire.awg
-        }
-      }
-
-      // If no suitable wire found, return the largest gauge
-      return wireSpecs[0].awg
-    }
-
-    // Main calculation function
-    function calculateUnun() {
-      isCalculating.value = true
-      calculationError.value = null
-
+    const calculateUnun = () => {
       try {
-        // Create config from form inputs
-        const config: UnunConfig = {
+        isCalculating.value = true
+        calculationError.value = ''
+
+        // Input validation
+        if (minFrequency.value >= maxFrequency.value) {
+          throw new Error('Minimum frequency must be less than maximum frequency')
+        }
+
+        if (power.value <= 0) {
+          throw new Error('Power must be greater than 0')
+        }
+
+        // Find the selected core model
+        const core = findCoreModel(selectedCoreModel.value)
+        if (!core) {
+          throw new Error('Invalid core model selected')
+        }
+
+        // Prepare configuration
+        const config: BalunConfig = {
           inputImpedance: inputImpedance.value,
           outputImpedance: outputImpedance.value,
-          power: power.value,
           minFrequency: minFrequency.value,
           maxFrequency: maxFrequency.value,
+          power: power.value,
           operationMode: operationMode.value,
+          coreModel: selectedCoreModel.value,
           coreCount: coreCount.value,
           primaryTurns: primaryTurns.value,
+          useHybridDesign: false, // Always false for Unun
         }
 
-        // If primary turns is 0, optimize the design
-        if (config.primaryTurns === 0) {
-          designResults.value = optimizeUnunDesign(config)
-        } else {
-          designResults.value = calculateUnunDesign(config)
-        }
+        // Calculate unun design
+        const results = BalunDesignCalculator.calculateBalunDesign(config, core)
+
+        // Generate alternative designs
+        const alternatives = BalunDesignCalculator.generateAlternatives(config, core, results)
 
         // Validate the design
-        validationResult.value = validateUnunDesign(designResults.value)
+        const validation = BalunDesignCalculator.validateDesign(results)
 
-        // Generate design report
-        designReport.value = generateDesignReport(designResults.value)
-
-        // Show the report
+        // Update state with results
+        designResults.value = {
+          ...results,
+          alternativeConfigurations: alternatives,
+        }
+        validationResult.value = validation
         showReport.value = true
       } catch (error) {
-        console.error('Calculation error:', error)
-        calculationError.value = `Error during calculation: ${error instanceof Error ? error.message : String(error)}`
+        calculationError.value = error instanceof Error ? error.message : String(error)
       } finally {
         isCalculating.value = false
       }
     }
 
-    // Reset form to defaults
-    function resetForm() {
-      inputImpedance.value = 50
-      outputImpedance.value = 200
-      power.value = 100
-      minFrequency.value = 3.5
-      maxFrequency.value = 30
-      operationMode.value = OperationMode.SSB
-      coreCount.value = 1
-      primaryTurns.value = 0
-      selectedCoreModel.value = coreModels[0].id
-      showAdvancedOptions.value = false
-      showDesignSteps.value = false
-      showAlternativeDesigns.value = false
-      showBandCoverage.value = false
-      showWireInfo.value = false
-      showPerformanceDetails.value = false
-      showReport.value = false
-      designResults.value = null
-      validationResult.value = null
-      designReport.value = ''
-      calculationError.value = null
-    }
-
-    // Presets for common unun configurations
-    const presets = [
-      {
-        name: '1:4 Unun (50Ω to 200Ω)',
-        config: {
-          inputImpedance: 50,
-          outputImpedance: 200,
-          power: 100,
-          minFrequency: 3.5,
-          maxFrequency: 30,
-          operationMode: OperationMode.SSB,
-          coreCount: 1,
-          primaryTurns: 0,
-        },
+    // Watchers
+    watch(
+      [
+        minFrequency,
+        maxFrequency,
+        power,
+        inputImpedance,
+        outputImpedance,
+        operationMode,
+        selectedCoreModel,
+        coreCount,
+        primaryTurns,
+      ],
+      () => {
+        // Reset results when inputs change
+        if (designResults.value) {
+          showReport.value = false
+          designResults.value = null
+          validationResult.value = null
+        }
       },
-      {
-        name: '1:9 Unun (50Ω to 450Ω)',
-        config: {
-          inputImpedance: 50,
-          outputImpedance: 450,
-          power: 100,
-          minFrequency: 3.5,
-          maxFrequency: 30,
-          operationMode: OperationMode.SSB,
-          coreCount: 1,
-          primaryTurns: 0,
-        },
-      },
-      {
-        name: '1:2 Unun (50Ω to 100Ω)',
-        config: {
-          inputImpedance: 50,
-          outputImpedance: 100,
-          power: 100,
-          minFrequency: 3.5,
-          maxFrequency: 30,
-          operationMode: OperationMode.SSB,
-          coreCount: 1,
-          primaryTurns: 0,
-        },
-      }
-      
-    ]
+    )
 
-    function applyPreset(preset: any) {
-      inputImpedance.value = preset.config.inputImpedance
-      outputImpedance.value = preset.config.outputImpedance
-      power.value = preset.config.power
-      minFrequency.value = preset.config.minFrequency
-      maxFrequency.value = preset.config.maxFrequency
-      operationMode.value = preset.config.operationMode
-      coreCount.value = preset.config.coreCount
-      primaryTurns.value = preset.config.primaryTurns
-
-      // Calculate after applying preset
-      calculateUnun()
-    }
-
-    function formatInstructions(instructions: string): string {
-      // Convert markdown headers to HTML
-      let formatted = instructions.replace(/### (.*?)\n/g, '<h5>$1</h5>')
-
-      // Convert markdown lists to HTML
-      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>')
-      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>')
-      formatted = formatted.replace(/<\/ul><ul>/g, '')
-
-      // Convert numbered lists
-      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$2</li>')
-      formatted = formatted.replace(/<li>/g, '<ol><li>').replace(/<\/li>(?!<li>)/g, '</li></ol>')
-      formatted = formatted.replace(/<\/ol><ol>/g, '')
-
-      // Convert line breaks
-      formatted = formatted.replace(/\n\n/g, '<br><br>')
-
-      return formatted
-    }
-
+    // Return everything needed by the template
     return {
-      // Form inputs
-      inputImpedance,
-      outputImpedance,
-      power,
-      minFrequency,
-      maxFrequency,
-      operationMode,
-      coreCount,
-      primaryTurns,
-      selectedCoreModel,
-      showAdvancedOptions,
+      // State
       showDesignSteps,
-      showAlternativeDesigns,
+      showAdvancedOptions,
+      showReport,
       showBandCoverage,
       showWireInfo,
       showPerformanceDetails,
       showWindingInstructions,
-      showReport,
+      showAlternativeDesigns,
+      isCalculating,
+      calculationError,
 
-      // Computed properties
-      impedanceRatio,
-      turnsRatio,
-      secondaryTurns,
-      characteristicImpedance,
-      selectedCore,
-      operationModeOptions,
-      coreModelOptions,
-      bandCoverage,
-      recommendedWireInfo,
+      // Form values
+      inputImpedance,
+      outputImpedance,
+      minFrequency,
+      maxFrequency,
+      power,
+      operationMode,
+      selectedCoreModel,
+      coreCount,
+      primaryTurns,
 
       // Results
       designResults,
       validationResult,
-      designReport,
-      isCalculating,
-      calculationError,
 
-      // Constants
-      dutyCycleFactor,
+      // Computed properties
+      impedanceRatio,
+      characteristicImpedance,
+      selectedCore,
+      coreModelOptions,
+      operationModeOptions,
+      presets,
+      bandCoverage,
+      recommendedWireInfo,
 
       // Methods
-      calculateUnun,
-      resetForm,
-      presets,
       applyPreset,
+      resetForm,
+      calculateUnun,
+      calculateRecommendedWireGauge,
       formatInstructions,
       WindingStyleCalculator,
+
+      // Constants
+      dutyCycleFactor: DUTY_CYCLE_FACTORS,
     }
   },
 })
@@ -1192,7 +287,7 @@ export default defineComponent({
           <li><strong>Core Selection:</strong> Based on power requirements and frequency range.</li>
           <li>
             <strong>Turns Calculation:</strong> Determined by the "Rule of 4" (XL ≥ 4×Z) at the
-            lowest frequency and the impedance ratio.
+            lowest frequency.
           </li>
           <li>
             <strong>Design Validation:</strong> Check core loss, flux density, and winding length
@@ -1202,8 +297,7 @@ export default defineComponent({
             <strong>Optimization:</strong> Adjust parameters if needed to meet all requirements.
           </li>
           <li>
-            <strong>Winding Style:</strong> Determine the appropriate winding style based on the
-            impedance ratio.
+            <strong>Alternative Designs:</strong> Consider different configurations for optimal performance.
           </li>
         </ol>
         <div class="info-box">
@@ -1224,10 +318,6 @@ export default defineComponent({
             <li>
               <strong>Winding Length:</strong> Should be less than λ/10 at the highest frequency to
               prevent transmission line effects.
-            </li>
-            <li>
-              <strong>Turns Ratio:</strong> The square root of the impedance ratio determines the
-              turns ratio.
             </li>
           </ul>
         </div>
@@ -1282,22 +372,6 @@ export default defineComponent({
           <div class="form-group">
             <label>Impedance Ratio</label>
             <div class="calculated-value">1:{{ impedanceRatio.toFixed(1) }}</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Turns Ratio</label>
-            <div class="calculated-value">1:{{ turnsRatio.toFixed(2) }}</div>
-          </div>
-
-          <div class="form-group">
-            <label>Primary:Secondary</label>
-            <div class="calculated-value">
-              {{ primaryTurns === 0 ? 'Auto' : primaryTurns }}:{{
-                secondaryTurns === 0 ? 'Auto' : secondaryTurns
-              }}
-            </div>
           </div>
         </div>
 
@@ -1417,7 +491,7 @@ export default defineComponent({
 
       <div class="form-actions">
         <button class="toggle-advanced" @click="showAdvancedOptions = !showAdvancedOptions">
-          {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Show Advanced Options' }}
+          {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Advanced Options' }}
         </button>
         <button class="reset-button" @click="resetForm">Reset</button>
         <button class="calculate-button" @click="calculateUnun" :disabled="isCalculating">
@@ -1474,14 +548,6 @@ export default defineComponent({
             >
           </div>
           <div class="result-item">
-            <span class="result-label">Turns Ratio:</span>
-            <span class="result-value"
-              >{{ designResults.turnsRatio.toFixed(2) }} ({{ designResults.config.primaryTurns }}:{{
-                designResults.secondaryTurns
-              }})</span
-            >
-          </div>
-          <div class="result-item">
             <span class="result-label">Frequency Range:</span>
             <span class="result-value"
               >{{ designResults.config.minFrequency }}-{{
@@ -1506,6 +572,21 @@ export default defineComponent({
             <span class="result-value"
               >{{ designResults.coreModel.id }} ({{ designResults.config.coreCount }}x)</span
             >
+          </div>
+          <div class="result-item">
+            <span class="result-label">Primary Turns:</span>
+            <span class="result-value">{{ designResults.config.primaryTurns }}</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Secondary Turns:</span>
+            <span class="result-value">{{
+              Math.round(
+                designResults.config.primaryTurns *
+                  Math.sqrt(
+                    designResults.config.outputImpedance / designResults.config.inputImpedance,
+                  ),
+              )
+            }}</span>
           </div>
           <div class="result-item">
             <span class="result-label">Characteristic Z:</span>
@@ -1542,7 +623,7 @@ export default defineComponent({
               class="result-value"
               :class="designResults.fluxDensityInLinearRegion ? 'good' : 'bad'"
             >
-              {{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT (Linear: <50 mT)
+              {{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT (Linear: &lt;50 mT)
             </span>
           </div>
           <div class="result-item">
@@ -1570,284 +651,302 @@ export default defineComponent({
       </div>
 
       <div class="additional-info">
-        <div class="info-toggle">
-          <button @click="showBandCoverage = !showBandCoverage">
-            {{ showBandCoverage ? 'Hide Band Coverage' : 'Show Band Coverage' }}
-          </button>
-          <button @click="showWireInfo = !showWireInfo">
-            {{ showWireInfo ? 'Hide Wire Information' : 'Show Wire Information' }}
-          </button>
-          <button @click="showPerformanceDetails = !showPerformanceDetails">
-            {{ showPerformanceDetails ? 'Hide Performance Details' : 'Show Performance Details' }}
-          </button>
-          <button
-            v-if="designResults?.windingInfo"
-            @click="showWindingInstructions = !showWindingInstructions"
-          >
-            {{
-              showWindingInstructions ? 'Hide Winding Instructions' : 'Show Winding Instructions'
-            }}
-          </button>
-        </div>
+        <div class="accordion">
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showBandCoverage = !showBandCoverage">
+              <span class="accordion-title">Band Coverage</span>
+              <span class="accordion-icon">{{ showBandCoverage ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showBandCoverage }">
+              <div class="band-coverage">
+                <h4>Ham Band Coverage</h4>
+                <div class="band-grid">
+                  <div
+                    v-for="band in bandCoverage"
+                    :key="band.name"
+                    class="band-item"
+                    :class="{ covered: band.covered }"
+                  >
+                    <span class="band-name">{{ band.name }}</span>
+                    <span class="band-status">{{ band.covered ? '✓' : '✗' }}</span>
+                    <span class="band-range">{{ band.min }}-{{ band.max }} MHz</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div v-if="showBandCoverage" class="band-coverage">
-          <h4>Ham Band Coverage</h4>
-          <div class="band-grid">
+          <div class="accordion-item" v-if="recommendedWireInfo">
+            <div class="accordion-header" @click="showWireInfo = !showWireInfo">
+              <span class="accordion-title">Wire Information</span>
+              <span class="accordion-icon">{{ showWireInfo ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showWireInfo }">
+              <div class="wire-info">
+                <h4>Wire Information</h4>
+                <div class="wire-details">
+                  <div class="wire-item">
+                    <span class="wire-label">Recommended Wire:</span>
+                    <span class="wire-value">AWG {{ recommendedWireInfo.gauge }}</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Wire Diameter:</span>
+                    <span class="wire-value">{{ recommendedWireInfo.diameter.toFixed(2) }} mm</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Cross-sectional Area:</span>
+                    <span class="wire-value">{{ recommendedWireInfo.area.toFixed(2) }} mm²</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Current Capacity:</span>
+                    <span class="wire-value"
+                      >{{ recommendedWireInfo.currentCapacity.toFixed(2) }} A</span
+                    >
+                  </div>
+                </div>
+                <div class="wire-notes">
+                  <p>
+                    <strong>Note:</strong> For optimal performance, use insulated wire (enamel, PTFE,
+                    etc.) to prevent shorts. The primary and secondary windings should be wound together
+                    for best coupling.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" v-if="designResults?.windingInfo">
             <div
-              v-for="band in bandCoverage"
-              :key="band.name"
-              class="band-item"
-              :class="{ covered: band.covered }"
+              class="accordion-header"
+              @click="showWindingInstructions = !showWindingInstructions"
             >
-              <span class="band-name">{{ band.name }}</span>
-              <span class="band-status">{{ band.covered ? '✓' : '✗' }}</span>
-              <span class="band-range">{{ band.min }}-{{ band.max }} MHz</span>
+              <span class="accordion-title">Winding Instructions</span>
+              <span class="accordion-icon">{{ showWindingInstructions ? '▼' : '▶' }}</span>
             </div>
-          </div>
-        </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showWindingInstructions }">
+              <div class="winding-instructions">
+                <h4>Winding Instructions</h4>
+                <div class="winding-details">
+                  <div class="winding-info-grid">
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Winding Style:</span>
+                      <span class="winding-info-value">{{ designResults.windingInfo.style }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Construction Method:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.construction === 'classical'
+                          ? 'Classical Transformer'
+                          : 'Autotransformer'
+                      }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Wire Count:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.wireCount
+                      }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Connection Type:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.connectionDetails
+                      }}</span>
+                    </div>
+                  </div>
 
-        <div v-if="showWireInfo && recommendedWireInfo" class="wire-info">
-          <h4>Wire Information</h4>
-          <div class="wire-details">
-            <div class="wire-item">
-              <span class="wire-label">Recommended Wire:</span>
-              <span class="wire-value">AWG {{ recommendedWireInfo.gauge }}</span>
-            </div>
-            <div class="wire-item">
-              <span class="wire-label">Wire Diameter:</span>
-              <span class="wire-value">{{ recommendedWireInfo.diameter.toFixed(2) }} mm</span>
-            </div>
-            <div class="wire-item">
-              <span class="wire-label">Cross-sectional Area:</span>
-              <span class="wire-value">{{ recommendedWireInfo.area.toFixed(2) }} mm²</span>
-            </div>
-            <div class="wire-item">
-              <span class="wire-label">Current Capacity:</span>
-              <span class="wire-value">{{ recommendedWireInfo.currentCapacity.toFixed(2) }} A</span>
-            </div>
-          </div>
-          <div class="wire-notes">
-            <p>
-              <strong>Note:</strong> For optimal performance, use insulated wire (enamel, PTFE,
-              etc.) to prevent shorts. The primary and secondary windings should be wound together
-              for best coupling.
-            </p>
-          </div>
-        </div>
+                  <div
+                    class="winding-instructions-content"
+                    v-html="
+                      formatInstructions(
+                        WindingStyleCalculator.generateWindingInstructions(
+                          designResults.windingInfo,
+                          designResults.config.primaryTurns,
+                          designResults.coreModel.id,
+                        ),
+                      )
+                    "
+                  ></div>
 
-        <div
-          v-if="showWindingInstructions && designResults?.windingInfo"
-          class="winding-instructions"
-        >
-          <h4>Winding Instructions</h4>
-          <div class="winding-details">
-            <div class="winding-info-grid">
-              <div class="winding-info-item">
-                <span class="winding-info-label">Winding Style:</span>
-                <span class="winding-info-value">{{ designResults.windingInfo.style }}</span>
-              </div>
-              <div class="winding-info-item">
-                <span class="winding-info-label">Construction Method:</span>
-                <span class="winding-info-value">{{
-                  designResults.windingInfo.construction === 'classical'
-                    ? 'Classical Transformer'
-                    : 'Autotransformer'
-                }}</span>
-              </div>
-              <div class="winding-info-item">
-                <span class="winding-info-label">Wire Count:</span>
-                <span class="winding-info-value">{{ designResults.windingInfo.wireCount }}</span>
-              </div>
-              <div class="winding-info-item">
-                <span class="winding-info-label">Connection Type:</span>
-                <span class="winding-info-value">{{
-                  designResults.windingInfo.connectionDetails
-                }}</span>
-              </div>
-            </div>
-
-            <div
-              class="winding-instructions-content"
-              v-html="
-                formatInstructions(
-                  WindingStyleCalculator.generateWindingInstructions(
-                    designResults.windingInfo,
-                    designResults.config.primaryTurns,
-                    designResults.coreModel.id,
-                  ),
-                )
-              "
-            ></div>
-
-            <div
-              v-if="
-                designResults.windingInfo.construction === 'autotransformer' &&
-                designResults.windingInfo.wireCount > 3
-              "
-              class="winding-suggestion"
-            >
-              <div class="suggestion-icon">💡</div>
-              <div class="suggestion-text">
-                <strong>Construction Suggestion:</strong> For this impedance ratio (1:{{
-                  (
-                    designResults.config.outputImpedance / designResults.config.inputImpedance
-                  ).toFixed(1)
-                }}), consider using a simpler ratio like 1:4 or 1:9 if your application allows for
-                it. This would simplify the winding process.
+                  <div
+                    v-if="
+                      designResults.windingInfo.construction === 'autotransformer' &&
+                      designResults.windingInfo.wireCount > 3
+                    "
+                    class="winding-suggestion"
+                  >
+                    <div class="suggestion-icon">💡</div>
+                    <div class="suggestion-text">
+                      <strong>Construction Suggestion:</strong> For this impedance ratio (1:{{
+                        (
+                          designResults.config.outputImpedance / designResults.config.inputImpedance
+                        ).toFixed(1)
+                      }}), consider using a simpler ratio like 1:4 or 1:9 if your application allows for
+                      it. This would simplify the winding process.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div v-if="showPerformanceDetails" class="performance-details">
-          <h4>Detailed Performance Analysis</h4>
-          <div class="performance-grid">
-            <div class="performance-item">
-              <h5>Core Properties</h5>
-              <div class="detail-item">
-                <span class="detail-label">Core Model:</span>
-                <span class="detail-value">{{ designResults.coreModel.id }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Mix:</span>
-                <span class="detail-value">{{ designResults.coreModel.mix }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Initial Permeability:</span>
-                <span class="detail-value">{{ designResults.coreModel.initialPermeability }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Saturation Flux Density:</span>
-                <span class="detail-value"
-                  >{{ designResults.coreModel.saturationFluxDensity }} mT</span
-                >
-              </div>
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showPerformanceDetails = !showPerformanceDetails">
+              <span class="accordion-title">Performance Details</span>
+              <span class="accordion-icon">{{ showPerformanceDetails ? '▼' : '▶' }}</span>
             </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showPerformanceDetails }">
+              <div class="performance-details">
+                <h4>Detailed Performance Analysis</h4>
+                <div class="performance-grid">
+                  <div class="performance-item">
+                    <h5>Core Properties</h5>
+                    <div class="detail-item">
+                      <span class="detail-label">Core Model:</span>
+                      <span class="detail-value">{{ designResults.coreModel.id }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Mix:</span>
+                      <span class="detail-value">{{ designResults.coreModel.mix }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Initial Permeability:</span>
+                      <span class="detail-value">{{
+                        designResults.coreModel.initialPermeability
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Saturation Flux Density:</span>
+                      <span class="detail-value"
+                        >{{ designResults.coreModel.saturationFluxDensity }} mT</span
+                      >
+                    </div>
+                  </div>
 
-            <div class="performance-item">
-              <h5>Electrical Parameters</h5>
-              <div class="detail-item">
-                <span class="detail-label"
-                  >Impedance at {{ designResults.config.minFrequency }} MHz:</span
-                >
-                <span class="detail-value"
-                  >{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span
-                >
-              </div>
-              <div class="detail-item">
-                <span class="detail-label"
-                  >Reactance at {{ designResults.config.minFrequency }} MHz:</span
-                >
-                <span class="detail-value"
-                  >{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span
-                >
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Q Factor:</span>
-                <span class="detail-value">{{ designResults.qFactorAtMinFreq.toFixed(1) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Flux Density:</span>
-                <span class="detail-value"
-                  >{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span
-                >
-              </div>
-            </div>
+                  <div class="performance-item">
+                    <h5>Electrical Parameters</h5>
+                    <div class="detail-item">
+                      <span class="detail-label"
+                        >Impedance at {{ designResults.config.minFrequency }} MHz:</span
+                      >
+                      <span class="detail-value"
+                        >{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label"
+                        >Reactance at {{ designResults.config.minFrequency }} MHz:</span
+                      >
+                      <span class="detail-value"
+                        >{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Q Factor:</span>
+                      <span class="detail-value">{{
+                        designResults.qFactorAtMinFreq.toFixed(1)
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Flux Density:</span>
+                      <span class="detail-value"
+                        >{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span
+                      >
+                    </div>
+                  </div>
 
-            <div class="performance-item">
-              <h5>Thermal Considerations</h5>
-              <div class="detail-item">
-                <span class="detail-label">Core Loss:</span>
-                <span class="detail-value">{{ designResults.coreLossAtMinFreq.toFixed(1) }} W</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Max Permissible Loss:</span>
-                <span class="detail-value"
-                  >{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span
-                >
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Loss Ratio:</span>
-                <span class="detail-value">{{
-                  (designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss).toFixed(
-                    2,
-                  )
-                }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Duty Cycle Factor:</span>
-                <span class="detail-value"
-                  >{{ dutyCycleFactor[designResults.config.operationMode] }}x</span
-                >
+                  <div class="performance-item">
+                    <h5>Thermal Considerations</h5>
+                    <div class="detail-item">
+                      <span class="detail-label">Core Loss:</span>
+                      <span class="detail-value"
+                        >{{ designResults.coreLossAtMinFreq.toFixed(1) }} W</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Max Permissible Loss:</span>
+                      <span class="detail-value"
+                        >{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Loss Ratio:</span>
+                      <span class="detail-value">{{
+                        (
+                          designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss
+                        ).toFixed(2)
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Duty Cycle Factor:</span>
+                      <span class="detail-value"
+                        >{{ dutyCycleFactor[designResults.config.operationMode] }}x</span
+                      >
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div
-        v-if="
-          designResults.alternativeConfigurations &&
-          designResults.alternativeConfigurations.length > 0
-        "
-        class="alternative-designs"
-      >
-        <div class="section-header">
-          <h4>Alternative Designs</h4>
-          <button @click="showAlternativeDesigns = !showAlternativeDesigns">
-            {{ showAlternativeDesigns ? 'Hide' : 'Show' }}
-          </button>
-        </div>
-
-        <div v-if="showAlternativeDesigns" class="alternatives-container">
           <div
-            v-for="(alt, index) in designResults.alternativeConfigurations"
-            :key="index"
-            class="alternative-card"
+            v-if="
+              designResults.alternativeConfigurations &&
+              designResults.alternativeConfigurations.length > 0
+            "
+            class="alternative-designs"
           >
-            <h5>Alternative {{ index + 1 }}</h5>
-            <div class="alt-item">
-              <span class="alt-label">Impedance Ratio:</span>
-              <span class="alt-value"
-                >{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω (1:{{
-                  (alt.config.outputImpedance / alt.config.inputImpedance).toFixed(1)
-                }})</span
+            <div class="section-header">
+              <h4>Alternative Designs</h4>
+              <button @click="showAlternativeDesigns = !showAlternativeDesigns">
+                {{ showAlternativeDesigns ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+
+            <div v-if="showAlternativeDesigns" class="alternatives-container">
+              <div
+                v-for="(alt, index) in designResults.alternativeConfigurations"
+                :key="index"
+                class="alternative-card"
               >
-            </div>
-            <div class="alt-item">
-              <span class="alt-label">Turns Ratio:</span>
-              <span class="alt-value"
-                >{{ alt.turnsRatio.toFixed(2) }} ({{ alt.config.primaryTurns }}:{{
-                  alt.secondaryTurns
-                }})</span
-              >
-            </div>
-            <div class="alt-item">
-              <span class="alt-label">Frequency Range:</span>
-              <span class="alt-value"
-                >{{ alt.config.minFrequency }}-{{
-                  Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)
-                }}
-                MHz</span
-              >
-            </div>
-            <div class="alt-item">
-              <span class="alt-label">Cores:</span>
-              <span class="alt-value">{{ alt.config.coreCount }}x {{ alt.coreModel.id }}</span>
-            </div>
-            <div class="alt-item">
-              <span class="alt-label">Power Rating:</span>
-              <span class="alt-value">{{ alt.calculatedPowerRating.toFixed(1) }} W</span>
+                <h5>Alternative {{ index + 1 }}</h5>
+                <div class="alt-item">
+                  <span class="alt-label">Impedance Ratio:</span>
+                  <span class="alt-value"
+                    >{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω</span
+                  >
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Frequency Range:</span>
+                  <span class="alt-value"
+                    >{{ alt.config.minFrequency }}-{{
+                      Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)
+                    }}
+                    MHz</span
+                  >
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Cores:</span>
+                  <span class="alt-value">{{ alt.config.coreCount }}x {{ alt.coreModel.id }}</span>
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Primary Turns:</span>
+                  <span class="alt-value">{{ alt.config.primaryTurns }}</span>
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Power Rating:</span>
+                  <span class="alt-value">{{ alt.calculatedPowerRating.toFixed(1) }} W</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="design-report">
-        <div class="report-toggle">
-          <button @click="showReport = !showReport">
-            {{ showReport ? 'Hide Full Report' : 'Show Full Report' }}
-          </button>
+          <div class="design-report">
+            <div class="report-toggle">
+              <button @click="showReport = !showReport">
+                {{ showReport ? 'Hide Full Report' : 'Show Full Report' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1968,29 +1067,33 @@ export default defineComponent({
 }
 
 .presets-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }
 
 .preset-button {
   background-color: var(--color-background-mute);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  flex: 1 1 calc(33.333% - 0.75rem);
-  min-width: 200px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
   text-align: center;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .preset-button:hover {
   background-color: hsla(160, 100%, 37%, 0.1);
   border-color: hsla(160, 100%, 37%, 0.5);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-section {
@@ -2097,21 +1200,32 @@ export default defineComponent({
 .reset-button,
 .calculate-button {
   padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .toggle-advanced {
-  background-color: transparent;
+  background-color: var(--color-background-mute);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-advanced::before {
+  content: "⚙️";
+  font-size: 1.1rem;
 }
 
 .toggle-advanced:hover {
-  background-color: var(--color-background-mute);
+  background-color: var(--color-background-soft);
   border-color: hsla(160, 100%, 37%, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .reset-button {
@@ -2291,31 +1405,61 @@ export default defineComponent({
   margin-top: 2rem;
 }
 
-.info-toggle {
+.accordion {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.info-toggle button {
-  background-color: transparent;
+.accordion-item {
   border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--color-background);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.info-toggle button:hover {
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: var(--color-background-soft);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.accordion-header:hover {
   background-color: var(--color-background-mute);
-  border-color: hsla(160, 100%, 37%, 0.5);
+}
+
+.accordion-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-heading);
+}
+
+.accordion-icon {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  transition: transform 0.3s ease;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.accordion-open {
+  max-height: 2000px; /* Large enough to contain content */
+  transition: max-height 0.5s ease-in;
 }
 
 .band-coverage {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .band-coverage h4 {
@@ -2360,7 +1504,7 @@ export default defineComponent({
 }
 
 .wire-info {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .wire-info h4 {
@@ -2401,7 +1545,7 @@ export default defineComponent({
 }
 
 .winding-instructions {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .winding-instructions h4 {
@@ -2486,7 +1630,7 @@ export default defineComponent({
 }
 
 .performance-details {
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
 }
 
 .performance-details h4 {
