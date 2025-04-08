@@ -14,7 +14,7 @@ import {
   calculateMaxFreqBasedOnLength,
   calculateCharacteristicImpedance,
 } from './utils'
-import { DUTY_CYCLE_FACTORS } from './constants'
+import { DUTY_CYCLE_FACTORS, HAM_BANDS } from './constants'
 
 export class BalunDesignCalculator {
   /**
@@ -322,31 +322,31 @@ export class BalunDesignCalculator {
     turns: number,
     coreCount: number,
     inputPower: number,
-    inputImpedance: number
+    inputImpedance: number,
   ) {
     // Calculate power transfer for each HAM band
-    return HAM_BANDS.map(band => {
+    return HAM_BANDS.map((band) => {
       const centerFreq = (band.min + band.max) / 2
-      
+
       // Calculate core losses and power output
       const lossResult = CoreCalculator.calculateLosses(
-        centerFreq, 
-        turns, 
-        core, 
-        coreCount, 
-        inputPower, 
-        inputImpedance
+        centerFreq,
+        turns,
+        core,
+        coreCount,
+        inputPower,
+        inputImpedance,
       )
-      
+
       // Calculate reactance
       const reactance = 2 * Math.PI * centerFreq * 1e6 * lossResult.inductance * 1e-6
-      
+
       // Calculate Q factor
       const qFactor = reactance / lossResult.resistance
-      
+
       // Calculate SWR (input power / output power)
       const swr = inputPower / lossResult.P_out
-      
+
       return {
         band: band.name,
         frequency: centerFreq,
@@ -357,11 +357,11 @@ export class BalunDesignCalculator {
         fluxDensity: lossResult.fluxDensity,
         powerOut: lossResult.P_out,
         efficiency: (lossResult.P_out / inputPower) * 100,
-        swr: swr
+        swr: swr,
       }
     })
   }
-  
+
   /**
    * Calculate SWR data across the HF spectrum
    */
@@ -370,34 +370,34 @@ export class BalunDesignCalculator {
     turns: number,
     coreCount: number,
     inputPower: number,
-    inputImpedance: number
+    inputImpedance: number,
   ) {
     // Generate SWR data across the HF spectrum (1-30 MHz)
     const points = 29
     const minFreq = 1
     const maxFreq = 30
-    
+
     return Array.from({ length: points }, (_, i) => {
       const freq = minFreq + i
-      
+
       // Calculate core losses and power output
       const lossResult = CoreCalculator.calculateLosses(
-        freq, 
-        turns, 
-        core, 
-        coreCount, 
-        inputPower, 
-        inputImpedance
+        freq,
+        turns,
+        core,
+        coreCount,
+        inputPower,
+        inputImpedance,
       )
-      
+
       // Calculate SWR (input power / output power)
       // Ensure we don't divide by zero
       const powerOut = Math.max(lossResult.P_out, 0.001)
       const swr = inputPower / powerOut
-      
+
       return {
         frequency: freq,
-        swr: Math.min(swr, 10) // Cap SWR at 10 for display purposes
+        swr: Math.min(swr, 10), // Cap SWR at 10 for display purposes
       }
     })
   }

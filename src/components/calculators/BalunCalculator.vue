@@ -57,19 +57,19 @@ export default defineComponent({
     const validationResult = ref<ValidationResult | null>(null)
     const hybridComponents = ref<HybridComponents | null>(null)
     const bandPowerData = ref<Array<{
-      band: string,
-      frequency: number,
-      inductance: number,
-      reactance: number,
-      resistance: number,
-      qFactor: number,
-      fluxDensity: number,
-      powerOut: number,
-      efficiency: number,
+      band: string
+      frequency: number
+      inductance: number
+      reactance: number
+      resistance: number
+      qFactor: number
+      fluxDensity: number
+      powerOut: number
+      efficiency: number
       swr: number
     }> | null>(null)
     const swrData = ref<Array<{
-      frequency: number,
+      frequency: number
       swr: number
     }> | null>(null)
     const showPowerTransfer = ref(false)
@@ -218,16 +218,16 @@ export default defineComponent({
           results.config.primaryTurns,
           results.config.coreCount,
           results.config.power,
-          results.config.inputImpedance
+          results.config.inputImpedance,
         )
-        
+
         // Calculate SWR data
         const swrResults = BalunDesignCalculator.calculateSWRData(
           core,
           results.config.primaryTurns,
           results.config.coreCount,
           results.config.power,
-          results.config.inputImpedance
+          results.config.inputImpedance,
         )
 
         // Update state with results
@@ -317,6 +317,7 @@ export default defineComponent({
       presets,
       bandCoverage,
       recommendedWireInfo,
+      determineBandCoverage,
 
       // Methods
       applyPreset,
@@ -796,8 +797,8 @@ export default defineComponent({
                 <div class="wire-notes">
                   <p>
                     <strong>Note:</strong> For bifilar windings, use two identical wires placed
-                    parallel to each other. For optimal performance, use insulated wire (enamel, PTFE, etc.) to
-                    prevent shorts.
+                    parallel to each other. For optimal performance, use insulated wire (enamel,
+                    PTFE, etc.) to prevent shorts.
                   </p>
                 </div>
               </div>
@@ -1145,10 +1146,11 @@ export default defineComponent({
               <div class="power-transfer">
                 <h4>Power Transfer to Antenna</h4>
                 <p class="power-transfer-explanation">
-                  This table shows how the balun's performance affects power transfer across different amateur bands.
-                  Higher efficiency values indicate better power transfer from the transmitter to the antenna.
+                  This table shows how the balun's performance affects power transfer across
+                  different amateur bands. Higher efficiency values indicate better power transfer
+                  from the transmitter to the antenna.
                 </p>
-                
+
                 <div class="power-transfer-table">
                   <table>
                     <thead>
@@ -1166,12 +1168,27 @@ export default defineComponent({
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(data, index) in bandPowerData" :key="index" 
-                          :class="{ 'covered-band': determineBandCoverage(
-                            designResults.config.minFrequency, 
-                            Math.min(designResults.config.maxFrequency, designResults.maxFreqBasedOnLength),
-                            [{ name: data.band, min: data.frequency * 0.9, max: data.frequency * 1.1, covered: false }]
-                          )[0].covered }">
+                      <tr
+                        v-for="(data, index) in bandPowerData"
+                        :key="index"
+                        :class="{
+                          'covered-band': determineBandCoverage(
+                            designResults.config.minFrequency,
+                            Math.min(
+                              designResults.config.maxFrequency,
+                              designResults.maxFreqBasedOnLength,
+                            ),
+                            [
+                              {
+                                name: data.band,
+                                min: data.frequency * 0.9,
+                                max: data.frequency * 1.1,
+                                covered: false,
+                              },
+                            ],
+                          )[0].covered,
+                        }"
+                      >
                         <td>{{ data.band }}</td>
                         <td>{{ data.frequency.toFixed(2) }}</td>
                         <td>{{ data.inductance.toFixed(1) }}</td>
@@ -1192,80 +1209,156 @@ export default defineComponent({
                     </tbody>
                   </table>
                 </div>
-                
+
                 <div class="swr-graph">
                   <h5>SWR Across HF Spectrum</h5>
                   <div class="graph-container">
                     <svg width="100%" height="300" viewBox="0 0 800 300" preserveAspectRatio="none">
                       <!-- Graph background -->
-                      <rect x="50" y="20" width="700" height="230" fill="#f8f9fa" stroke="#dee2e6" />
-                      
+                      <rect
+                        x="50"
+                        y="20"
+                        width="700"
+                        height="230"
+                        fill="#f8f9fa"
+                        stroke="#dee2e6"
+                      />
+
                       <!-- X-axis -->
                       <line x1="50" y1="250" x2="750" y2="250" stroke="#495057" stroke-width="2" />
-                      
+
                       <!-- Y-axis -->
                       <line x1="50" y1="20" x2="50" y2="250" stroke="#495057" stroke-width="2" />
-                      
+
                       <!-- X-axis labels -->
-                      <text v-for="i in 6" :key="`x-${i}`" 
-                            :x="50 + (i-1) * 140" y="270" 
-                            text-anchor="middle" font-size="12">
-                        {{ (1 + (i-1) * 6).toFixed(0) }}
+                      <text
+                        v-for="i in 6"
+                        :key="`x-${i}`"
+                        :x="50 + (i - 1) * 140"
+                        y="270"
+                        text-anchor="middle"
+                        font-size="12"
+                      >
+                        {{ (1 + (i - 1) * 6).toFixed(0) }}
                       </text>
-                      <text x="400" y="290" text-anchor="middle" font-size="14">Frequency (MHz)</text>
-                      
+                      <text x="400" y="290" text-anchor="middle" font-size="14">
+                        Frequency (MHz)
+                      </text>
+
                       <!-- Y-axis labels -->
-                      <text v-for="i in 5" :key="`y-${i}`" 
-                            x="40" :y="250 - i * 46" 
-                            text-anchor="end" font-size="12">
+                      <text
+                        v-for="i in 5"
+                        :key="`y-${i}`"
+                        x="40"
+                        :y="250 - i * 46"
+                        text-anchor="end"
+                        font-size="12"
+                      >
                         {{ i * 2 }}
                       </text>
-                      <text x="20" y="140" text-anchor="middle" font-size="14" 
-                            transform="rotate(-90, 20, 140)">SWR</text>
-                      
+                      <text
+                        x="20"
+                        y="140"
+                        text-anchor="middle"
+                        font-size="14"
+                        transform="rotate(-90, 20, 140)"
+                      >
+                        SWR
+                      </text>
+
                       <!-- Grid lines -->
-                      <line v-for="i in 5" :key="`grid-y-${i}`" 
-                            x1="50" :y1="250 - i * 46" x2="750" :y2="250 - i * 46" 
-                            stroke="#dee2e6" stroke-width="1" stroke-dasharray="5,5" />
-                      
-                      <line v-for="i in 5" :key="`grid-x-${i}`" 
-                            :x1="50 + i * 140" y1="20" :x2="50 + i * 140" y2="250" 
-                            stroke="#dee2e6" stroke-width="1" stroke-dasharray="5,5" />
-                      
+                      <line
+                        v-for="i in 5"
+                        :key="`grid-y-${i}`"
+                        x1="50"
+                        :y1="250 - i * 46"
+                        x2="750"
+                        :y2="250 - i * 46"
+                        stroke="#dee2e6"
+                        stroke-width="1"
+                        stroke-dasharray="5,5"
+                      />
+
+                      <line
+                        v-for="i in 5"
+                        :key="`grid-x-${i}`"
+                        :x1="50 + i * 140"
+                        y1="20"
+                        :x2="50 + i * 140"
+                        y2="250"
+                        stroke="#dee2e6"
+                        stroke-width="1"
+                        stroke-dasharray="5,5"
+                      />
+
                       <!-- SWR curve -->
-                      <polyline :points="swrData.map(point => {
-                        const x = 50 + (point.frequency - 1) * (700 / 29); // Scale to 1-30 MHz
-                        const y = 250 - Math.min(point.swr, 10) * 23; // Scale to SWR 1-10
-                        return `${x},${y}`;
-                      }).join(' ')"
-                      fill="none" stroke="hsla(160, 100%, 37%, 1)" stroke-width="2" />
-                      
+                      <polyline
+                        :points="
+                          swrData
+                            .map((point) => {
+                              const x = 50 + (point.frequency - 1) * (700 / 29) // Scale to 1-30 MHz
+                              const y = 250 - Math.min(point.swr, 10) * 23 // Scale to SWR 1-10
+                              return `${x},${y}`
+                            })
+                            .join(' ')
+                        "
+                        fill="none"
+                        stroke="hsla(160, 100%, 37%, 1)"
+                        stroke-width="2"
+                      />
+
                       <!-- Highlight SWR=2 line -->
-                      <line x1="50" y1="204" x2="750" y2="204" 
-                            stroke="#dc3545" stroke-width="1" stroke-dasharray="5,5" />
-                      <text x="755" y="204" text-anchor="start" font-size="12" fill="#dc3545">SWR=2</text>
-                      
+                      <line
+                        x1="50"
+                        y1="204"
+                        x2="750"
+                        y2="204"
+                        stroke="#dc3545"
+                        stroke-width="1"
+                        stroke-dasharray="5,5"
+                      />
+                      <text x="755" y="204" text-anchor="start" font-size="12" fill="#dc3545">
+                        SWR=2
+                      </text>
+
                       <!-- Highlight operating range -->
-                      <rect :x="50 + (designResults.config.minFrequency - 1) * (700 / 29)" 
-                            y="20" 
-                            :width="(Math.min(designResults.config.maxFrequency, designResults.maxFreqBasedOnLength) - 
-                                    designResults.config.minFrequency) * (700 / 29)" 
-                            height="230" 
-                            fill="rgba(0, 123, 255, 0.1)" 
-                            stroke="rgba(0, 123, 255, 0.5)" />
+                      <rect
+                        :x="50 + (designResults.config.minFrequency - 1) * (700 / 29)"
+                        y="20"
+                        :width="
+                          (Math.min(
+                            designResults.config.maxFrequency,
+                            designResults.maxFreqBasedOnLength,
+                          ) -
+                            designResults.config.minFrequency) *
+                          (700 / 29)
+                        "
+                        height="230"
+                        fill="rgba(0, 123, 255, 0.1)"
+                        stroke="rgba(0, 123, 255, 0.5)"
+                      />
                     </svg>
                   </div>
                   <div class="graph-legend">
                     <div class="legend-item">
-                      <span class="legend-color" style="background-color: hsla(160, 100%, 37%, 1)"></span>
+                      <span
+                        class="legend-color"
+                        style="background-color: hsla(160, 100%, 37%, 1)"
+                      ></span>
                       <span class="legend-label">SWR Curve</span>
                     </div>
                     <div class="legend-item">
-                      <span class="legend-color" style="background-color: rgba(0, 123, 255, 0.5)"></span>
+                      <span
+                        class="legend-color"
+                        style="background-color: rgba(0, 123, 255, 0.5)"
+                      ></span>
                       <span class="legend-label">Operating Range</span>
                     </div>
                     <div class="legend-item">
-                      <span class="legend-color" style="background-color: #dc3545; height: 2px"></span>
+                      <span
+                        class="legend-color"
+                        style="background-color: #dc3545; height: 2px"
+                      ></span>
                       <span class="legend-label">SWR=2 Threshold</span>
                     </div>
                   </div>
@@ -1273,7 +1366,7 @@ export default defineComponent({
               </div>
             </div>
           </div>
-          
+
           <div class="design-report">
             <div class="report-toggle">
               <button @click="showReport = !showReport">
