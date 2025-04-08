@@ -755,8 +755,8 @@ export default defineComponent({
                 </div>
                 <div class="wire-notes">
                   <p>
-                    <strong>Note:</strong> For bifilar windings, use two identical wires twisted
-                    together. For optimal performance, use insulated wire (enamel, PTFE, etc.) to
+                    <strong>Note:</strong> For bifilar windings, use two identical wires placed
+                    parallel to each other. For optimal performance, use insulated wire (enamel, PTFE, etc.) to
                     prevent shorts.
                   </p>
                 </div>
@@ -1058,7 +1058,7 @@ export default defineComponent({
               <ol>
                 <li>
                   Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar
-                  turns of AWG
+                  turns (parallel wires, not twisted) of AWG
                   {{
                     calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance)
                       .gauge
