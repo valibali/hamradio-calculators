@@ -200,7 +200,7 @@ export default defineComponent({
         const results = BalunDesignCalculator.calculateBalunDesign(config, core)
 
         // Generate alternative designs
-        const alternatives = BalunDesignCalculator.generateAlternatives(config, core)
+        const alternatives = BalunDesignCalculator.generateAlternatives(config, core, results)
 
         // Validate the design
         const validation = BalunDesignCalculator.validateDesign(results)
@@ -655,7 +655,7 @@ export default defineComponent({
             >
           </div>
           <div class="result-item">
-            <span class="result-label">Power Rating:</span>
+            <span class="result-label">Absolute maximum Input Power:</span>
             <span class="result-value"
               >{{ designResults.calculatedPowerRating.toFixed(1) }} W ({{
                 designResults.config.operationMode

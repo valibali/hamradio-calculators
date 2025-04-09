@@ -168,7 +168,7 @@ export const PRESET_CONFIGS: PresetConfig[] = [
     maxFrequency: 30,
     power: 100,
     operationMode: 'SSB',
-    useHybridDesign: false,
+    useHybridDesign: true,
   },
   {
     name: '1:9 High Power Hybrid Balun (50:450Ω)',
@@ -178,7 +178,7 @@ export const PRESET_CONFIGS: PresetConfig[] = [
     maxFrequency: 30,
     power: 280,
     operationMode: 'SSB',
-    useHybridDesign: true,
+    useHybridDesign: false,
   },
   {
     name: 'QRP 1:1 Current Balun',
