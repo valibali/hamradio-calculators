@@ -38,6 +38,7 @@ export default defineComponent({
     const showWindingInstructions = ref(false)
     const showAlternativeDesigns = ref(false)
     const showHybridDesign = ref(false)
+    const showCoreInfo = ref(false)
     const isCalculating = ref(false)
     const calculationError = ref('')
 
