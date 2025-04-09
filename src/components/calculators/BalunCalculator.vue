@@ -2726,21 +2726,22 @@ export default defineComponent({
   /* Preserve the existing markdown styling for FormulasView */
   .markdown-content :deep(h1) {
     font-size: 1.8rem;
-    margin-bottom: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2rem;
     color: var(--color-heading);
   }
 
   .markdown-content :deep(h2) {
     font-size: 1.5rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
     color: var(--color-heading);
   }
 
   .markdown-content :deep(h3) {
     font-size: 1.2rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
+    margin-top: 2rem;
+    margin-bottom: 1.25rem;
     color: var(--color-heading);
   }
 
