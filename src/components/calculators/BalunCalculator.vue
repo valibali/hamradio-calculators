@@ -1,5 +1,11 @@
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from 'vue'
+import { defineComponent, ref, computed, watch } from 'vue'
+import BandCoverageAccordion from './accordion/BandCoverageAccordion.vue'
+import WireInfoAccordion from './accordion/WireInfoAccordion.vue'
+import WindingInstructionsAccordion from './accordion/WindingInstructionsAccordion.vue'
+import PerformanceDetailsAccordion from './accordion/PerformanceDetailsAccordion.vue'
+import CoreInfoAccordion from './accordion/CoreInfoAccordion.vue'
+import PowerTransferAccordion from './accordion/PowerTransferAccordion.vue'
 import {
   type BalunConfig,
   type DesignResults,
@@ -26,6 +32,14 @@ import { CoreCalculator } from './src/coreCalculator'
 
 export default defineComponent({
   name: 'BalunCalculator',
+  components: {
+    BandCoverageAccordion,
+    WireInfoAccordion,
+    WindingInstructionsAccordion,
+    PerformanceDetailsAccordion,
+    CoreInfoAccordion,
+    PowerTransferAccordion
+  },
 
   setup() {
     // State variables
