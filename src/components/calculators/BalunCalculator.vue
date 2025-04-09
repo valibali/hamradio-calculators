@@ -22,6 +22,7 @@ import {
 } from './src/utils'
 import { BalunDesignCalculator } from './src/balunDesignCalculator'
 import { WindingStyleCalculator } from './src/windingStyleCalculator'
+import { CoreCalculator } from './src/coreCalculator'
 
 export default defineComponent({
   name: 'BalunCalculator',
@@ -284,6 +285,7 @@ export default defineComponent({
       showWindingInstructions,
       showAlternativeDesigns,
       showHybridDesign,
+      showCoreInfo,
       showPowerTransfer,
       isCalculating,
       calculationError,
@@ -326,6 +328,7 @@ export default defineComponent({
       calculateRecommendedWireGauge,
       formatInstructions,
       WindingStyleCalculator,
+      CoreCalculator,
 
       // Constants
       dutyCycleFactor: DUTY_CYCLE_FACTORS,
@@ -1133,6 +1136,72 @@ export default defineComponent({
                   <li>Optimized characteristic impedance for each component</li>
                   <li>Superior performance with difficult loads</li>
                 </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showCoreInfo = !showCoreInfo">
+              <span class="accordion-title">Core Information</span>
+              <span class="accordion-icon">{{ showCoreInfo ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showCoreInfo }">
+              <div class="core-detailed-info">
+                <h4>Core Specifications</h4>
+                
+                <div class="core-dimensions">
+                  <h5>Physical Dimensions</h5>
+                  <div class="dimensions-grid">
+                    <div class="dimension-item">
+                      <span class="dimension-label">Outside Diameter (OD):</span>
+                      <span class="dimension-value">{{ designResults.coreModel.dimensions.od }} mm</span>
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Inside Diameter (ID):</span>
+                      <span class="dimension-value">{{ designResults.coreModel.dimensions.id }} mm</span>
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Height:</span>
+                      <span class="dimension-value">{{ designResults.coreModel.dimensions.height }} mm</span>
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Effective Path Length (Le):</span>
+                      <span class="dimension-value">{{ designResults.coreModel.dimensions.le || ((Math.PI * (designResults.coreModel.dimensions.od + designResults.coreModel.dimensions.id)) / 20).toFixed(2) }} cm</span>
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Effective Cross-Section (Ae):</span>
+                      <span class="dimension-value">{{ designResults.coreModel.dimensions.ae || (((designResults.coreModel.dimensions.od - designResults.coreModel.dimensions.id) * designResults.coreModel.dimensions.height) / 200).toFixed(2) }} cm²</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="permeability-data">
+                  <h5>Permeability Data for Mix {{ designResults.coreModel.mix }}</h5>
+                  <div class="permeability-table-container">
+                    <table class="permeability-table">
+                      <thead>
+                        <tr>
+                          <th>Frequency (MHz)</th>
+                          <th>μ' (Real)</th>
+                          <th>μ" (Imaginary)</th>
+                          <th>|μ| (Complex)</th>
+                          <th>Q Factor</th>
+                          <th>tanδ/μ'</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(freq, index) in [1, 2, 5, 10, 20, 30]" :key="index">
+                          <td>{{ freq }}</td>
+                          <td>{{ CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0].toFixed(1) }}</td>
+                          <td>{{ CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1].toFixed(1) }}</td>
+                          <td>{{ Math.sqrt(Math.pow(CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0], 2) + Math.pow(CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1], 2)).toFixed(1) }}</td>
+                          <td>{{ (CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0] / CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1]).toFixed(1) }}</td>
+                          <td>{{ (CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1] / CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0]).toFixed(4) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2290,6 +2359,79 @@ export default defineComponent({
 .report-toggle button:hover {
   background-color: hsla(160, 100%, 37%, 1);
   transform: translateY(-2px);
+}
+
+.core-detailed-info {
+  padding: 1.25rem;
+}
+
+.core-detailed-info h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.core-dimensions {
+  margin-bottom: 2rem;
+}
+
+.core-dimensions h5,
+.permeability-data h5 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+.dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.dimension-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.dimension-label {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 0.25rem;
+}
+
+.dimension-value {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.permeability-table-container {
+  overflow-x: auto;
+}
+
+.permeability-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.permeability-table th,
+.permeability-table td {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.permeability-table th {
+  background-color: var(--color-background-soft);
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.permeability-table tr:nth-child(even) {
+  background-color: var(--color-background-mute);
 }
 
 .power-transfer {
