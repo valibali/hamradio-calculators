@@ -1643,6 +1643,54 @@ export default defineComponent({
   border: 1px solid var(--color-border);
 }
 
+.design-steps .markdown-content {
+  padding-top: 1rem;
+}
+
+.design-steps .markdown-content :deep(h1:first-child),
+.design-steps .markdown-content :deep(h2:first-child),
+.design-steps .markdown-content :deep(h3:first-child),
+.design-steps .markdown-content :deep(h4:first-child) {
+  margin-top: 0.5rem;
+}
+
+.design-steps .loading-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-style: italic;
+  color: var(--color-text-light);
+}
+
+.design-steps .markdown-content :deep(h1) {
+  font-size: 1.8rem;
+  margin-top: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h2) {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h3) {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h4) {
+  font-size: 1.1rem;
+  margin-top: 1.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-heading);
+}
+
 .design-steps h4 {
   margin-top: 0;
   margin-bottom: 1rem;
