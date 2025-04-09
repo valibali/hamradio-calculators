@@ -54,11 +54,13 @@ Ferrite cores are characterized by:
 The optimal core is selected based on:
 
 1. **Frequency Range**: Different ferrite mixes are optimized for specific frequency ranges:
+
    - Mix 43: 0.5-30 MHz (HF)
    - Mix 52: 2-50 MHz (HF/VHF)
    - Mix 61: 10-200 MHz (VHF/UHF)
 
 2. **Power Handling**: Larger cores can dissipate more heat:
+
    - FT-140: ~100W SSB
    - FT-240: ~250W SSB
 
@@ -94,6 +96,7 @@ The inductive reactance is calculated as:
 $$X_L = 2\pi \times f \times L$$
 
 Where:
+
 - $f$ is the frequency in Hz
 - $L$ is the inductance in Henries
 
@@ -104,6 +107,7 @@ The inductance of a winding on a toroidal core is:
 $$L = \frac{\mu_0 \times \mu_r \times N^2 \times A_e}{l_e}$$
 
 Where:
+
 - $\mu_0$ is the permeability of free space ($4\pi \times 10^{-7}$ H/m)
 - $\mu_r$ is the relative permeability of the core material
 - $N$ is the number of turns
@@ -127,6 +131,7 @@ For a transformer, the impedance ratio is related to the turns ratio by:
 $$\frac{Z_2}{Z_1} = \left(\frac{N_2}{N_1}\right)^2$$
 
 Where:
+
 - $Z_1$ and $Z_2$ are the primary and secondary impedances
 - $N_1$ and $N_2$ are the primary and secondary turns
 
@@ -147,6 +152,7 @@ Core losses are calculated using the complex permeability model:
 $$P_{loss} = \frac{(2\pi \times f \times B \times V_e)^2 \times \mu''}{2 \times \mu_0 \times (\mu')^2}$$
 
 Where:
+
 - $f$ is the frequency in Hz
 - $B$ is the flux density in Tesla
 - $V_e$ is the effective volume in m³
@@ -154,24 +160,16 @@ Where:
 - $\mu'$ is the real part of complex permeability
 - $\mu_0$ is the permeability of free space
 
-### Simplified Loss Model
-
-A simplified model for estimating core loss is:
-
-$$P_{loss} = k \times f^\alpha \times B^\beta \times V_e$$
-
-Where:
-- $k$ is a material-specific constant
-- $\alpha$ and $\beta$ are frequency and flux density exponents
-- $V_e$ is the effective volume
-
 ### Maximum Permissible Core Loss
 
 The maximum permissible core loss is determined by thermal considerations:
 
-$$P_{max} = \frac{\Delta T \times k_{thermal} \times \sqrt{V_e}}{duty\_cycle\_factor}$$
+$$
+P_{max} = \frac{\Delta T \times k_{thermal} \times \sqrt{V_e}}{duty\_cycle\_factor}
+$$
 
 Where:
+
 - $\Delta T$ is the permissible temperature rise (typically 30°C)
 - $k_{thermal}$ is a thermal coefficient (typically 0.044 for ferrite)
 - $V_e$ is the effective volume in cm³
@@ -190,6 +188,7 @@ The flux density in the core is calculated as:
 $$B = \frac{L \times I}{N \times A_e}$$
 
 Where:
+
 - $L$ is the inductance in Henries
 - $I$ is the current in Amperes
 - $N$ is the number of turns
@@ -218,6 +217,7 @@ The total winding length is estimated as:
 $$l_{winding} = 1.2 \times N \times [(OD - ID) + (K \times 2 \times H)]$$
 
 Where:
+
 - $N$ is the number of turns
 - $OD$ is the outer diameter
 - $ID$ is the inner diameter
@@ -232,6 +232,7 @@ To prevent transmission line effects, the winding length should be less than λ/
 $$f_{max} = \frac{c}{10 \times l_{winding}}$$
 
 Where:
+
 - $c$ is the speed of light ($3 \times 10^8$ m/s)
 - $l_{winding}$ is the winding length in meters
 
@@ -240,17 +241,20 @@ Where:
 ### Bifilar Winding
 
 Two parallel wires wound together, used for:
+
 - 1:1 current baluns (series connection)
 - 1:4 impedance transformers (parallel input, series output)
 
 ### Trifilar Winding
 
 Three parallel wires wound together, used for:
+
 - 1:9 impedance transformers (parallel input, series output)
 
 ### Quadrifilar Winding
 
 Four parallel wires wound together, used for:
+
 - 1:16 impedance transformers (parallel input, series output)
 
 ### Construction Methods
@@ -264,6 +268,7 @@ Four parallel wires wound together, used for:
 ### When to Use Hybrid Designs
 
 Hybrid designs (combining a balun and unun) are recommended when:
+
 - The impedance ratio is not close to a standard value (1, 4, 9, 16)
 - Better common-mode rejection is needed
 - The characteristic impedance would otherwise be far from 50Ω or 100Ω
@@ -296,6 +301,7 @@ The Q factor is calculated as:
 $$Q = \frac{X_L}{R_s}$$
 
 Where:
+
 - $X_L$ is the inductive reactance
 - $R_s$ is the series resistance
 

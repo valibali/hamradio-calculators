@@ -326,11 +326,9 @@ export default defineComponent({
           <p>We're working on adding calculators for this category.</p>
         </div>
         <BalunCalculator v-else-if="activeCalculator === 'balun'" />
-        <UnunCalculator v-else-if="activeCalculator === 'unun'" />
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
-        <BalunCalculator v-else-if="activeCalculator === 'balun'" />
       </div>
     </div>
   </div>

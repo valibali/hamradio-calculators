@@ -125,8 +125,8 @@ export class WindingStyleCalculator {
     if (windingInfo.style === 'Bifilar') {
       instructions = `**Bifilar Winding Instructions for ${coreModel}**\n\n`
       instructions += `1. Prepare two identical wires (preferably different colors for easier identification).\n`
-      instructions += `2. Twist the wires together at approximately 4-6 twists per inch.\n`
-      instructions += `3. Wind ${primaryTurns} turns of the twisted pair through the core.\n`
+      instructions += `2. Never twist the wires together - they need to run parallel, since they are feedline. Calculate airgap <a href='calculators?category=transmission-lines&calculator=twinlead'>here</a>.\n`
+      instructions += `3. Wind ${primaryTurns} turns of the twinline through the core.\n`
 
       if (windingInfo.construction === 'classical') {
         instructions += `4. Label the wire ends as follows:\n`
@@ -153,8 +153,8 @@ export class WindingStyleCalculator {
     } else if (windingInfo.style === 'Trifilar') {
       instructions = `**Trifilar Winding Instructions for ${coreModel}**\n\n`
       instructions += `1. Prepare three identical wires (preferably different colors for easier identification).\n`
-      instructions += `2. Twist the wires together at approximately 4-6 twists per inch.\n`
-      instructions += `3. Wind ${primaryTurns} turns of the twisted trio through the core.\n`
+      instructions += `2. Never twist the wires together - they need to run parallel, since they are feedline. Calculate airgap <a href='calculators?category=transmission-lines&calculator=twinlead'>here</a>.\n`
+      instructions += `3. Wind ${primaryTurns} turns of the paralell trio through the core.\n`
       instructions += `4. Label the wire ends as follows:\n`
       instructions += `   - Wire 1: A (start) and B (end)\n`
       instructions += `   - Wire 2: C (start) and D (end)\n`
@@ -174,7 +174,7 @@ export class WindingStyleCalculator {
       instructions = `**Custom Winding Instructions for ${coreModel}**\n\n`
       instructions += `This is a custom impedance transformation that uses an autotransformer configuration.\n\n`
       instructions += `1. Prepare two identical wires (preferably different colors for easier identification).\n`
-      instructions += `2. Twist the wires together at approximately 4-6 twists per inch.\n`
+      instructions += `2. Never twist the wires together - they need to run parallel, since they are feedline. Calculate airgap <a href='calculators?category=transmission-lines&calculator=twinlead'>here</a>.\n`
       instructions += `3. Wind ${primaryTurns} turns of the twisted pair through the core.\n`
       instructions += `4. For this specific impedance ratio, you will need custom connection points.\n`
       instructions += `5. Consult a reference guide or use a vector network analyzer to find the optimal tap points.\n`

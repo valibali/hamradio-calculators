@@ -285,15 +285,6 @@ export class BalunDesignCalculator {
       })
     }
 
-    // Add informational messages
-    if (messages.length === 0) {
-      messages.push({
-        type: 'info',
-        message:
-          'Design meets all requirements and should provide excellent performance across the specified frequency range.',
-      })
-    }
-
     // Add information about hybrid design if appropriate
     if (
       !designResults.config.useHybridDesign &&
