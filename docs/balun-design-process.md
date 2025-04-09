@@ -43,11 +43,11 @@ The key parameters that define a balun design include:
 
 Ferrite cores are characterized by:
 
-- **Initial Permeability (μᵢ)**: The magnetic amplification factor of the material
-- **Complex Permeability (μ' and μ")**: Frequency-dependent values that determine:
-  - μ': The inductive component (energy storage)
-  - μ": The resistive component (energy loss)
-- **Saturation Flux Density (Bₛₐₜ)**: Maximum magnetic flux before non-linear behavior
+- **Initial Permeability ($\mu_i$)**: The magnetic amplification factor of the material
+- **Complex Permeability ($\mu'$ and $\mu''$)**: Frequency-dependent values that determine:
+  - $\mu'$: The inductive component (energy storage)
+  - $\mu''$: The resistive component (energy loss)
+- **Saturation Flux Density ($B_{sat}$)**: Maximum magnetic flux before non-linear behavior
 
 ### Core Selection Criteria
 
@@ -68,30 +68,22 @@ The optimal core is selected based on:
 
 The core's effective parameters are calculated as:
 
-- **Effective Magnetic Path Length (lₑ)**:
-  ```
-  lₑ = π × (OD + ID) / 2 [mm]
-  ```
+- **Effective Magnetic Path Length ($l_e$)**:
+  $$l_e = \pi \times \frac{OD + ID}{2} \text{ [mm]}$$
 
-- **Effective Cross-Sectional Area (Aₑ)**:
-  ```
-  Aₑ = (OD - ID) × Height / 2 [mm²]
-  ```
+- **Effective Cross-Sectional Area ($A_e$)**:
+  $$A_e = \frac{(OD - ID) \times Height}{2} \text{ [mm²]}$$
 
-- **Effective Volume (Vₑ)**:
-  ```
-  Vₑ = Aₑ × lₑ / 1000 [cm³]
-  ```
+- **Effective Volume ($V_e$)**:
+  $$V_e = \frac{A_e \times l_e}{1000} \text{ [cm³]}$$
 
 ## Turns Calculation
 
 ### The Rule of Four
 
-The fundamental principle in balun design is the "Rule of Four," which states that the inductive reactance (X_L) should be at least four times the input impedance (Z_in) at the lowest operating frequency:
+The fundamental principle in balun design is the "Rule of Four," which states that the inductive reactance ($X_L$) should be at least four times the input impedance ($Z_{in}$) at the lowest operating frequency:
 
-```
-X_L ≥ 4 × Z_in
-```
+$$X_L \geq 4 \times Z_{in}$$
 
 This ensures that the balun presents a high impedance to common-mode currents, effectively forcing equal currents in the balanced output.
 
@@ -99,36 +91,30 @@ This ensures that the balun presents a high impedance to common-mode currents, e
 
 The inductive reactance is calculated as:
 
-```
-X_L = 2π × f × L
-```
+$$X_L = 2\pi \times f \times L$$
 
 Where:
-- f is the frequency in Hz
-- L is the inductance in Henries
+- $f$ is the frequency in Hz
+- $L$ is the inductance in Henries
 
 ### Calculating Inductance
 
 The inductance of a winding on a toroidal core is:
 
-```
-L = μ₀ × μᵣ × N² × Aₑ / lₑ
-```
+$$L = \frac{\mu_0 \times \mu_r \times N^2 \times A_e}{l_e}$$
 
 Where:
-- μ₀ is the permeability of free space (4π × 10⁻⁷ H/m)
-- μᵣ is the relative permeability of the core material
-- N is the number of turns
-- Aₑ is the effective cross-sectional area in m²
-- lₑ is the effective magnetic path length in m
+- $\mu_0$ is the permeability of free space ($4\pi \times 10^{-7}$ H/m)
+- $\mu_r$ is the relative permeability of the core material
+- $N$ is the number of turns
+- $A_e$ is the effective cross-sectional area in m²
+- $l_e$ is the effective magnetic path length in m
 
 ### Minimum Turns Calculation
 
 Combining the above equations and solving for N:
 
-```
-N ≥ √[(4 × Z_in × lₑ) / (2π × f × μ₀ × μᵣ × Aₑ)]
-```
+$$N \geq \sqrt{\frac{4 \times Z_{in} \times l_e}{2\pi \times f \times \mu_0 \times \mu_r \times A_e}}$$
 
 This gives us the minimum number of turns required to satisfy the Rule of Four.
 
@@ -138,21 +124,17 @@ This gives us the minimum number of turns required to satisfy the Rule of Four.
 
 For a transformer, the impedance ratio is related to the turns ratio by:
 
-```
-Z₂/Z₁ = (N₂/N₁)²
-```
+$$\frac{Z_2}{Z_1} = \left(\frac{N_2}{N_1}\right)^2$$
 
 Where:
-- Z₁ and Z₂ are the primary and secondary impedances
-- N₁ and N₂ are the primary and secondary turns
+- $Z_1$ and $Z_2$ are the primary and secondary impedances
+- $N_1$ and $N_2$ are the primary and secondary turns
 
 ### Characteristic Impedance
 
 The characteristic impedance of a transmission line transformer is:
 
-```
-Z₀ = √(Z_in × Z_out)
-```
+$$Z_0 = \sqrt{Z_{in} \times Z_{out}}$$
 
 This is important for determining the optimal spacing between wires in bifilar windings.
 
@@ -162,44 +144,38 @@ This is important for determining the optimal spacing between wires in bifilar w
 
 Core losses are calculated using the complex permeability model:
 
-```
-P_loss = (2π × f × B × V_e)² × μ" / (2 × μ₀ × μ'²)
-```
+$$P_{loss} = \frac{(2\pi \times f \times B \times V_e)^2 \times \mu''}{2 \times \mu_0 \times (\mu')^2}$$
 
 Where:
-- f is the frequency in Hz
-- B is the flux density in Tesla
-- V_e is the effective volume in m³
-- μ" is the imaginary part of complex permeability
-- μ' is the real part of complex permeability
-- μ₀ is the permeability of free space
+- $f$ is the frequency in Hz
+- $B$ is the flux density in Tesla
+- $V_e$ is the effective volume in m³
+- $\mu''$ is the imaginary part of complex permeability
+- $\mu'$ is the real part of complex permeability
+- $\mu_0$ is the permeability of free space
 
 ### Simplified Loss Model
 
 A simplified model for estimating core loss is:
 
-```
-P_loss = k × f^α × B^β × V_e
-```
+$$P_{loss} = k \times f^\alpha \times B^\beta \times V_e$$
 
 Where:
-- k is a material-specific constant
-- α and β are frequency and flux density exponents
-- V_e is the effective volume
+- $k$ is a material-specific constant
+- $\alpha$ and $\beta$ are frequency and flux density exponents
+- $V_e$ is the effective volume
 
 ### Maximum Permissible Core Loss
 
 The maximum permissible core loss is determined by thermal considerations:
 
-```
-P_max = ΔT × k_thermal × √V_e / duty_cycle_factor
-```
+$$P_{max} = \frac{\Delta T \times k_{thermal} \times \sqrt{V_e}}{duty\_cycle\_factor}$$
 
 Where:
-- ΔT is the permissible temperature rise (typically 30°C)
-- k_thermal is a thermal coefficient (typically 0.044 for ferrite)
-- V_e is the effective volume in cm³
-- duty_cycle_factor accounts for the operation mode:
+- $\Delta T$ is the permissible temperature rise (typically 30°C)
+- $k_{thermal}$ is a thermal coefficient (typically 0.044 for ferrite)
+- $V_e$ is the effective volume in cm³
+- $duty\_cycle\_factor$ accounts for the operation mode:
   - SSB: 0.3
   - CW: 0.5
   - Digital: 0.8
@@ -211,33 +187,27 @@ Where:
 
 The flux density in the core is calculated as:
 
-```
-B = L × I / (N × A_e)
-```
+$$B = \frac{L \times I}{N \times A_e}$$
 
 Where:
-- L is the inductance in Henries
-- I is the current in Amperes
-- N is the number of turns
-- A_e is the effective cross-sectional area in m²
+- $L$ is the inductance in Henries
+- $I$ is the current in Amperes
+- $N$ is the number of turns
+- $A_e$ is the effective cross-sectional area in m²
 
 ### Current Calculation
 
 The current is derived from the power and impedance:
 
-```
-I = √(P / Z)
-```
+$$I = \sqrt{\frac{P}{Z}}$$
 
 ### Linear Region Constraint
 
 To ensure the core operates in its linear region:
 
-```
-B < 0.5 × B_sat
-```
+$$B < 0.5 \times B_{sat}$$
 
-Where B_sat is the saturation flux density of the core material.
+Where $B_{sat}$ is the saturation flux density of the core material.
 
 ## Winding Length Constraints
 
@@ -245,29 +215,25 @@ Where B_sat is the saturation flux density of the core material.
 
 The total winding length is estimated as:
 
-```
-l_winding = 1.2 × N × [(OD - ID) + (K × 2 × H)]
-```
+$$l_{winding} = 1.2 \times N \times [(OD - ID) + (K \times 2 \times H)]$$
 
 Where:
-- N is the number of turns
-- OD is the outer diameter
-- ID is the inner diameter
-- H is the height of the core
-- K is the number of stacked cores
+- $N$ is the number of turns
+- $OD$ is the outer diameter
+- $ID$ is the inner diameter
+- $H$ is the height of the core
+- $K$ is the number of stacked cores
 - 1.2 is a factor accounting for wire spacing and leads
 
 ### Maximum Frequency Constraint
 
 To prevent transmission line effects, the winding length should be less than λ/10 at the highest frequency:
 
-```
-f_max = c / (10 × l_winding)
-```
+$$f_{max} = \frac{c}{10 \times l_{winding}}$$
 
 Where:
-- c is the speed of light (3 × 10⁸ m/s)
-- l_winding is the winding length in meters
+- $c$ is the speed of light ($3 \times 10^8$ m/s)
+- $l_{winding}$ is the winding length in meters
 
 ## Winding Styles and Construction Methods
 
@@ -318,22 +284,20 @@ Hybrid designs (combining a balun and unun) are recommended when:
 
 ### Key Validation Criteria
 
-1. **Rule of Four**: X_L ≥ 4 × Z_in at the lowest frequency
-2. **Core Loss**: P_loss ≤ P_max
-3. **Flux Density**: B < 0.5 × B_sat
-4. **Winding Length**: l_winding < λ/10 at the highest frequency
+1. **Rule of Four**: $X_L \geq 4 \times Z_{in}$ at the lowest frequency
+2. **Core Loss**: $P_{loss} \leq P_{max}$
+3. **Flux Density**: $B < 0.5 \times B_{sat}$
+4. **Winding Length**: $l_{winding} < \lambda/10$ at the highest frequency
 
 ### Quality Factor (Q)
 
 The Q factor is calculated as:
 
-```
-Q = X_L / R_s
-```
+$$Q = \frac{X_L}{R_s}$$
 
 Where:
-- X_L is the inductive reactance
-- R_s is the series resistance
+- $X_L$ is the inductive reactance
+- $R_s$ is the series resistance
 
 A lower Q factor (1-5) is generally better for broadband applications.
 
@@ -368,9 +332,7 @@ A lower Q factor (1-5) is generally better for broadband applications.
 
 - Use insulated wire (enamel or PTFE)
 - Select gauge based on current handling requirements:
-  ```
-  I_max = √(P_max / Z_min)
-  ```
+  $$I_{max} = \sqrt{\frac{P_{max}}{Z_{min}}}$$
 - Add 50% safety margin for RF applications
 
 ### Winding Techniques
