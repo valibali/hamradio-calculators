@@ -35,5 +35,22 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script>
+      // Ensure MathJax is properly loaded
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          if (window.MathJax) {
+            if (window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise()
+                .catch(function(err) { console.error('MathJax error:', err); });
+            } else if (window.MathJax.typeset) {
+              window.MathJax.typeset();
+            } else if (window.MathJax.Hub && window.MathJax.Hub.Queue) {
+              window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
+            }
+          }
+        }, 2000);
+      });
+    </script>
   </body>
 </html>

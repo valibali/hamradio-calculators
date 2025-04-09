@@ -42,16 +42,19 @@ export default {
         tex: {
           inlineMath: [['$', '$'], ['\\(', '\\)']],
           displayMath: [['$$', '$$'], ['\\[', '\\]']],
-          processEscapes: true
+          processEscapes: true,
+          processEnvironments: true
         },
         svg: {
           fontCache: 'global'
         },
         startup: {
-          typeset: true
+          typeset: true,
+          elements: [document.body]
         },
         options: {
-          enableMenu: false
+          enableMenu: false,
+          processHtmlClass: 'markdown-content'
         }
       };
       
@@ -62,12 +65,23 @@ export default {
       
       // Add event listener to retry typesetting if needed
       script.onload = () => {
+        console.log("MathJax script loaded");
         setTimeout(() => {
-          if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise()
-              .catch(err => console.error('MathJax typeset error:', err));
+          if (window.MathJax) {
+            console.log("Attempting to typeset with MathJax");
+            if (window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise()
+                .then(() => console.log("MathJax typesetting complete"))
+                .catch(err => console.error('MathJax typeset error:', err));
+            } else if (window.MathJax.typeset) {
+              window.MathJax.typeset();
+              console.log("MathJax typeset called");
+            } else if (window.MathJax.Hub && window.MathJax.Hub.Queue) {
+              window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
+              console.log("MathJax Hub Queue called");
+            }
           }
-        }, 500);
+        }, 1000);
       };
       
       document.head.appendChild(script);
