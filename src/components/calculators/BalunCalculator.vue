@@ -1151,6 +1151,22 @@ export default defineComponent({
                 <h4>Core Specifications</h4>
                 
                 <div class="core-dimensions">
+                  <h5>Core Type</h5>
+                  <div class="core-type-info">
+                    <div class="core-type-item">
+                      <span class="core-type-label">Model:</span>
+                      <span class="core-type-value">{{ designResults.coreModel.id }}</span>
+                    </div>
+                    <div class="core-type-item">
+                      <span class="core-type-label">Mix:</span>
+                      <span class="core-type-value">{{ designResults.coreModel.mix }}</span>
+                    </div>
+                    <div class="core-type-item">
+                      <span class="core-type-label">Initial Permeability:</span>
+                      <span class="core-type-value">{{ designResults.coreModel.initialPermeability }}</span>
+                    </div>
+                  </div>
+                  
                   <h5>Physical Dimensions</h5>
                   <div class="dimensions-grid">
                     <div class="dimension-item">
@@ -2374,6 +2390,30 @@ export default defineComponent({
 
 .core-dimensions {
   margin-bottom: 2rem;
+}
+
+.core-type-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.core-type-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.core-type-label {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 0.25rem;
+}
+
+.core-type-value {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .core-dimensions h5,
