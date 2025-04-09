@@ -1,11 +1,5 @@
 <script lang="ts">
 import { defineComponent, ref, computed, watch } from 'vue'
-import BandCoverageAccordion from './accordion/BandCoverageAccordion.vue'
-import WireInfoAccordion from './accordion/WireInfoAccordion.vue'
-import WindingInstructionsAccordion from './accordion/WindingInstructionsAccordion.vue'
-import PerformanceDetailsAccordion from './accordion/PerformanceDetailsAccordion.vue'
-import CoreInfoAccordion from './accordion/CoreInfoAccordion.vue'
-import PowerTransferAccordion from './accordion/PowerTransferAccordion.vue'
 import {
   type BalunConfig,
   type DesignResults,
@@ -32,14 +26,7 @@ import { CoreCalculator } from './src/coreCalculator'
 
 export default defineComponent({
   name: 'BalunCalculator',
-  components: {
-    BandCoverageAccordion,
-    WireInfoAccordion,
-    WindingInstructionsAccordion,
-    PerformanceDetailsAccordion,
-    CoreInfoAccordion,
-    PowerTransferAccordion
-  },
+  components: {},
 
   setup() {
     // State variables
@@ -213,7 +200,7 @@ export default defineComponent({
         const results = BalunDesignCalculator.calculateBalunDesign(config, core)
 
         // Generate alternative designs
-        const alternatives = BalunDesignCalculator.generateAlternatives(config, core, results)
+        const alternatives = BalunDesignCalculator.generateAlternatives(config, core)
 
         // Validate the design
         const validation = BalunDesignCalculator.validateDesign(results)
@@ -784,459 +771,6 @@ export default defineComponent({
             </div>
           </div>
 
-          <div class="accordion-item" v-if="recommendedWireInfo">
-            <div class="accordion-header" @click="showWireInfo = !showWireInfo">
-              <span class="accordion-title">Wire Information</span>
-              <span class="accordion-icon">{{ showWireInfo ? '▼' : '▶' }}</span>
-            </div>
-            <div class="accordion-content" :class="{ 'accordion-open': showWireInfo }">
-              <div class="wire-info">
-                <h4>Wire Information</h4>
-                <div class="wire-details">
-                  <div class="wire-item">
-                    <span class="wire-label">Recommended Wire:</span>
-                    <span class="wire-value">AWG {{ recommendedWireInfo.gauge }}</span>
-                  </div>
-                  <div class="wire-item">
-                    <span class="wire-label">Wire Diameter:</span>
-                    <span class="wire-value">{{ recommendedWireInfo.diameter.toFixed(2) }} mm</span>
-                  </div>
-                  <div class="wire-item">
-                    <span class="wire-label">Cross-sectional Area:</span>
-                    <span class="wire-value">{{ recommendedWireInfo.area.toFixed(2) }} mm²</span>
-                  </div>
-                  <div class="wire-item">
-                    <span class="wire-label">Current Capacity:</span>
-                    <span class="wire-value"
-                      >{{ recommendedWireInfo.currentCapacity.toFixed(2) }} A</span
-                    >
-                  </div>
-                </div>
-                <div class="wire-notes">
-                  <p>
-                    <strong>Note:</strong> For bifilar windings, use two identical wires placed
-                    parallel to each other. For optimal performance, use insulated wire (enamel,
-                    PTFE, etc.) to prevent shorts.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item" v-if="designResults?.windingInfo">
-            <div
-              class="accordion-header"
-              @click="showWindingInstructions = !showWindingInstructions"
-            >
-              <span class="accordion-title">Winding Instructions</span>
-              <span class="accordion-icon">{{ showWindingInstructions ? '▼' : '▶' }}</span>
-            </div>
-            <div class="accordion-content" :class="{ 'accordion-open': showWindingInstructions }">
-              <div class="winding-instructions">
-                <h4>Winding Instructions</h4>
-                <div class="winding-details">
-                  <div class="winding-info-grid">
-                    <div class="winding-info-item">
-                      <span class="winding-info-label">Winding Style:</span>
-                      <span class="winding-info-value">{{ designResults.windingInfo.style }}</span>
-                    </div>
-                    <div class="winding-info-item">
-                      <span class="winding-info-label">Construction Method:</span>
-                      <span class="winding-info-value">{{
-                        designResults.windingInfo.construction === 'classical'
-                          ? 'Classical Transformer'
-                          : 'Autotransformer'
-                      }}</span>
-                    </div>
-                    <div class="winding-info-item">
-                      <span class="winding-info-label">Wire Count:</span>
-                      <span class="winding-info-value">{{
-                        designResults.windingInfo.wireCount
-                      }}</span>
-                    </div>
-                    <div class="winding-info-item">
-                      <span class="winding-info-label">Connection Type:</span>
-                      <span class="winding-info-value">{{
-                        designResults.windingInfo.connectionDetails
-                      }}</span>
-                    </div>
-                  </div>
-
-                  <div
-                    class="winding-instructions-content"
-                    v-html="
-                      formatInstructions(
-                        WindingStyleCalculator.generateWindingInstructions(
-                          designResults.windingInfo,
-                          designResults.config.primaryTurns,
-                          designResults.coreModel.id,
-                        ),
-                      )
-                    "
-                  ></div>
-
-                  <div
-                    v-if="
-                      designResults.windingInfo.construction === 'autotransformer' &&
-                      !designResults.config.useHybridDesign &&
-                      WindingStyleCalculator.shouldUseHybridDesign(
-                        designResults.config.inputImpedance,
-                        designResults.config.outputImpedance,
-                      )
-                    "
-                    class="winding-suggestion"
-                  >
-                    <div class="suggestion-icon">💡</div>
-                    <div class="suggestion-text">
-                      <strong>Construction Suggestion:</strong> For this non-standard impedance
-                      ratio (1:{{
-                        (
-                          designResults.config.outputImpedance / designResults.config.inputImpedance
-                        ).toFixed(1)
-                      }}), consider using a hybrid design (1:1 current balun + unun) instead of the
-                      autotransformer approach for better performance and simpler construction.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <div class="accordion-header" @click="showPerformanceDetails = !showPerformanceDetails">
-              <span class="accordion-title">Performance Details</span>
-              <span class="accordion-icon">{{ showPerformanceDetails ? '▼' : '▶' }}</span>
-            </div>
-            <div class="accordion-content" :class="{ 'accordion-open': showPerformanceDetails }">
-              <div class="performance-details">
-                <h4>Detailed Performance Analysis</h4>
-                <div class="performance-grid">
-                  <div class="performance-item">
-                    <h5>Core Properties</h5>
-                    <div class="detail-item">
-                      <span class="detail-label">Core Model:</span>
-                      <span class="detail-value">{{ designResults.coreModel.id }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Mix:</span>
-                      <span class="detail-value">{{ designResults.coreModel.mix }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Initial Permeability:</span>
-                      <span class="detail-value">{{
-                        designResults.coreModel.initialPermeability
-                      }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Saturation Flux Density:</span>
-                      <span class="detail-value"
-                        >{{ designResults.coreModel.saturationFluxDensity }} mT</span
-                      >
-                    </div>
-                  </div>
-
-                  <div class="performance-item">
-                    <h5>Electrical Parameters</h5>
-                    <div class="detail-item">
-                      <span class="detail-label"
-                        >Impedance at {{ designResults.config.minFrequency }} MHz:</span
-                      >
-                      <span class="detail-value"
-                        >{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span
-                      >
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label"
-                        >Reactance at {{ designResults.config.minFrequency }} MHz:</span
-                      >
-                      <span class="detail-value"
-                        >{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span
-                      >
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Q Factor:</span>
-                      <span class="detail-value">{{
-                        designResults.qFactorAtMinFreq.toFixed(1)
-                      }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Flux Density:</span>
-                      <span class="detail-value"
-                        >{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span
-                      >
-                    </div>
-                  </div>
-
-                  <div class="performance-item">
-                    <h5>Thermal Considerations</h5>
-                    <div class="detail-item">
-                      <span class="detail-label">Core Loss:</span>
-                      <span class="detail-value"
-                        >{{ designResults.coreLossAtMinFreq.toFixed(1) }} W</span
-                      >
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Max Permissible Loss:</span>
-                      <span class="detail-value"
-                        >{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span
-                      >
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Loss Ratio:</span>
-                      <span class="detail-value">{{
-                        (
-                          designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss
-                        ).toFixed(2)
-                      }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Duty Cycle Factor:</span>
-                      <span class="detail-value"
-                        >{{ dutyCycleFactor[designResults.config.operationMode] }}x</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="
-              designResults.alternativeConfigurations &&
-              designResults.alternativeConfigurations.length > 0
-            "
-            class="alternative-designs"
-          >
-            <div class="section-header">
-              <h4>Alternative Designs</h4>
-              <button @click="showAlternativeDesigns = !showAlternativeDesigns">
-                {{ showAlternativeDesigns ? 'Hide' : 'Show' }}
-              </button>
-            </div>
-
-            <div v-if="showAlternativeDesigns" class="alternatives-container">
-              <div
-                v-for="(alt, index) in designResults.alternativeConfigurations"
-                :key="index"
-                class="alternative-card"
-              >
-                <h5>Alternative {{ index + 1 }}</h5>
-                <div class="alt-item">
-                  <span class="alt-label">Impedance Ratio:</span>
-                  <span class="alt-value"
-                    >{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω</span
-                  >
-                </div>
-                <div class="alt-item">
-                  <span class="alt-label">Frequency Range:</span>
-                  <span class="alt-value"
-                    >{{ alt.config.minFrequency }}-{{
-                      Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)
-                    }}
-                    MHz</span
-                  >
-                </div>
-                <div class="alt-item">
-                  <span class="alt-label">Cores:</span>
-                  <span class="alt-value">{{ alt.config.coreCount }}x {{ alt.coreModel.id }}</span>
-                </div>
-                <div class="alt-item">
-                  <span class="alt-label">Primary Turns:</span>
-                  <span class="alt-value">{{ alt.config.primaryTurns }}</span>
-                </div>
-                <div class="alt-item">
-                  <span class="alt-label">Type:</span>
-                  <span class="alt-value">{{
-                    alt.config.useHybridDesign ? 'Hybrid' : 'Standard'
-                  }}</span>
-                </div>
-                <div class="alt-item">
-                  <span class="alt-label">Power Rating:</span>
-                  <span class="alt-value">{{ alt.calculatedPowerRating.toFixed(1) }} W</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="hybridComponents && showHybridDesign" class="hybrid-design">
-            <div class="section-header">
-              <h4>Hybrid Design (Balun + Unun)</h4>
-            </div>
-
-            <div class="hybrid-components">
-              <div class="hybrid-component">
-                <h5>Component 1: Current Balun (1:1)</h5>
-                <div class="component-item">
-                  <span class="component-label">Core:</span>
-                  <span class="component-value">{{ hybridComponents.balun.coreType }}</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Turns:</span>
-                  <span class="component-value">{{ hybridComponents.balun.turns }} (bifilar)</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Input Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.balun.inputImpedance }}Ω</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Output Impedance:</span>
-                  <span class="component-value"
-                    >{{ hybridComponents.balun.outputImpedance }}Ω balanced</span
-                  >
-                </div>
-              </div>
-
-              <div class="hybrid-component">
-                <h5>Component 2: Unun Transformer</h5>
-                <div class="component-item">
-                  <span class="component-label">Core:</span>
-                  <span class="component-value">{{ hybridComponents.unun.coreType }}</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Primary Turns:</span>
-                  <span class="component-value">{{ hybridComponents.unun.turns.primary }}</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Secondary Turns:</span>
-                  <span class="component-value">{{ hybridComponents.unun.turns.secondary }}</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Input Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.unun.inputImpedance }}Ω</span>
-                </div>
-                <div class="component-item">
-                  <span class="component-label">Output Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.unun.outputImpedance }}Ω</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="hybrid-notes">
-              <h5>Construction Notes</h5>
-              <ol>
-                <li>
-                  Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar
-                  turns (parallel wires, not twisted) of AWG
-                  {{
-                    calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance)
-                      .gauge
-                  }}
-                  wire.
-                </li>
-                <li>
-                  Construct the unun transformer with
-                  {{ hybridComponents.unun.turns.primary }} primary turns and
-                  {{ hybridComponents.unun.turns.secondary }} secondary turns.
-                </li>
-                <li>
-                  Connect the output of the current balun to the input of the unun transformer.
-                </li>
-                <li>Keep connections between components as short as possible.</li>
-                <li>
-                  Install both components in a weatherproof enclosure with adequate ventilation.
-                </li>
-              </ol>
-
-              <div class="advantages">
-                <h5>Advantages of This Hybrid Design</h5>
-                <ul>
-                  <li>
-                    Improved common-mode rejection compared to direct 1:{{
-                      (outputImpedance / inputImpedance).toFixed(1)
-                    }}
-                    balun
-                  </li>
-                  <li>Better balanced output for symmetrical antennas</li>
-                  <li>Optimized characteristic impedance for each component</li>
-                  <li>Superior performance with difficult loads</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <div class="accordion-header" @click="showCoreInfo = !showCoreInfo">
-              <span class="accordion-title">Core Information</span>
-              <span class="accordion-icon">{{ showCoreInfo ? '▼' : '▶' }}</span>
-            </div>
-            <div class="accordion-content" :class="{ 'accordion-open': showCoreInfo }">
-              <div class="core-detailed-info">
-                <h4>Core Specifications</h4>
-                
-                <div class="core-dimensions">
-                  <h5>Core Type</h5>
-                  <div class="core-type-info">
-                    <div class="core-type-item">
-                      <span class="core-type-label">Model:</span>
-                      <span class="core-type-value">{{ designResults.coreModel.id }}</span>
-                    </div>
-                    <div class="core-type-item">
-                      <span class="core-type-label">Mix:</span>
-                      <span class="core-type-value">{{ designResults.coreModel.mix }}</span>
-                    </div>
-                    <div class="core-type-item">
-                      <span class="core-type-label">Initial Permeability:</span>
-                      <span class="core-type-value">{{ designResults.coreModel.initialPermeability }}</span>
-                    </div>
-                  </div>
-                  
-                  <h5>Physical Dimensions</h5>
-                  <div class="dimensions-grid">
-                    <div class="dimension-item">
-                      <span class="dimension-label">Outside Diameter (OD):</span>
-                      <span class="dimension-value">{{ designResults.coreModel.dimensions.od }} mm</span>
-                    </div>
-                    <div class="dimension-item">
-                      <span class="dimension-label">Inside Diameter (ID):</span>
-                      <span class="dimension-value">{{ designResults.coreModel.dimensions.id }} mm</span>
-                    </div>
-                    <div class="dimension-item">
-                      <span class="dimension-label">Height:</span>
-                      <span class="dimension-value">{{ designResults.coreModel.dimensions.height }} mm</span>
-                    </div>
-                    <div class="dimension-item">
-                      <span class="dimension-label">Effective Path Length (Le):</span>
-                      <span class="dimension-value">{{ designResults.coreModel.dimensions.le || ((Math.PI * (designResults.coreModel.dimensions.od + designResults.coreModel.dimensions.id)) / 20).toFixed(2) }} cm</span>
-                    </div>
-                    <div class="dimension-item">
-                      <span class="dimension-label">Effective Cross-Section (Ae):</span>
-                      <span class="dimension-value">{{ designResults.coreModel.dimensions.ae || (((designResults.coreModel.dimensions.od - designResults.coreModel.dimensions.id) * designResults.coreModel.dimensions.height) / 200).toFixed(2) }} cm²</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="permeability-data">
-                  <h5>Permeability Data for Mix {{ designResults.coreModel.mix }}</h5>
-                  <div class="permeability-table-container">
-                    <table class="permeability-table">
-                      <thead>
-                        <tr>
-                          <th>Frequency (MHz)</th>
-                          <th>μ' (Real)</th>
-                          <th>μ" (Imaginary)</th>
-                          <th>|μ| (Complex)</th>
-                          <th>Q Factor</th>
-                          <th>tanδ/μ'</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="(freq, index) in [1, 2, 5, 10, 20, 30]" :key="index">
-                          <td>{{ freq }}</td>
-                          <td>{{ CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0].toFixed(1) }}</td>
-                          <td>{{ CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1].toFixed(1) }}</td>
-                          <td>{{ Math.sqrt(Math.pow(CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0], 2) + Math.pow(CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1], 2)).toFixed(1) }}</td>
-                          <td>{{ (CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0] / CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1]).toFixed(1) }}</td>
-                          <td>{{ (CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[1] / CoreCalculator.interpolatePermeability(freq, designResults.coreModel)[0]).toFixed(4) }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="accordion-item" v-if="bandPowerData && swrData">
             <div class="accordion-header" @click="showPowerTransfer = !showPowerTransfer">
               <span class="accordion-title">Power Transfer Analysis</span>
@@ -1462,6 +996,546 @@ export default defineComponent({
                       <span class="legend-label">SWR=2 Threshold</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" v-if="recommendedWireInfo">
+            <div class="accordion-header" @click="showWireInfo = !showWireInfo">
+              <span class="accordion-title">Wire Information</span>
+              <span class="accordion-icon">{{ showWireInfo ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showWireInfo }">
+              <div class="wire-info">
+                <h4>Wire Information</h4>
+                <div class="wire-details">
+                  <div class="wire-item">
+                    <span class="wire-label">Recommended Wire:</span>
+                    <span class="wire-value">AWG {{ recommendedWireInfo.gauge }}</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Wire Diameter:</span>
+                    <span class="wire-value">{{ recommendedWireInfo.diameter.toFixed(2) }} mm</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Cross-sectional Area:</span>
+                    <span class="wire-value">{{ recommendedWireInfo.area.toFixed(2) }} mm²</span>
+                  </div>
+                  <div class="wire-item">
+                    <span class="wire-label">Current Capacity:</span>
+                    <span class="wire-value"
+                      >{{ recommendedWireInfo.currentCapacity.toFixed(2) }} A</span
+                    >
+                  </div>
+                </div>
+                <div class="wire-notes">
+                  <p>
+                    <strong>Note:</strong> For bifilar windings, use two identical wires placed
+                    parallel to each other. For optimal performance, use insulated wire (enamel,
+                    PTFE, etc.) to prevent shorts.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" v-if="designResults?.windingInfo">
+            <div
+              class="accordion-header"
+              @click="showWindingInstructions = !showWindingInstructions"
+            >
+              <span class="accordion-title">Winding Instructions</span>
+              <span class="accordion-icon">{{ showWindingInstructions ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showWindingInstructions }">
+              <div class="winding-instructions">
+                <h4>Winding Instructions</h4>
+                <div class="winding-details">
+                  <div class="winding-info-grid">
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Winding Style:</span>
+                      <span class="winding-info-value">{{ designResults.windingInfo.style }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Construction Method:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.construction === 'classical'
+                          ? 'Classical Transformer'
+                          : 'Autotransformer'
+                      }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Wire Count:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.wireCount
+                      }}</span>
+                    </div>
+                    <div class="winding-info-item">
+                      <span class="winding-info-label">Connection Type:</span>
+                      <span class="winding-info-value">{{
+                        designResults.windingInfo.connectionDetails
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="winding-instructions-content"
+                    v-html="
+                      formatInstructions(
+                        WindingStyleCalculator.generateWindingInstructions(
+                          designResults.windingInfo,
+                          designResults.config.primaryTurns,
+                          designResults.coreModel.id,
+                        ),
+                      )
+                    "
+                  ></div>
+
+                  <div
+                    v-if="
+                      designResults.windingInfo.construction === 'autotransformer' &&
+                      !designResults.config.useHybridDesign &&
+                      WindingStyleCalculator.shouldUseHybridDesign(
+                        designResults.config.inputImpedance,
+                        designResults.config.outputImpedance,
+                      )
+                    "
+                    class="winding-suggestion"
+                  >
+                    <div class="suggestion-icon">💡</div>
+                    <div class="suggestion-text">
+                      <strong>Construction Suggestion:</strong> For this non-standard impedance
+                      ratio (1:{{
+                        (
+                          designResults.config.outputImpedance / designResults.config.inputImpedance
+                        ).toFixed(1)
+                      }}), consider using a hybrid design (1:1 current balun + unun) instead of the
+                      autotransformer approach for better performance and simpler construction.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showPerformanceDetails = !showPerformanceDetails">
+              <span class="accordion-title">Performance Details</span>
+              <span class="accordion-icon">{{ showPerformanceDetails ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showPerformanceDetails }">
+              <div class="performance-details">
+                <h4>Detailed Performance Analysis</h4>
+                <div class="performance-grid">
+                  <div class="performance-item">
+                    <h5>Core Properties</h5>
+                    <div class="detail-item">
+                      <span class="detail-label">Core Model:</span>
+                      <span class="detail-value">{{ designResults.coreModel.id }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Mix:</span>
+                      <span class="detail-value">{{ designResults.coreModel.mix }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Initial Permeability:</span>
+                      <span class="detail-value">{{
+                        designResults.coreModel.initialPermeability
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Saturation Flux Density:</span>
+                      <span class="detail-value"
+                        >{{ designResults.coreModel.saturationFluxDensity }} mT</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="performance-item">
+                    <h5>Electrical Parameters</h5>
+                    <div class="detail-item">
+                      <span class="detail-label"
+                        >Impedance at {{ designResults.config.minFrequency }} MHz:</span
+                      >
+                      <span class="detail-value"
+                        >{{ designResults.impedanceAtMinFreq.toFixed(1) }} Ω</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label"
+                        >Reactance at {{ designResults.config.minFrequency }} MHz:</span
+                      >
+                      <span class="detail-value"
+                        >{{ designResults.reactanceAtMinFreq.toFixed(1) }} Ω</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Q Factor:</span>
+                      <span class="detail-value">{{
+                        designResults.qFactorAtMinFreq.toFixed(1)
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Flux Density:</span>
+                      <span class="detail-value"
+                        >{{ designResults.fluxDensityAtMinFreq.toFixed(1) }} mT</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="performance-item">
+                    <h5>Thermal Considerations</h5>
+                    <div class="detail-item">
+                      <span class="detail-label">Core Loss:</span>
+                      <span class="detail-value"
+                        >{{ designResults.coreLossAtMinFreq.toFixed(1) }} W</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Max Permissible Loss:</span>
+                      <span class="detail-value"
+                        >{{ designResults.maxPermissibleCoreLoss.toFixed(1) }} W</span
+                      >
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Loss Ratio:</span>
+                      <span class="detail-value">{{
+                        (
+                          designResults.coreLossAtMinFreq / designResults.maxPermissibleCoreLoss
+                        ).toFixed(2)
+                      }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Duty Cycle Factor:</span>
+                      <span class="detail-value"
+                        >{{ dutyCycleFactor[designResults.config.operationMode] }}x</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="hybridComponents && showHybridDesign" class="hybrid-design">
+            <div class="section-header">
+              <h4>Hybrid Design (Balun + Unun)</h4>
+            </div>
+
+            <div class="hybrid-components">
+              <div class="hybrid-component">
+                <h5>Component 1: Current Balun (1:1)</h5>
+                <div class="component-item">
+                  <span class="component-label">Core:</span>
+                  <span class="component-value">{{ hybridComponents.balun.coreType }}</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Turns:</span>
+                  <span class="component-value">{{ hybridComponents.balun.turns }} (bifilar)</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Input Impedance:</span>
+                  <span class="component-value">{{ hybridComponents.balun.inputImpedance }}Ω</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Output Impedance:</span>
+                  <span class="component-value"
+                    >{{ hybridComponents.balun.outputImpedance }}Ω balanced</span
+                  >
+                </div>
+              </div>
+
+              <div class="hybrid-component">
+                <h5>Component 2: Unun Transformer</h5>
+                <div class="component-item">
+                  <span class="component-label">Core:</span>
+                  <span class="component-value">{{ hybridComponents.unun.coreType }}</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Primary Turns:</span>
+                  <span class="component-value">{{ hybridComponents.unun.turns.primary }}</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Secondary Turns:</span>
+                  <span class="component-value">{{ hybridComponents.unun.turns.secondary }}</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Input Impedance:</span>
+                  <span class="component-value">{{ hybridComponents.unun.inputImpedance }}Ω</span>
+                </div>
+                <div class="component-item">
+                  <span class="component-label">Output Impedance:</span>
+                  <span class="component-value">{{ hybridComponents.unun.outputImpedance }}Ω</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hybrid-notes">
+              <h5>Construction Notes</h5>
+              <ol>
+                <li>
+                  Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar
+                  turns (parallel wires, not twisted) of AWG
+                  {{
+                    calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance)
+                      .gauge
+                  }}
+                  wire.
+                </li>
+                <li>
+                  Construct the unun transformer with
+                  {{ hybridComponents.unun.turns.primary }} primary turns and
+                  {{ hybridComponents.unun.turns.secondary }} secondary turns.
+                </li>
+                <li>
+                  Connect the output of the current balun to the input of the unun transformer.
+                </li>
+                <li>Keep connections between components as short as possible.</li>
+                <li>
+                  Install both components in a weatherproof enclosure with adequate ventilation.
+                </li>
+              </ol>
+
+              <div class="advantages">
+                <h5>Advantages of This Hybrid Design</h5>
+                <ul>
+                  <li>
+                    Improved common-mode rejection compared to direct 1:{{
+                      (outputImpedance / inputImpedance).toFixed(1)
+                    }}
+                    balun
+                  </li>
+                  <li>Better balanced output for symmetrical antennas</li>
+                  <li>Optimized characteristic impedance for each component</li>
+                  <li>Superior performance with difficult loads</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" @click="showCoreInfo = !showCoreInfo">
+              <span class="accordion-title">Core Information</span>
+              <span class="accordion-icon">{{ showCoreInfo ? '▼' : '▶' }}</span>
+            </div>
+            <div class="accordion-content" :class="{ 'accordion-open': showCoreInfo }">
+              <div class="core-detailed-info">
+                <h4>Core Specifications</h4>
+
+                <div class="core-dimensions">
+                  <h5>Core Type</h5>
+                  <div class="core-type-info">
+                    <div class="core-type-item">
+                      <span class="core-type-label">Model:</span>
+                      <span class="core-type-value">{{ designResults.coreModel.id }}</span>
+                    </div>
+                    <div class="core-type-item">
+                      <span class="core-type-label">Mix:</span>
+                      <span class="core-type-value">{{ designResults.coreModel.mix }}</span>
+                    </div>
+                    <div class="core-type-item">
+                      <span class="core-type-label">Initial Permeability:</span>
+                      <span class="core-type-value">{{
+                        designResults.coreModel.initialPermeability
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <h5>Physical Dimensions</h5>
+                  <div class="dimensions-grid">
+                    <div class="dimension-item">
+                      <span class="dimension-label">Outside Diameter (OD):</span>
+                      <span class="dimension-value"
+                        >{{ designResults.coreModel.dimensions.od }} mm</span
+                      >
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Inside Diameter (ID):</span>
+                      <span class="dimension-value"
+                        >{{ designResults.coreModel.dimensions.id }} mm</span
+                      >
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Height:</span>
+                      <span class="dimension-value"
+                        >{{ designResults.coreModel.dimensions.height }} mm</span
+                      >
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Effective Path Length (Le):</span>
+                      <span class="dimension-value"
+                        >{{
+                          (
+                            (Math.PI *
+                              (designResults.coreModel.dimensions.od +
+                                designResults.coreModel.dimensions.id)) /
+                            20
+                          ).toFixed(2)
+                        }}
+                        cm</span
+                      >
+                    </div>
+                    <div class="dimension-item">
+                      <span class="dimension-label">Effective Cross-Section (Ae):</span>
+                      <span class="dimension-value"
+                        >{{
+                          (
+                            ((designResults.coreModel.dimensions.od -
+                              designResults.coreModel.dimensions.id) *
+                              designResults.coreModel.dimensions.height) /
+                            200
+                          ).toFixed(2)
+                        }}
+                        cm²</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="permeability-data">
+                  <h5>Permeability Data for Mix {{ designResults.coreModel.mix }}</h5>
+                  <div class="permeability-table-container">
+                    <table class="permeability-table">
+                      <thead>
+                        <tr>
+                          <th>Frequency (MHz)</th>
+                          <th>μ' (Real)</th>
+                          <th>μ" (Imaginary)</th>
+                          <th>|μ| (Complex)</th>
+                          <th>Q Factor</th>
+                          <th>tanδ/μ'</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(freq, index) in [1, 2, 5, 10, 20, 30]" :key="index">
+                          <td>{{ freq }}</td>
+                          <td>
+                            {{
+                              CoreCalculator.interpolatePermeability(
+                                freq,
+                                designResults.coreModel,
+                              )[0].toFixed(1)
+                            }}
+                          </td>
+                          <td>
+                            {{
+                              CoreCalculator.interpolatePermeability(
+                                freq,
+                                designResults.coreModel,
+                              )[1].toFixed(1)
+                            }}
+                          </td>
+                          <td>
+                            {{
+                              Math.sqrt(
+                                Math.pow(
+                                  CoreCalculator.interpolatePermeability(
+                                    freq,
+                                    designResults.coreModel,
+                                  )[0],
+                                  2,
+                                ) +
+                                  Math.pow(
+                                    CoreCalculator.interpolatePermeability(
+                                      freq,
+                                      designResults.coreModel,
+                                    )[1],
+                                    2,
+                                  ),
+                              ).toFixed(1)
+                            }}
+                          </td>
+                          <td>
+                            {{
+                              (
+                                CoreCalculator.interpolatePermeability(
+                                  freq,
+                                  designResults.coreModel,
+                                )[0] /
+                                CoreCalculator.interpolatePermeability(
+                                  freq,
+                                  designResults.coreModel,
+                                )[1]
+                              ).toFixed(1)
+                            }}
+                          </td>
+                          <td>
+                            {{
+                              (
+                                CoreCalculator.interpolatePermeability(
+                                  freq,
+                                  designResults.coreModel,
+                                )[1] /
+                                CoreCalculator.interpolatePermeability(
+                                  freq,
+                                  designResults.coreModel,
+                                )[0]
+                              ).toFixed(4)
+                            }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="
+              designResults.alternativeConfigurations &&
+              designResults.alternativeConfigurations.length > 0
+            "
+            class="alternative-designs"
+          >
+            <div class="section-header">
+              <h4>Alternative Designs</h4>
+              <button @click="showAlternativeDesigns = !showAlternativeDesigns">
+                {{ showAlternativeDesigns ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+
+            <div v-if="showAlternativeDesigns" class="alternatives-container">
+              <div
+                v-for="(alt, index) in designResults.alternativeConfigurations"
+                :key="index"
+                class="alternative-card"
+              >
+                <h5>Alternative {{ index + 1 }}</h5>
+                <div class="alt-item">
+                  <span class="alt-label">Impedance Ratio:</span>
+                  <span class="alt-value"
+                    >{{ alt.config.inputImpedance }}Ω:{{ alt.config.outputImpedance }}Ω</span
+                  >
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Frequency Range:</span>
+                  <span class="alt-value"
+                    >{{ alt.config.minFrequency }}-{{
+                      Math.min(alt.config.maxFrequency, alt.maxFreqBasedOnLength).toFixed(1)
+                    }}
+                    MHz</span
+                  >
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Cores:</span>
+                  <span class="alt-value">{{ alt.config.coreCount }}x {{ alt.coreModel.id }}</span>
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Primary Turns:</span>
+                  <span class="alt-value">{{ alt.config.primaryTurns }}</span>
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Type:</span>
+                  <span class="alt-value">{{
+                    alt.config.useHybridDesign ? 'Hybrid' : 'Standard'
+                  }}</span>
+                </div>
+                <div class="alt-item">
+                  <span class="alt-label">Power Rating:</span>
+                  <span class="alt-value">{{ alt.calculatedPowerRating.toFixed(1) }} W</span>
                 </div>
               </div>
             </div>
