@@ -497,7 +497,7 @@ export default defineComponent({
             <label for="useHybridDesign">Design Type</label>
             <select id="useHybridDesign" v-model="useHybridDesign">
               <option :value="false">Standard Balun</option>
-              <option :value="true">Hybrid Design (Balun+Unun)</option>
+              <option :value="true" disabled>Hybrid Design (Balun+Unun)</option>
             </select>
           </div>
         </div>
