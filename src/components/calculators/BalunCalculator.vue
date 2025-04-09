@@ -258,16 +258,16 @@ export default defineComponent({
       try {
         const response = await fetch('/docs/balun-design-process.md')
         const markdownContent = await response.text()
-        
+
         // Render the markdown content
         const html = await marked.parse(markdownContent, { async: true })
         designProcessContent.value = html
-        
+
         // Typeset math if needed
         if (window.MathJax && window.MathJax.typesetPromise) {
           setTimeout(() => {
-            window.MathJax.typesetPromise().catch((err) => 
-              console.error('MathJax typeset error:', err)
+            window.MathJax.typesetPromise().catch((err) =>
+              console.error('MathJax typeset error:', err),
             )
           }, 100)
         }
@@ -276,14 +276,14 @@ export default defineComponent({
         designProcessContent.value = '<p>Error loading design process documentation.</p>'
       }
     }
-    
+
     // Load design process markdown when the button is clicked
     watch(showDesignSteps, (newValue) => {
       if (newValue && !designProcessContent.value) {
         loadDesignProcessMarkdown()
       }
     })
-    
+
     // Watchers for form inputs
     watch(
       [
@@ -384,7 +384,11 @@ export default defineComponent({
       </p>
 
       <div class="design-steps" v-if="showDesignSteps">
-        <div v-if="designProcessContent" v-html="designProcessContent" class="markdown-content"></div>
+        <div
+          v-if="designProcessContent"
+          v-html="designProcessContent"
+          class="markdown-content"
+        ></div>
         <div v-else class="loading-content">
           <p>Loading design process documentation...</p>
         </div>
@@ -2667,6 +2671,119 @@ export default defineComponent({
 
   .form-actions button {
     width: 100%;
+  }
+  /* Preserve the existing markdown styling for FormulasView */
+  .markdown-content :deep(h1) {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-heading);
+  }
+
+  .markdown-content :deep(h2) {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--color-heading);
+  }
+
+  .markdown-content :deep(h3) {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-heading);
+  }
+
+  .markdown-content :deep(p) {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .markdown-content :deep(ul),
+  .markdown-content :deep(ol) {
+    margin: 1rem 0;
+    padding-left: 2rem;
+  }
+
+  .markdown-content :deep(li) {
+    margin-bottom: 0.5rem;
+  }
+
+  .markdown-content :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+
+  .markdown-content :deep(th),
+  .markdown-content :deep(td) {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .markdown-content :deep(th) {
+    background-color: var(--color-background-mute);
+    font-weight: bold;
+  }
+
+  .markdown-content :deep(blockquote) {
+    border-left: 4px solid var(--color-border);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--color-text-light);
+  }
+
+  .markdown-content :deep(hr) {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 2rem 0;
+  }
+
+  .markdown-content :deep(code) {
+    font-family: monospace;
+    background-color: var(--color-background-mute);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .markdown-content :deep(pre) {
+    background-color: var(--color-background-mute);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .markdown-content :deep(pre code) {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .markdown-content :deep(.math-inline) {
+    font-style: italic;
+    font-family: 'Times New Roman', serif;
+  }
+
+  /* Add MathJax specific styling */
+  .markdown-content :deep(.MathJax) {
+    max-width: 100%;
+  }
+
+  .markdown-content :deep(.MathJax_Display) {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Only show scrollbars on small screens */
+  @media (max-width: 768px) {
+    .markdown-content :deep(.math-inline),
+    .markdown-content :deep(.MathJax),
+    .markdown-content :deep(.MathJax_Display) {
+      overflow-x: auto;
+    }
   }
 }
 </style>
