@@ -596,7 +596,145 @@ h1 {
   font-size: clamp(1.75rem, 5vw, 2.5rem);
 }
 
-/* Markdown content styling */
+.design-steps {
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.design-steps .loading-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-style: italic;
+  color: var(--color-text-light);
+}
+
+/* Markdown content styling for design process */
+.design-steps .markdown-content :deep(h1) {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h2) {
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h3) {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(h4) {
+  font-size: 1.1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-heading);
+}
+
+.design-steps .markdown-content :deep(p) {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.design-steps .markdown-content :deep(ul),
+.design-steps .markdown-content :deep(ol) {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.design-steps .markdown-content :deep(li) {
+  margin-bottom: 0.5rem;
+}
+
+.design-steps .markdown-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.design-steps .markdown-content :deep(th),
+.design-steps .markdown-content :deep(td) {
+  border: 1px solid var(--color-border);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.design-steps .markdown-content :deep(th) {
+  background-color: var(--color-background-mute);
+  font-weight: bold;
+}
+
+.design-steps .markdown-content :deep(blockquote) {
+  border-left: 4px solid var(--color-border);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-text-light);
+}
+
+.design-steps .markdown-content :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+.design-steps .markdown-content :deep(code) {
+  font-family: monospace;
+  background-color: var(--color-background-mute);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+}
+
+.design-steps .markdown-content :deep(pre) {
+  background-color: var(--color-background-mute);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.design-steps .markdown-content :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+}
+
+.design-steps .markdown-content :deep(.math-inline) {
+  font-style: italic;
+  font-family: 'Times New Roman', serif;
+}
+
+/* Add MathJax specific styling */
+.design-steps .markdown-content :deep(.MathJax) {
+  max-width: 100%;
+}
+
+.design-steps .markdown-content :deep(.MathJax_Display) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Only show scrollbars on small screens */
+@media (max-width: 768px) {
+  .design-steps .markdown-content :deep(.math-inline),
+  .design-steps .markdown-content :deep(.MathJax),
+  .design-steps .markdown-content :deep(.MathJax_Display) {
+    overflow-x: auto;
+  }
+}
+
+/* Preserve the existing markdown styling for FormulasView */
 .markdown-content :deep(h1) {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;

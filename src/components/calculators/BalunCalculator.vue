@@ -1,5 +1,6 @@
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue'
+import { defineComponent, ref, computed, watch, onMounted } from 'vue'
+import { marked } from 'marked'
 import {
   type BalunConfig,
   type DesignResults,
@@ -33,6 +34,7 @@ export default defineComponent({
     const showDesignSteps = ref(false)
     const showAdvancedOptions = ref(false)
     const showReport = ref(false)
+    const designProcessContent = ref('')
     const showBandCoverage = ref(false)
     const showWireInfo = ref(false)
     const showPerformanceDetails = ref(false)
@@ -251,7 +253,38 @@ export default defineComponent({
       }
     }
 
-    // Watchers
+    // Load design process markdown when component is mounted
+    const loadDesignProcessMarkdown = async () => {
+      try {
+        const response = await fetch('/docs/balun-design-process.md')
+        const markdownContent = await response.text()
+        
+        // Render the markdown content
+        const html = await marked.parse(markdownContent, { async: true })
+        designProcessContent.value = html
+        
+        // Typeset math if needed
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          setTimeout(() => {
+            window.MathJax.typesetPromise().catch((err) => 
+              console.error('MathJax typeset error:', err)
+            )
+          }, 100)
+        }
+      } catch (error) {
+        console.error('Error loading design process markdown:', error)
+        designProcessContent.value = '<p>Error loading design process documentation.</p>'
+      }
+    }
+    
+    // Load design process markdown when the button is clicked
+    watch(showDesignSteps, (newValue) => {
+      if (newValue && !designProcessContent.value) {
+        loadDesignProcessMarkdown()
+      }
+    })
+    
+    // Watchers for form inputs
     watch(
       [
         minFrequency,
@@ -331,6 +364,7 @@ export default defineComponent({
       formatInstructions,
       WindingStyleCalculator,
       CoreCalculator,
+      designProcessContent,
 
       // Constants
       dutyCycleFactor: DUTY_CYCLE_FACTORS,
@@ -350,49 +384,9 @@ export default defineComponent({
       </p>
 
       <div class="design-steps" v-if="showDesignSteps">
-        <h4>Design Process Overview</h4>
-        <ol>
-          <li>
-            <strong>Specify Requirements:</strong> Input impedance, output impedance, power
-            handling, and frequency range.
-          </li>
-          <li><strong>Core Selection:</strong> Based on power requirements and frequency range.</li>
-          <li>
-            <strong>Turns Calculation:</strong> Determined by the "Rule of 4" (XL ≥ 4×Z) at the
-            lowest frequency.
-          </li>
-          <li>
-            <strong>Design Validation:</strong> Check core loss, flux density, and winding length
-            constraints.
-          </li>
-          <li>
-            <strong>Optimization:</strong> Adjust parameters if needed to meet all requirements.
-          </li>
-          <li>
-            <strong>Alternative Designs:</strong> Consider hybrid designs for non-standard impedance
-            ratios.
-          </li>
-        </ol>
-        <div class="info-box">
-          <h5>Key Design Principles</h5>
-          <ul>
-            <li>
-              <strong>Rule of 4:</strong> The inductive reactance should be at least 4 times the
-              input impedance at the lowest frequency.
-            </li>
-            <li>
-              <strong>Core Loss:</strong> Must be within the core's thermal limits for the selected
-              operation mode.
-            </li>
-            <li>
-              <strong>Flux Density:</strong> Should remain in the linear region (&lt;50mT) to
-              prevent saturation.
-            </li>
-            <li>
-              <strong>Winding Length:</strong> Should be less than λ/10 at the highest frequency to
-              prevent transmission line effects.
-            </li>
-          </ul>
+        <div v-if="designProcessContent" v-html="designProcessContent" class="markdown-content"></div>
+        <div v-else class="loading-content">
+          <p>Loading design process documentation...</p>
         </div>
       </div>
 
