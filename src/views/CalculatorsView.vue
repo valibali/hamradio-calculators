@@ -150,6 +150,10 @@ export default defineComponent({
       // Check if there's any non-coming-soon calculator in this category
       return activeCategory.calculators.some((calc) => !calc.comingSoon)
     },
+    hasActiveCategory(): boolean {
+      if (this.activeCategory) return true
+      else return false
+    },
   },
   mounted() {
     // Check if there's a calculator parameter in the URL
@@ -288,7 +292,7 @@ export default defineComponent({
       </div>
     </div>
 
-    <div class="calculators-content">
+    <div v-if="hasActiveCategory" class="calculators-content">
       <div class="calculator-nav">
         <h3>Calculators</h3>
 
@@ -322,7 +326,8 @@ export default defineComponent({
         </div>
 
         <div v-if="!hasActiveCalculator" class="coming-soon-message">
-          <h3>Please select a calculator!</h3>
+          <h3>Stay tuned, this will update soon!</h3>
+          <p>We're working on adding calculators for this category.</p>
         </div>
         <BalunCalculator v-else-if="activeCalculator === 'balun'" />
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
