@@ -213,11 +213,7 @@ export default defineComponent({
         // If using hybrid design, generate hybrid components
         let hybrid = null
         if (useHybridDesign.value) {
-          hybrid = BalunDesignCalculator.generateHybridComponents(
-            inputImpedance.value,
-            outputImpedance.value,
-            selectedCoreModel.value,
-          )
+          hybrid = BalunDesignCalculator.generateHybridComponents(config, core)
         }
 
         // Calculate band power data
@@ -1281,20 +1277,33 @@ export default defineComponent({
                 <h5>Component 1: Current Balun (1:1)</h5>
                 <div class="component-item">
                   <span class="component-label">Core:</span>
-                  <span class="component-value">{{ hybridComponents.balun.coreType }}</span>
+                  <span class="component-value">{{ hybridComponents.balun.config.type }}</span>
                 </div>
                 <div class="component-item">
                   <span class="component-label">Turns:</span>
-                  <span class="component-value">{{ hybridComponents.balun.turns }} (bifilar)</span>
+                  <span class="component-value"
+                    >{{ hybridComponents.balun.config.primaryTurns }}:{{
+                      Math.round(
+                        hybridComponents.balun.config.primaryTurns *
+                          Math.sqrt(
+                            hybridComponents.balun.config.outputImpedance /
+                              hybridComponents.balun.config.inputImpedance,
+                          ),
+                      )
+                    }}
+                    ({{ hybridComponents.balun.windingInfo?.style || 'N/A' }})</span
+                  >
                 </div>
                 <div class="component-item">
                   <span class="component-label">Input Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.balun.inputImpedance }}Ω</span>
+                  <span class="component-value"
+                    >{{ hybridComponents.balun.config.inputImpedance }}Ω</span
+                  >
                 </div>
                 <div class="component-item">
                   <span class="component-label">Output Impedance:</span>
                   <span class="component-value"
-                    >{{ hybridComponents.balun.outputImpedance }}Ω balanced</span
+                    >{{ hybridComponents.balun.config.outputImpedance }}Ω balanced</span
                   >
                 </div>
               </div>
@@ -1303,23 +1312,37 @@ export default defineComponent({
                 <h5>Component 2: Unun Transformer</h5>
                 <div class="component-item">
                   <span class="component-label">Core:</span>
-                  <span class="component-value">{{ hybridComponents.unun.coreType }}</span>
+                  <span class="component-value">{{ hybridComponents.unun.coreModel.id }}</span>
                 </div>
                 <div class="component-item">
                   <span class="component-label">Primary Turns:</span>
-                  <span class="component-value">{{ hybridComponents.unun.turns.primary }}</span>
+                  <span class="component-value">{{
+                    hybridComponents.unun.config.primaryTurns
+                  }}</span>
                 </div>
                 <div class="component-item">
                   <span class="component-label">Secondary Turns:</span>
-                  <span class="component-value">{{ hybridComponents.unun.turns.secondary }}</span>
+                  <span class="component-value">{{
+                    Math.round(
+                      hybridComponents.unun.config.primaryTurns *
+                        Math.sqrt(
+                          hybridComponents.unun.config.outputImpedance /
+                            hybridComponents.unun.config.inputImpedance,
+                        ),
+                    )
+                  }}</span>
                 </div>
                 <div class="component-item">
                   <span class="component-label">Input Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.unun.inputImpedance }}Ω</span>
+                  <span class="component-value"
+                    >{{ hybridComponents.unun.config.inputImpedance }}Ω</span
+                  >
                 </div>
                 <div class="component-item">
                   <span class="component-label">Output Impedance:</span>
-                  <span class="component-value">{{ hybridComponents.unun.outputImpedance }}Ω</span>
+                  <span class="component-value"
+                    >{{ hybridComponents.unun.config.outputImpedance }}Ω</span
+                  >
                 </div>
               </div>
             </div>
@@ -1328,18 +1351,32 @@ export default defineComponent({
               <h5>Construction Notes</h5>
               <ol>
                 <li>
-                  Construct the 1:1 current balun using {{ hybridComponents.balun.turns }} bifilar
-                  turns (parallel wires, not twisted) of AWG
+                  Construct the 1:1 current balun using
+                  {{ hybridComponents.balun.config.primaryTurns }} bifilar turns (parallel wires,
+                  not twisted), for both primary and secondary part. Go for the "Guanella" style,
+                  using AWG
                   {{
-                    calculateRecommendedWireGauge(power, hybridComponents.balun.inputImpedance)
-                      .gauge
+                    calculateRecommendedWireGauge(
+                      power,
+                      hybridComponents.balun.config.inputImpedance,
+                    ).gauge
                   }}
-                  wire.
+                  wire. To see how to make a 50Ω bifilar line (twinline) go
+                  <a href="/calculators?category=transmission-lines&calculator=twinlead">here!</a>
                 </li>
                 <li>
                   Construct the unun transformer with
-                  {{ hybridComponents.unun.turns.primary }} primary turns and
-                  {{ hybridComponents.unun.turns.secondary }} secondary turns.
+                  {{ hybridComponents.unun.config.primaryTurns }} primary turns and
+                  {{
+                    Math.round(
+                      hybridComponents.unun.config.primaryTurns *
+                        Math.sqrt(
+                          hybridComponents.unun.config.outputImpedance /
+                            hybridComponents.unun.config.inputImpedance,
+                        ),
+                    )
+                  }}
+                  secondary turns.
                 </li>
                 <li>
                   Connect the output of the current balun to the input of the unun transformer.

@@ -40,6 +40,7 @@ export interface BalunConfig {
   coreCount: number
   primaryTurns: number // If 0, auto-calculate
   useHybridDesign: boolean
+  type: 'current' | 'voltage'
 }
 
 export interface WindingInfo {
@@ -67,21 +68,8 @@ export interface WireInfo {
 }
 
 export interface HybridComponents {
-  balun: {
-    coreType: string
-    turns: number
-    inputImpedance: number
-    outputImpedance: number
-  }
-  unun: {
-    coreType: string
-    turns: {
-      primary: number
-      secondary: number
-    }
-    inputImpedance: number
-    outputImpedance: number
-  }
+  balun: DesignResults
+  unun: DesignResults
 }
 
 export interface DesignResults {

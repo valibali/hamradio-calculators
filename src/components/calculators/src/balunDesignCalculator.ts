@@ -258,7 +258,7 @@ export class BalunDesignCalculator {
     if (designResults.maxFreqBasedOnLength < designResults.config.maxFrequency) {
       messages.push({
         type: 'warning',
-        message: `Winding length limits maximum frequency to ${designResults.maxFreqBasedOnLength.toFixed(1)}MHz (below the specified ${designResults.config.maxFrequency}MHz). Reduce turns or use a smaller core.`,
+        message: `Winding length limits maximum frequency to ${designResults.maxFreqBasedOnLength.toFixed(1)}MHz (below the specified ${designResults.config.maxFrequency}MHz). Reduce turns and/or power, or use a bigger core.`,
       })
     }
 
@@ -396,36 +396,22 @@ export class BalunDesignCalculator {
   /**
    * Generate hybrid design components for non-standard impedance ratios
    */
-  static generateHybridComponents(
-    inputZ: number,
-    outputZ: number,
-    coreModel: string,
-  ): HybridComponents {
-    // Calculate the impedance ratio
-    const impedanceRatio = outputZ / inputZ
-
+  static generateHybridComponents(config: BalunConfig, coreModel: CoreModel): HybridComponents {
     // For a hybrid design, we use a 1:1 current balun followed by an impedance transformer
-    const balun = {
-      coreType: coreModel,
-      turns: 12, // Typical turn count for a 1:1 current balun
-      inputImpedance: inputZ,
-      outputImpedance: inputZ, // 1:1 ratio
+
+    const balunConfig: BalunConfig = {
+      ...config,
+      type: 'current',
+      outputImpedance: config.inputImpedance, //make sure the balun is a 1:1 current (choke) balun
     }
 
-    // Calculate turns ratio for the unun (square root of impedance ratio)
-    const turnsRatio = Math.sqrt(impedanceRatio)
-    const primaryTurns = Math.round(6) // Base number
-    const secondaryTurns = Math.round(primaryTurns * turnsRatio)
-
-    const unun = {
-      coreType: coreModel,
-      turns: {
-        primary: primaryTurns,
-        secondary: secondaryTurns,
-      },
-      inputImpedance: inputZ,
-      outputImpedance: outputZ,
+    const ununConfig: BalunConfig = {
+      ...config,
+      type: 'voltage',
     }
+
+    const balun = BalunDesignCalculator.calculateBalunDesign(balunConfig, coreModel)
+    const unun = BalunDesignCalculator.calculateBalunDesign(ununConfig, coreModel)
 
     return { balun, unun }
   }
