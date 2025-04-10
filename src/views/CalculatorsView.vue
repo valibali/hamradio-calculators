@@ -30,8 +30,8 @@ export default defineComponent({
   },
   data() {
     return {
-      activeCalculator: 'twinlead',
-      activeCategory: 'transmission-lines',
+      activeCalculator: '',
+      activeCategory: '',
       categories: [
         {
           id: 'impedance-transformers',
@@ -322,8 +322,7 @@ export default defineComponent({
         </div>
 
         <div v-if="!hasActiveCalculator" class="coming-soon-message">
-          <h3>Stay tuned, this will update soon!</h3>
-          <p>We're working on adding calculators for this category.</p>
+          <h3>Please select a calculator!</h3>
         </div>
         <BalunCalculator v-else-if="activeCalculator === 'balun'" />
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
