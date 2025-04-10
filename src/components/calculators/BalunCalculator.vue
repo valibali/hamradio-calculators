@@ -29,7 +29,7 @@ import { CoreCalculator } from './src/coreCalculator'
 export default defineComponent({
   name: 'BalunCalculator',
   components: {
-    MathJaxLoader
+    MathJaxLoader,
   },
 
   setup() {
@@ -259,44 +259,48 @@ export default defineComponent({
     // Configure marked to preserve LaTeX delimiters
     const configureMarked = () => {
       marked.use({
-        extensions: [{
-          name: 'tex',
-          level: 'inline',
-          start(src) { return src.match(/\$\$|\$/)?.index; },
-          tokenizer(src) {
-            const blockRule = /^\$\$([\s\S]+?)\$\$/;
-            const inlineRule = /^\$([\s\S]+?)\$/;
-            
-            const blockMatch = blockRule.exec(src);
-            if (blockMatch) {
-              return {
-                type: 'html',
-                raw: blockMatch[0],
-                text: `$$${blockMatch[1]}$$`
-              };
-            }
-            
-            const inlineMatch = inlineRule.exec(src);
-            if (inlineMatch) {
-              return {
-                type: 'html',
-                raw: inlineMatch[0],
-                text: `$${inlineMatch[1]}$`
-              };
-            }
-            
-            return undefined;
-          }
-        }]
-      });
-    };
+        extensions: [
+          {
+            name: 'tex',
+            level: 'inline',
+            start(src) {
+              return src.match(/\$\$|\$/)?.index
+            },
+            tokenizer(src) {
+              const blockRule = /^\$\$([\s\S]+?)\$\$/
+              const inlineRule = /^\$([\s\S]+?)\$/
+
+              const blockMatch = blockRule.exec(src)
+              if (blockMatch) {
+                return {
+                  type: 'html',
+                  raw: blockMatch[0],
+                  text: `$$${blockMatch[1]}$$`,
+                }
+              }
+
+              const inlineMatch = inlineRule.exec(src)
+              if (inlineMatch) {
+                return {
+                  type: 'html',
+                  raw: inlineMatch[0],
+                  text: `$${inlineMatch[1]}$`,
+                }
+              }
+
+              return undefined
+            },
+          },
+        ],
+      })
+    }
 
     // Load design process markdown when component is mounted
     const loadDesignProcessMarkdown = async () => {
       try {
         // Configure marked before parsing
-        configureMarked();
-        
+        configureMarked()
+
         const response = await fetch('/docs/balun-design-process.md')
         const markdownContent = await response.text()
 
@@ -307,20 +311,20 @@ export default defineComponent({
         // Typeset math after content is loaded
         setTimeout(() => {
           if (window.MathJax) {
-            console.log("Attempting to typeset LaTeX in balun design process");
+            console.log('Attempting to typeset LaTeX in balun design process')
             if (window.MathJax.typesetPromise) {
               window.MathJax.typesetPromise()
-                .then(() => console.log("MathJax typesetting complete"))
-                .catch((err) => console.error('MathJax typeset error:', err));
+                .then(() => console.log('MathJax typesetting complete'))
+                .catch((err: Error) => console.error('MathJax typeset error:', err))
             } else if (window.MathJax.typeset) {
-              window.MathJax.typeset();
-              console.log("MathJax typeset called");
+              window.MathJax.typeset()
+              console.log('MathJax typeset called')
             } else if (window.MathJax.Hub && window.MathJax.Hub.Queue) {
-              window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
-              console.log("MathJax Hub Queue called");
+              window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub])
+              console.log('MathJax Hub Queue called')
             }
           }
-        }, 500);
+        }, 500)
       } catch (error) {
         console.error('Error loading design process markdown:', error)
         designProcessContent.value = '<p>Error loading design process documentation.</p>'
