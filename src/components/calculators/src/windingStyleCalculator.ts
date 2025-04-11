@@ -39,7 +39,7 @@ export class WindingStyleCalculator {
       // 1:1 current balun (bifilar winding)
       return {
         style: 'Bifilar',
-        construction: 'classical',
+        construction: 'autotransformer',
         wireCount: 2,
         connectionDetails: 'Series-Connected Windings',
       }

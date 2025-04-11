@@ -27,6 +27,8 @@ export interface PresetConfig {
   power: number
   operationMode: string
   useHybridDesign: boolean
+  suggestedCoreModel: string
+  suggestedCoreCount: number
 }
 
 export interface BalunConfig {

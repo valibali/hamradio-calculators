@@ -7,6 +7,7 @@ import {
   type DesignResults,
   type ValidationResult,
   type HybridComponents,
+  type PresetConfig,
 } from './src/types'
 import {
   CORE_MODELS,
@@ -140,7 +141,7 @@ export default defineComponent({
     })
 
     // Methods
-    const applyPreset = (preset: any) => {
+    const applyPreset = (preset: PresetConfig) => {
       inputImpedance.value = preset.inputImpedance
       outputImpedance.value = preset.outputImpedance
       minFrequency.value = preset.minFrequency
@@ -148,6 +149,8 @@ export default defineComponent({
       power.value = preset.power
       operationMode.value = preset.operationMode
       useHybridDesign.value = preset.useHybridDesign
+      selectedCoreModel.value = preset.suggestedCoreModel
+      coreCount.value = preset.suggestedCoreCount
     }
 
     const resetForm = () => {
@@ -718,20 +721,28 @@ export default defineComponent({
               >{{ designResults.coreModel.id }} ({{ designResults.config.coreCount }}x)</span
             >
           </div>
-          <div class="result-item">
-            <span class="result-label">Primary Turns:</span>
-            <span class="result-value">{{ designResults.config.primaryTurns }}</span>
+          <div v-if="designResults.config.inputImpedance !== designResults.config.outputImpedance">
+            <div class="result-item">
+              <span class="result-label">Primary Turns:</span>
+              <span class="result-value">{{ designResults.config.primaryTurns }}</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Secondary Turns:</span>
+              <span class="result-value">{{
+                Math.round(
+                  designResults.config.primaryTurns *
+                    Math.sqrt(
+                      designResults.config.outputImpedance / designResults.config.inputImpedance,
+                    ),
+                )
+              }}</span>
+            </div>
           </div>
-          <div class="result-item">
-            <span class="result-label">Secondary Turns:</span>
-            <span class="result-value">{{
-              Math.round(
-                designResults.config.primaryTurns *
-                  Math.sqrt(
-                    designResults.config.outputImpedance / designResults.config.inputImpedance,
-                  ),
-              )
-            }}</span>
+          <div v-else>
+            <div class="result-item">
+              <span class="result-label">Turns (equally distributed - See Guanella-winding):</span>
+              <span class="result-value">{{ designResults.config.primaryTurns }}</span>
+            </div>
           </div>
           <div class="result-item">
             <span class="result-label">Characteristic Z:</span>

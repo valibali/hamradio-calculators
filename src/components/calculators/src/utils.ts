@@ -1,6 +1,12 @@
 // utils.ts
 import { CORE_MODELS, SPEED_OF_LIGHT, WIRE_DATA } from './constants'
-import { type CoreModel, type WireInfo, type FrequencyBand, type ValidationMessage } from './types'
+import {
+  type CoreModel,
+  type WireInfo,
+  type FrequencyBand,
+  type ValidationMessage,
+  type BalunConfig,
+} from './types'
 
 /**
  * Find a core model by its ID
@@ -54,7 +60,12 @@ export function calculateWindingLength(
 /**
  * Calculate maximum frequency based on winding length
  */
-export function calculateMaxFreqBasedOnLength(windingLengthCm: number): number {
+export function calculateMaxFreqBasedOnLength(
+  windingLengthCm: number,
+  config: BalunConfig,
+): number {
+  if (config.inputImpedance == config.outputImpedance) return config.maxFrequency
+
   // Max frequency based on λ/10 rule
   const maxWavelengthCm = windingLengthCm * 10
   return (SPEED_OF_LIGHT * 100) / maxWavelengthCm / 1e6 // Convert to MHz

@@ -78,7 +78,7 @@ export class BalunDesignCalculator {
 
     // Calculate winding length and maximum frequency based on length
     const windingLengthCm = calculateWindingLength(primaryTurns, coreModel, config.coreCount)
-    const maxFreqBasedOnLength = calculateMaxFreqBasedOnLength(windingLengthCm)
+    const maxFreqBasedOnLength = calculateMaxFreqBasedOnLength(windingLengthCm, config)
 
     // Calculate power rating based on core loss
     const calculatedPowerRating = (config.power * maxPermissibleCoreLoss) / coreLossAtMinFreq
@@ -255,10 +255,14 @@ export class BalunDesignCalculator {
     }
 
     // Check frequency range based on winding length
-    if (designResults.maxFreqBasedOnLength < designResults.config.maxFrequency) {
+    if (
+      designResults.config.useHybridDesign &&
+      designResults.maxFreqBasedOnLength < designResults.config.maxFrequency
+    ) {
       messages.push({
-        type: 'warning',
-        message: `Winding length limits maximum frequency to ${designResults.maxFreqBasedOnLength.toFixed(1)}MHz (below the specified ${designResults.config.maxFrequency}MHz). Reduce turns and/or power, or use a bigger core.`,
+        type: 'info',
+        message: `Winding length limits the theoretical maximum frequency to ${designResults.maxFreqBasedOnLength.toFixed(1)}MHz (below the specified ${designResults.config.maxFrequency}MHz).\n
+        This is not necessarily a problem, but you may encounter higher theoretical insertion SWR, since the wire will start having stronger feedline-behavior at this length.`,
       })
     }
 
