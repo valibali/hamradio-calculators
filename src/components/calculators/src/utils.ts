@@ -36,14 +36,19 @@ export function calculateWavelength(frequencyMHz: number): number {
 export function calculateWindingLength(
   turns: number,
   coreModel: CoreModel,
+  coreCount: number,
   wireGauge: number = 14,
 ): number {
   const wireDiameter = WIRE_DATA[wireGauge].diameter / 10 // Convert to cm
-  const coreMeanCircumference =
-    (Math.PI * ((coreModel.dimensions.od + coreModel.dimensions.id) / 2)) / 10 // Convert to cm
+  const coreCircumference =
+    (coreModel.dimensions.od -
+      coreModel.dimensions.id +
+      coreCount * 2 * coreModel.dimensions.height) /
+      10 +
+    wireDiameter * 2 // Convert to cm
 
   // Winding length = circumference × turns + some margin for leads
-  return coreMeanCircumference * turns + 5 // Add 5cm for lead length
+  return 1.2 * coreCircumference * turns + 5 // Add 5cm for lead length
 }
 
 /**

@@ -22,55 +22,38 @@ export const DUTY_CYCLE_FACTORS: Record<string, number> = {
   CONTINUOUS: 1.0, // 100% duty cycle
 }
 
-// Core models library
 export const CORE_MODELS: CoreModel[] = [
   {
-    id: 'FT-140-43',
-    mix: '43',
-    initialPermeability: 850,
-    saturationFluxDensity: 300,
+    id: 'FT-140-61',
+    mix: '61',
+    initialPermeability: 125,
+    saturationFluxDensity: 350,
     dimensions: {
       od: 35.6,
       id: 23.0,
       height: 12.7,
     },
     recommendedFreqRange: {
-      min: 0.5,
-      max: 30,
+      min: 5.0,
+      max: 150,
     },
-    lossFactor: 0.008,
+    lossFactor: 0.002,
   },
   {
-    id: 'FT-114-43',
-    mix: '43',
-    initialPermeability: 850,
-    saturationFluxDensity: 300,
+    id: 'FT-114-61',
+    mix: '61',
+    initialPermeability: 125,
+    saturationFluxDensity: 350,
     dimensions: {
       od: 29.0,
       id: 19.1,
       height: 7.1,
     },
     recommendedFreqRange: {
-      min: 1.0,
-      max: 50,
+      min: 10.0,
+      max: 200,
     },
-    lossFactor: 0.008,
-  },
-  {
-    id: 'FT-240-43',
-    mix: '43',
-    initialPermeability: 850,
-    saturationFluxDensity: 300,
-    dimensions: {
-      od: 61.0,
-      id: 35.6,
-      height: 12.7,
-    },
-    recommendedFreqRange: {
-      min: 0.1,
-      max: 10,
-    },
-    lossFactor: 0.008,
+    lossFactor: 0.002,
   },
   {
     id: 'FT-140-52',
@@ -105,14 +88,174 @@ export const CORE_MODELS: CoreModel[] = [
     lossFactor: 0.005,
   },
   {
-    id: 'FT-114-61',
-    mix: '61',
-    initialPermeability: 125,
-    saturationFluxDensity: 350,
+    id: 'FT-50-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 12.7,
+      id: 7.6,
+      height: 5.1,
+    },
+    recommendedFreqRange: {
+      min: 10.0,
+      max: 300,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-82-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 21.0,
+      id: 12.7,
+      height: 6.4,
+    },
+    recommendedFreqRange: {
+      min: 5.0,
+      max: 100,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-114-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
     dimensions: {
       od: 29.0,
       id: 19.1,
       height: 7.1,
+    },
+    recommendedFreqRange: {
+      min: 1.0,
+      max: 50,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-140-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 35.6,
+      id: 23.0,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.5,
+      max: 30,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-240-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 61.0,
+      id: 35.6,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.1,
+      max: 10,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-140-77',
+    mix: '77',
+    initialPermeability: 2000,
+    saturationFluxDensity: 510,
+    dimensions: {
+      od: 35.6,
+      id: 23.0,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.5,
+      max: 8,
+    },
+    lossFactor: 0.015,
+  },
+  {
+    id: 'FT-240-61',
+    mix: '61',
+    initialPermeability: 125,
+    saturationFluxDensity: 350,
+    dimensions: {
+      od: 61.0,
+      id: 35.6,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 15.0,
+      max: 200,
+    },
+    lossFactor: 0.002,
+  },
+  {
+    id: 'FT-240-77',
+    mix: '77',
+    initialPermeability: 2000,
+    saturationFluxDensity: 510,
+    dimensions: {
+      od: 61.0,
+      id: 35.6,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.1,
+      max: 5,
+    },
+    lossFactor: 0.015,
+  },
+  {
+    id: 'FT-290-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 73.65,
+      id: 38.85,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 1.0,
+      max: 30,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-290-52',
+    mix: '52',
+    initialPermeability: 250,
+    saturationFluxDensity: 350,
+    dimensions: {
+      od: 73.65,
+      id: 38.85,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.5,
+      max: 30,
+    },
+    lossFactor: 0.005,
+  },
+  {
+    id: 'FT-290-61',
+    mix: '61',
+    initialPermeability: 125,
+    saturationFluxDensity: 350,
+    dimensions: {
+      od: 73.65,
+      id: 38.85,
+      height: 12.7,
     },
     recommendedFreqRange: {
       min: 10.0,
@@ -121,20 +264,86 @@ export const CORE_MODELS: CoreModel[] = [
     lossFactor: 0.002,
   },
   {
-    id: 'FT-140-61',
+    id: 'FT-290-77',
+    mix: '77',
+    initialPermeability: 2000,
+    saturationFluxDensity: 510,
+    dimensions: {
+      od: 73.65,
+      id: 38.85,
+      height: 12.7,
+    },
+    recommendedFreqRange: {
+      min: 0.1,
+      max: 5,
+    },
+    lossFactor: 0.015,
+  },
+
+  // FT-340 Variants
+  {
+    id: 'FT-340-43',
+    mix: '43',
+    initialPermeability: 850,
+    saturationFluxDensity: 300,
+    dimensions: {
+      od: 85.7,
+      id: 55.5,
+      height: 13.5,
+    },
+    recommendedFreqRange: {
+      min: 0.1,
+      max: 10,
+    },
+    lossFactor: 0.008,
+  },
+  {
+    id: 'FT-340-52',
+    mix: '52',
+    initialPermeability: 250,
+    saturationFluxDensity: 350,
+    dimensions: {
+      od: 85.7,
+      id: 55.5,
+      height: 13.5,
+    },
+    recommendedFreqRange: {
+      min: 0.5,
+      max: 30,
+    },
+    lossFactor: 0.005,
+  },
+  {
+    id: 'FT-340-61',
     mix: '61',
     initialPermeability: 125,
     saturationFluxDensity: 350,
     dimensions: {
-      od: 35.6,
-      id: 23.0,
-      height: 12.7,
+      od: 85.7,
+      id: 55.5,
+      height: 13.5,
     },
     recommendedFreqRange: {
-      min: 5.0,
-      max: 150,
+      min: 10.0,
+      max: 200,
     },
     lossFactor: 0.002,
+  },
+  {
+    id: 'FT-340-77',
+    mix: '77',
+    initialPermeability: 2000,
+    saturationFluxDensity: 510,
+    dimensions: {
+      od: 85.7,
+      id: 55.5,
+      height: 13.5,
+    },
+    recommendedFreqRange: {
+      min: 0.1,
+      max: 5,
+    },
+    lossFactor: 0.015,
   },
 ]
 
@@ -261,5 +470,17 @@ export const PERMEABILITY_DATA: { [mixType: string]: PermeabilityData[] } = {
     { frequency: 30.0, uPrime: 115, uDoublePrime: 15 },
     { frequency: 40.0, uPrime: 110, uDoublePrime: 18 },
     { frequency: 50.0, uPrime: 105, uDoublePrime: 20 },
+  ],
+  '77': [
+    { frequency: 1.0, uPrime: 2097, uDoublePrime: 791 },
+    { frequency: 2.0, uPrime: 1174, uDoublePrime: 1286 },
+    { frequency: 4.0, uPrime: 278, uDoublePrime: 920 },
+    { frequency: 7.0, uPrime: 27, uDoublePrime: 603 },
+    { frequency: 10.0, uPrime: -40, uDoublePrime: 346 },
+    { frequency: 15.0, uPrime: -41, uDoublePrime: 237 },
+    { frequency: 20.0, uPrime: -36, uDoublePrime: 163 },
+    { frequency: 30.0, uPrime: -26, uDoublePrime: 92 },
+    { frequency: 40.0, uPrime: -19, uDoublePrime: 62 },
+    { frequency: 50.0, uPrime: -16, uDoublePrime: 51 },
   ],
 }

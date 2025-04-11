@@ -77,7 +77,7 @@ export class BalunDesignCalculator {
     const fluxDensityInLinearRegion = fluxDensityAtMinFreq < 50
 
     // Calculate winding length and maximum frequency based on length
-    const windingLengthCm = calculateWindingLength(primaryTurns, coreModel)
+    const windingLengthCm = calculateWindingLength(primaryTurns, coreModel, config.coreCount)
     const maxFreqBasedOnLength = calculateMaxFreqBasedOnLength(windingLengthCm)
 
     // Calculate power rating based on core loss

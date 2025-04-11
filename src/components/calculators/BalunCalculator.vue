@@ -199,6 +199,7 @@ export default defineComponent({
           coreCount: coreCount.value,
           primaryTurns: primaryTurns.value,
           useHybridDesign: useHybridDesign.value,
+          type: 'current',
         }
 
         // Calculate balun design
