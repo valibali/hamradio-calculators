@@ -90,7 +90,7 @@ export function determineBandCoverage(
  */
 export function calculateRecommendedWireGauge(power: number, impedance: number): WireInfo {
   // Calculate maximum current: I = sqrt(P/Z)
-  const current = Math.sqrt(power / impedance) * 1.5 // Add 50% safety margin
+  const current = Math.sqrt(power / impedance) * 3 // Add 50% safety margin
 
   // Get all gauge numbers and sort them in descending order (largest wire first)
   const gauges = Object.keys(WIRE_DATA)
