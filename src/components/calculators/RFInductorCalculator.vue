@@ -549,6 +549,11 @@ export default defineComponent({
       </div>
     </div>
 
+    <div v-if="results" class="plot-container">
+      <h3>Impedance vs Frequency</h3>
+      <div id="impedancePlot" class="plot-area"></div>
+    </div>
+
     <div v-if="results" class="results-section">
       <h3>Calculation Results</h3>
 
@@ -661,11 +666,6 @@ export default defineComponent({
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="plot-container">
-      <h3>Impedance vs Frequency</h3>
-      <div id="impedancePlot" class="plot-area"></div>
     </div>
   </div>
 </template>
