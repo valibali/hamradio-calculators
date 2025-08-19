@@ -308,7 +308,7 @@ export default defineComponent({
           (Math.max(selectedBand.start, data.startFreq) +
             Math.min(selectedBand.end, data.stopFreq)) /
           2
-        
+
         ;(layout as any).annotations = [
           {
             x: labelX,
@@ -403,6 +403,7 @@ export default defineComponent({
     watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand], calculate)
 
     // Configure marked to preserve LaTeX delimiters
+  ##AI! Cannot find name 'marked'.ts-plugin(2304)
     const configureMarked = () => {
       if (typeof marked !== 'undefined') {
         marked.use({
