@@ -11,6 +11,9 @@ import {
   type HamBandData,
 } from './src/rfInductorCalculator'
 
+// Declare marked for TypeScript
+declare const marked: any
+
 export default defineComponent({
   name: 'RFInductorCalculator',
   components: {
@@ -403,7 +406,6 @@ export default defineComponent({
     watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand], calculate)
 
     // Configure marked to preserve LaTeX delimiters
-  ##AI! Cannot find name 'marked'.ts-plugin(2304)
     const configureMarked = () => {
       if (typeof marked !== 'undefined') {
         marked.use({
@@ -411,10 +413,10 @@ export default defineComponent({
             {
               name: 'tex',
               level: 'inline',
-              start(src) {
+              start(src: { match: (arg0: RegExp) => { (): any; new (): any; index: any } }) {
                 return src.match(/\$\$|\$/)?.index
               },
-              tokenizer(src) {
+              tokenizer(src: string) {
                 const blockRule = /^\$\$([\s\S]+?)\$\$/
                 const inlineRule = /^\$([\s\S]+?)\$/
 
