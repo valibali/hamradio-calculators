@@ -393,7 +393,7 @@ export class RFInductorCalculator {
       return {
         isGoodChoke: false,
         performanceLevel: 'poor',
-        message: 'Az induktor az önrezonancia frekvencia felett működik - nem alkalmas fojtótekercsként!'
+        message: 'Inductor operates above self-resonant frequency - not suitable as a choke!'
       }
     }
 
@@ -401,19 +401,19 @@ export class RFInductorCalculator {
       return {
         isGoodChoke: true,
         performanceLevel: 'excellent',
-        message: 'Kiváló fojtótekercs! Az impedancia nagyobb mint 3kΩ.'
+        message: 'Excellent choke! Impedance is greater than 3kΩ.'
       }
     } else if (impedanceMagnitude >= 1000) {
       return {
         isGoodChoke: true,
         performanceLevel: 'usable',
-        message: 'Használható fojtótekercs. Az impedancia 1-3kΩ között van.'
+        message: 'Usable choke. Impedance is between 1-3kΩ.'
       }
     } else {
       return {
         isGoodChoke: false,
         performanceLevel: 'poor',
-        message: 'Gyenge fojtótekercs. Az impedancia kevesebb mint 1kΩ - nem ajánlott használni.'
+        message: 'Poor choke. Impedance is less than 1kΩ - not recommended for use.'
       }
     }
   }

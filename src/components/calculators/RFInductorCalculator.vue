@@ -715,11 +715,11 @@ export default defineComponent({
           <span v-else>✗</span>
         </div>
         <div class="verdict-content">
-          <h4>Fojtótekercs Értékelés</h4>
+          <h4>Choke Performance Evaluation</h4>
           <p class="verdict-message">{{ results.verdict.message }}</p>
           <div class="verdict-details">
             <span class="impedance-value">
-              Impedancia: {{ formatNumber(results.impedanceMagnitude, 1) }} Ω
+              Impedance: {{ formatNumber(results.impedanceMagnitude, 1) }} Ω
             </span>
             <span class="frequency-info">
               @ {{ selectedBandData.center.toFixed(2) }} MHz ({{ selectedBandData.name }})
