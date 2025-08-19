@@ -137,6 +137,149 @@ export default defineComponent({
       }
     }
 
+    const updateCommonModePlot = () => {
+      if (!results.value?.commonModeResults || !(window as any).Plotly) return
+
+      // Generate load impedance range (25-300 ohms)
+      const loadImpedances = []
+      const suppressionValues = []
+      const chokeImpedance = results.value.impedanceMagnitude
+
+      for (let z = 25; z <= 300; z += 5) {
+        loadImpedances.push(z)
+        const suppression = 20 * Math.log10(1 + chokeImpedance / z)
+        suppressionValues.push(suppression)
+      }
+
+      // Current operating point
+      const currentLoadZ = loadImpedance.value
+      const currentSuppression = results.value.commonModeResults.commonModeSuppression
+
+      const traces = [
+        {
+          x: loadImpedances,
+          y: suppressionValues,
+          name: 'CM Suppression',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#007bff', width: 3 },
+        },
+        {
+          x: [currentLoadZ],
+          y: [currentSuppression],
+          name: `Operating Point (${currentLoadZ}Ω)`,
+          type: 'scatter',
+          mode: 'markers',
+          marker: { 
+            color: '#e74c3c', 
+            size: 12,
+            symbol: 'circle',
+            line: { color: 'white', width: 2 }
+          },
+        }
+      ]
+
+      const layout = {
+        title: {
+          text: `Common Mode Suppression vs Load Impedance<br>(Choke Impedance: ${formatNumber(chokeImpedance, 1)}Ω @ ${selectedBandData.value.center.toFixed(2)} MHz)`,
+          font: { size: 16, color: 'var(--color-heading)' },
+        },
+        xaxis: {
+          title: 'Load Impedance (Ω)',
+          gridcolor: 'var(--color-border)',
+          showgrid: true,
+          range: [25, 300],
+        },
+        yaxis: {
+          title: 'Common Mode Suppression (dB)',
+          gridcolor: 'var(--color-border)',
+          showgrid: true,
+        },
+        plot_bgcolor: 'var(--color-background)',
+        paper_bgcolor: 'var(--color-background)',
+        font: { color: 'var(--color-text)' },
+        margin: { l: 80, r: 50, t: 80, b: 60 },
+        legend: {
+          x: 0.02,
+          y: 0.98,
+          bgcolor: 'rgba(255,255,255,0.8)',
+          bordercolor: 'var(--color-border)',
+          borderwidth: 1,
+        },
+        hovermode: 'x unified',
+        shapes: [
+          // Excellent suppression zone (>20dB) - Green
+          {
+            type: 'rect',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: 20,
+            x1: 1,
+            y1: 100,
+            fillcolor: 'rgba(46, 204, 113, 0.15)',
+            line: { width: 0 },
+            layer: 'below',
+          },
+          // Good suppression zone (10-20dB) - Orange
+          {
+            type: 'rect',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: 10,
+            x1: 1,
+            y1: 20,
+            fillcolor: 'rgba(243, 156, 18, 0.15)',
+            line: { width: 0 },
+            layer: 'below',
+          },
+          // Poor suppression zone (<10dB) - Red
+          {
+            type: 'rect',
+            xref: 'paper',
+            yref: 'y',
+            x0: 0,
+            y0: 0,
+            x1: 1,
+            y1: 10,
+            fillcolor: 'rgba(231, 76, 60, 0.15)',
+            line: { width: 0 },
+            layer: 'below',
+          }
+        ],
+        annotations: [
+          {
+            x: 0.98,
+            y: 0.85,
+            xref: 'paper',
+            yref: 'paper',
+            text: '<b>Suppression Zones:</b><br><span style="color: #2ecc71;">■</span> Excellent (&gt;20dB)<br><span style="color: #f39c12;">■</span> Good (10-20dB)<br><span style="color: #e74c3c;">■</span> Poor (&lt;10dB)',
+            showarrow: false,
+            font: {
+              size: 10,
+              color: 'var(--color-text)',
+            },
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: 'var(--color-border)',
+            borderwidth: 1,
+            borderpad: 4,
+            align: 'right',
+            xanchor: 'right',
+          }
+        ]
+      }
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d', 'autoScale2d'],
+        displaylogo: false,
+      }
+
+      ;(window as any).Plotly.newPlot('commonModePlot', traces, layout, config)
+    }
+
     const updatePlot = () => {
       if (!plotData.value || !(window as any).Plotly) return
 
@@ -385,6 +528,11 @@ export default defineComponent({
       }
 
       ;(window as any).Plotly.newPlot('impedancePlot', traces, layout, config)
+      
+      // Update common mode plot if available
+      if (results.value?.commonModeResults) {
+        updateCommonModePlot()
+      }
     }
 
     const formatNumber = (value: number, decimals: number = 2): string => {
@@ -768,6 +916,11 @@ export default defineComponent({
       <div id="impedancePlot" class="plot-area"></div>
     </div>
 
+    <div v-if="results && results.commonModeResults" class="plot-container">
+      <h3>Common Mode Suppression vs Load Impedance</h3>
+      <div id="commonModePlot" class="plot-area"></div>
+    </div>
+
     <div v-if="results" class="results-section">
       <h3>Calculation Results</h3>
 
@@ -875,7 +1028,7 @@ export default defineComponent({
           <span class="result-value">{{ formatNumber(results.coilLength, 1) }} mm</span>
         </div>
 
-        <div v-if="results.commonModeResults">
+        <div v-if="results.commonModeResults" class="common-mode-section">
           <h4>Common Mode Suppression</h4>
           <div class="result-item">
             <span class="result-label">Load Current:</span>
@@ -886,18 +1039,8 @@ export default defineComponent({
             <span class="result-value">{{ formatNumber(results.commonModeResults.feedlineCurrent, 3) }} A</span>
           </div>
           <div class="result-item">
-            <span class="result-label">Current Reduction:</span>
-            <span class="result-value">{{ formatNumber(results.commonModeResults.feedlineCurrentReduction, 1) }} dB</span>
-          </div>
-          <div class="result-item">
             <span class="result-label">CM Suppression:</span>
             <span class="result-value">{{ formatNumber(results.commonModeResults.commonModeSuppression, 1) }} dB</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Choke Effectiveness:</span>
-            <span class="result-value" :class="`effectiveness-${results.commonModeResults.chokeEffectiveness}`">
-              {{ results.commonModeResults.chokeEffectiveness.toUpperCase() }}
-            </span>
           </div>
         </div>
       </div>
@@ -1298,19 +1441,8 @@ export default defineComponent({
   margin-right: 0.5rem;
 }
 
-.effectiveness-poor {
-  color: #e74c3c;
-  font-weight: bold;
-}
-
-.effectiveness-good {
-  color: #f39c12;
-  font-weight: bold;
-}
-
-.effectiveness-excellent {
-  color: #2ecc71;
-  font-weight: bold;
+.common-mode-section {
+  margin-top: 2rem;
 }
 
 .plot-container {
