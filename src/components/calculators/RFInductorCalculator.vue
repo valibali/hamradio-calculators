@@ -176,6 +176,28 @@ export default defineComponent({
             symbol: 'circle',
             line: { color: 'white', width: 2 }
           },
+        },
+        // Vertical hairline at operating load impedance
+        {
+          x: [currentLoadZ, currentLoadZ],
+          y: [0, Math.max(...suppressionValues)],
+          name: 'Load Impedance',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e74c3c', width: 1, dash: 'dot' },
+          showlegend: false,
+          hoverinfo: 'skip',
+        },
+        // Horizontal hairline at operating suppression
+        {
+          x: [25, 300],
+          y: [currentSuppression, currentSuppression],
+          name: 'CM Suppression Level',
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#e74c3c', width: 1, dash: 'dot' },
+          showlegend: false,
+          hoverinfo: 'skip',
         }
       ]
 
@@ -266,6 +288,29 @@ export default defineComponent({
             borderpad: 4,
             align: 'right',
             xanchor: 'right',
+          },
+          // Operating point label
+          {
+            x: currentLoadZ,
+            y: currentSuppression,
+            xref: 'x',
+            yref: 'y',
+            text: `<b>${formatNumber(currentSuppression, 1)}dB @ ${currentLoadZ}Ω load</b>`,
+            showarrow: true,
+            arrowhead: 2,
+            arrowsize: 1,
+            arrowwidth: 2,
+            arrowcolor: '#e74c3c',
+            ax: 30,
+            ay: -30,
+            font: {
+              size: 12,
+              color: '#e74c3c',
+            },
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#e74c3c',
+            borderwidth: 1,
+            borderpad: 4,
           }
         ]
       }
