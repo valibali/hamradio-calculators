@@ -308,8 +308,8 @@ export default defineComponent({
           (Math.max(selectedBand.start, data.startFreq) +
             Math.min(selectedBand.end, data.stopFreq)) /
           2
-##AI! Property 'annotations' does not exist on type '{ title: { text: string; font: { size: number; color: string; }; }; xaxis: { title: string; gridcolor: string; showgrid: boolean; range: number[]; }; yaxis: { title: string; gridcolor: string; showgrid: boolean; type: string; range: number[]; }; ... 6 more ...; shapes: never[]; }'.ts-plugin(2339)
-        layout.annotations = [
+        
+        ;(layout as any).annotations = [
           {
             x: labelX,
             y: 0.95,
@@ -329,7 +329,7 @@ export default defineComponent({
         ]
 
         // Add performance zone labels
-        layout.annotations.push({
+        ;(layout as any).annotations.push({
           x: 0.98,
           y: 0.85,
           xref: 'paper',
@@ -350,7 +350,7 @@ export default defineComponent({
 
         // Add invalid region annotation if SRF is visible
         if (data.srfMHz < data.stopFreq && data.srfMHz >= data.startFreq) {
-          layout.annotations.push({
+          ;(layout as any).annotations.push({
             x: (data.srfMHz + data.stopFreq) / 2,
             y: 0.5,
             xref: 'x',
