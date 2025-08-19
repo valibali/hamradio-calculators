@@ -7,7 +7,7 @@ import {
   type InductorParameters,
   type InductorResults,
   type FrequencyResponse,
-  type HamBandData
+  type HamBandData,
 } from './src/rfInductorCalculator'
 
 export default defineComponent({
@@ -18,7 +18,7 @@ export default defineComponent({
     const formerDiameter = ref(100.0)
     const pitchRatio = ref(1.4)
     const turnCount = ref(10)
-    const iaruRegion = ref('Region 2')
+    const iaruRegion = ref('Region 1')
     const hamBand = ref('7.150')
 
     // Results
@@ -30,21 +30,21 @@ export default defineComponent({
     const coaxOptions = computed(() => {
       return Object.entries(COAX_CABLES).map(([key, value]) => ({
         value: key,
-        label: `${value.name} (${value.outerDiameter}mm)`
+        label: `${value.name} (${value.outerDiameter}mm)`,
       }))
     })
 
     const iaruRegionOptions = computed(() => [
       { value: 'Region 1', label: 'Region 1 (Europe, Africa, Middle East)' },
       { value: 'Region 2', label: 'Region 2 (Americas)' },
-      { value: 'Region 3', label: 'Region 3 (Asia-Pacific)' }
+      { value: 'Region 3', label: 'Region 3 (Asia-Pacific)' },
     ])
 
     const hamBandOptions = computed(() => {
       const bands = HAM_BANDS_BY_REGION[iaruRegion.value]
       return Object.entries(bands).map(([key, value]) => ({
         value: key,
-        label: `${value.name} (${value.center} MHz)`
+        label: `${value.name} (${value.center} MHz)`,
       }))
     })
 
@@ -59,16 +59,16 @@ export default defineComponent({
       const srfMHz = results.value.selfResonantFreq / 1e6
 
       // Extract data arrays
-      const frequencies = frequencyResponse.value.map(p => p.frequency)
-      const impedanceMagnitudes = frequencyResponse.value.map(p => p.impedanceMagnitude)
-      const resistances = frequencyResponse.value.map(p => p.resistance)
-      const reactances = frequencyResponse.value.map(p => p.reactance)
+      const frequencies = frequencyResponse.value.map((p) => p.frequency)
+      const impedanceMagnitudes = frequencyResponse.value.map((p) => p.impedanceMagnitude)
+      const resistances = frequencyResponse.value.map((p) => p.resistance)
+      const reactances = frequencyResponse.value.map((p) => p.reactance)
 
       // Find Y-axis range
       const validValues = [
-        ...impedanceMagnitudes.filter(v => v !== null) as number[],
-        ...resistances.filter(v => v !== null) as number[],
-        ...reactances.filter(v => v !== null).map(v => Math.abs(v as number))
+        ...(impedanceMagnitudes.filter((v) => v !== null) as number[]),
+        ...(resistances.filter((v) => v !== null) as number[]),
+        ...reactances.filter((v) => v !== null).map((v) => Math.abs(v as number)),
       ]
       const yMin = Math.min(...validValues) * 0.1
       const yMax = Math.max(...validValues) * 10
@@ -83,14 +83,14 @@ export default defineComponent({
         yMin,
         yMax,
         startFreq: frequencies[0],
-        stopFreq: frequencies[frequencies.length - 1]
+        stopFreq: frequencies[frequencies.length - 1],
       }
     })
 
     // Methods
     const calculate = () => {
       isCalculating.value = true
-      
+
       try {
         const params: InductorParameters = {
           coaxType: coaxType.value,
@@ -99,7 +99,7 @@ export default defineComponent({
           turnCount: turnCount.value,
           frequency: parseFloat(hamBand.value),
           iaruRegion: iaruRegion.value,
-          hamBand: hamBand.value
+          hamBand: hamBand.value,
         }
 
         results.value = RFInductorCalculator.calculateInductor(params)
@@ -112,7 +112,7 @@ export default defineComponent({
           params,
           startFreq,
           stopFreq,
-          100
+          100,
         )
 
         nextTick(() => {
@@ -138,7 +138,7 @@ export default defineComponent({
           type: 'scatter',
           mode: 'lines',
           line: { color: 'hsla(160, 100%, 37%, 1)', width: 3 },
-          connectgaps: false
+          connectgaps: false,
         },
         {
           x: data.frequencies,
@@ -147,7 +147,7 @@ export default defineComponent({
           type: 'scatter',
           mode: 'lines',
           line: { color: '#e74c3c', width: 2, dash: 'dot' },
-          connectgaps: false
+          connectgaps: false,
         },
         {
           x: data.frequencies,
@@ -156,7 +156,7 @@ export default defineComponent({
           type: 'scatter',
           mode: 'lines',
           line: { color: '#2ecc71', width: 2, dash: 'dash' },
-          connectgaps: false
+          connectgaps: false,
         },
         // Operating frequency line
         {
@@ -166,8 +166,8 @@ export default defineComponent({
           type: 'scatter',
           mode: 'lines',
           line: { color: '#764ba2', width: 1 },
-          showlegend: true
-        }
+          showlegend: true,
+        },
       ]
 
       // Add SRF line if within range
@@ -179,27 +179,27 @@ export default defineComponent({
           type: 'scatter',
           mode: 'lines',
           line: { color: '#f39c12', width: 2 },
-          showlegend: true
+          showlegend: true,
         })
       }
 
       const layout = {
         title: {
           text: `Impedance vs Frequency (±10% around ${selectedBand.name} - ${selectedBand.center.toFixed(3)} MHz, ${iaruRegion.value})`,
-          font: { size: 16, color: 'var(--color-heading)' }
+          font: { size: 16, color: 'var(--color-heading)' },
         },
         xaxis: {
           title: 'Frequency (MHz)',
           gridcolor: 'var(--color-border)',
           showgrid: true,
-          range: [data.startFreq, data.stopFreq]
+          range: [data.startFreq, data.stopFreq],
         },
         yaxis: {
           title: 'Impedance (Ω)',
           gridcolor: 'var(--color-border)',
           showgrid: true,
           type: 'log',
-          range: [Math.log10(data.yMin), Math.log10(data.yMax)]
+          range: [Math.log10(data.yMin), Math.log10(data.yMax)],
         },
         plot_bgcolor: 'var(--color-background)',
         paper_bgcolor: 'var(--color-background)',
@@ -210,15 +210,15 @@ export default defineComponent({
           y: 0.98,
           bgcolor: 'rgba(255,255,255,0.8)',
           bordercolor: 'var(--color-border)',
-          borderwidth: 1
+          borderwidth: 1,
         },
         hovermode: 'x unified',
-        shapes: []
+        shapes: [],
       }
 
       // Add performance zones
       const shapes = layout.shapes as any[]
-      
+
       // Poor performance zone (below 1000Ω) - Red
       shapes.push({
         type: 'rect',
@@ -230,7 +230,7 @@ export default defineComponent({
         y1: 1000,
         fillcolor: 'rgba(231, 76, 60, 0.15)',
         line: { width: 0 },
-        layer: 'below'
+        layer: 'below',
       })
 
       // Usable performance zone (1000-3000Ω) - Orange
@@ -244,7 +244,7 @@ export default defineComponent({
         y1: 3000,
         fillcolor: 'rgba(243, 156, 18, 0.15)',
         line: { width: 0 },
-        layer: 'below'
+        layer: 'below',
       })
 
       // Excellent performance zone (above 3000Ω) - Green
@@ -258,7 +258,7 @@ export default defineComponent({
         y1: data.yMax,
         fillcolor: 'rgba(46, 204, 113, 0.15)',
         line: { width: 0 },
-        layer: 'below'
+        layer: 'below',
       })
 
       // Add invalid region shading above SRF
@@ -273,7 +273,7 @@ export default defineComponent({
           y1: 1,
           fillcolor: 'rgba(169, 169, 169, 0.3)',
           line: { width: 0 },
-          layer: 'above'
+          layer: 'above',
         })
       }
 
@@ -281,7 +281,7 @@ export default defineComponent({
       if (selectedBand.start >= data.startFreq || selectedBand.end <= data.stopFreq) {
         const bandStart = Math.max(selectedBand.start, data.startFreq)
         const bandEnd = Math.min(selectedBand.end, data.stopFreq)
-        
+
         shapes.push({
           type: 'rect',
           xref: 'x',
@@ -292,7 +292,7 @@ export default defineComponent({
           y1: 1,
           fillcolor: 'rgba(102, 126, 234, 0.1)',
           line: { width: 0 },
-          layer: 'above'
+          layer: 'above',
         })
       }
 
@@ -300,7 +300,7 @@ export default defineComponent({
         responsive: true,
         displayModeBar: true,
         modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d', 'autoScale2d'],
-        displaylogo: false
+        displaylogo: false,
       }
 
       window.Plotly.newPlot('impedancePlot', traces, layout, config)
@@ -331,6 +331,7 @@ export default defineComponent({
 
     // Load Plotly script
     onMounted(() => {
+      ##AI! Property 'Plotly' does not exist on type 'Window & typeof globalThis'.
       if (!window.Plotly) {
         const script = document.createElement('script')
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
@@ -365,9 +366,9 @@ export default defineComponent({
       // Methods
       calculate,
       formatNumber,
-      formatEngineering
+      formatEngineering,
     }
-  }
+  },
 })
 </script>
 
@@ -390,11 +391,7 @@ export default defineComponent({
           <div class="form-group">
             <label for="coaxType">Coax Cable Type</label>
             <select id="coaxType" v-model="coaxType">
-              <option
-                v-for="option in coaxOptions"
-                :key="option.value"
-                :value="option.value"
-              >
+              <option v-for="option in coaxOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -403,11 +400,7 @@ export default defineComponent({
           <div class="form-group">
             <label for="iaruRegion">IARU Region</label>
             <select id="iaruRegion" v-model="iaruRegion">
-              <option
-                v-for="option in iaruRegionOptions"
-                :key="option.value"
-                :value="option.value"
-              >
+              <option v-for="option in iaruRegionOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -416,11 +409,7 @@ export default defineComponent({
           <div class="form-group">
             <label for="hamBand">Ham Band</label>
             <select id="hamBand" v-model="hamBand">
-              <option
-                v-for="option in hamBandOptions"
-                :key="option.value"
-                :value="option.value"
-              >
+              <option v-for="option in hamBandOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </option>
             </select>
@@ -429,7 +418,9 @@ export default defineComponent({
 
         <div class="form-row">
           <div class="form-group">
-            <label for="formerDiameter">Former Diameter: {{ formatNumber(formerDiameter, 1) }} mm</label>
+            <label for="formerDiameter"
+              >Former Diameter: {{ formatNumber(formerDiameter, 1) }} mm</label
+            >
             <div class="slider-input-group">
               <input
                 id="formerDiameter"
@@ -517,7 +508,9 @@ export default defineComponent({
           </div>
           <div class="result-item">
             <span class="result-label">Self-Resonant Freq:</span>
-            <span class="result-value">{{ formatNumber(results.selfResonantFreq / 1e6, 1) }} MHz</span>
+            <span class="result-value"
+              >{{ formatNumber(results.selfResonantFreq / 1e6, 1) }} MHz</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Wire Length:</span>
@@ -555,7 +548,8 @@ export default defineComponent({
             <span class="result-label">Complex Impedance:</span>
             <span class="result-value" :class="{ 'over-srf': results.overSRF }">
               {{ formatNumber(results.complexImpedance.re, 1) }}
-              {{ results.complexImpedance.im >= 0 ? ' + j' : ' - j' }}{{ formatNumber(Math.abs(results.complexImpedance.im), 1) }} Ω
+              {{ results.complexImpedance.im >= 0 ? ' + j' : ' - j'
+              }}{{ formatNumber(Math.abs(results.complexImpedance.im), 1) }} Ω
             </span>
           </div>
           <div class="result-item">
@@ -576,7 +570,9 @@ export default defineComponent({
           <h4>Physical Dimensions</h4>
           <div class="result-item">
             <span class="result-label">Mean Diameter (Øm):</span>
-            <span class="result-value">{{ formatNumber(results.conductorMeanDiameter, 2) }} mm</span>
+            <span class="result-value"
+              >{{ formatNumber(results.conductorMeanDiameter, 2) }} mm</span
+            >
           </div>
           <div class="result-item">
             <span class="result-label">Outer Diameter (Øo):</span>
@@ -614,7 +610,15 @@ export default defineComponent({
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
 .calculator-intro {
@@ -692,7 +696,7 @@ export default defineComponent({
   gap: 10px;
 }
 
-.slider-input-group input[type="range"] {
+.slider-input-group input[type='range'] {
   flex: 1;
   height: 8px;
   border-radius: 5px;
@@ -701,7 +705,7 @@ export default defineComponent({
   -webkit-appearance: none;
 }
 
-.slider-input-group input[type="range"]::-webkit-slider-thumb {
+.slider-input-group input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 20px;
@@ -710,17 +714,17 @@ export default defineComponent({
   background: white;
   border: 3px solid hsla(160, 100%, 37%, 1);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.slider-input-group input[type="range"]::-moz-range-thumb {
+.slider-input-group input[type='range']::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
   background: white;
   border: 3px solid hsla(160, 100%, 37%, 1);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .number-input {
