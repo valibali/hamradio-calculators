@@ -25,6 +25,8 @@ export default defineComponent({
     const results = ref<InductorResults | null>(null)
     const frequencyResponse = ref<FrequencyResponse[]>([])
     const isCalculating = ref(false)
+    const showTechnicalGuide = ref(false)
+    const technicalGuideContent = ref('')
 
     // Computed properties
     const coaxOptions = computed(() => {
@@ -391,6 +393,36 @@ export default defineComponent({
     // Watchers
     watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand], calculate)
 
+    // Load technical guide markdown
+    const loadTechnicalGuide = async () => {
+      try {
+        const response = await fetch('/docs/rf-inductor-technical-guide.md')
+        const markdownContent = await response.text()
+        
+        // Simple markdown to HTML conversion for basic formatting
+        let html = markdownContent
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          .replace(/^\*\*(.*)\*\*$/gim, '<strong>$1</strong>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/^- (.*$)/gim, '<li>$1</li>')
+          .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+          .replace(/^(\d+\. .*$)/gim, '<li>$1</li>')
+          .replace(/(<li>\d+\. .*<\/li>)/s, '<ol>$1</ol>')
+          .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/^\s*---\s*$/gim, '<hr>')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>')
+        
+        technicalGuideContent.value = `<p>${html}</p>`
+      } catch (error) {
+        console.error('Error loading technical guide:', error)
+        technicalGuideContent.value = '<p>Error loading technical guide.</p>'
+      }
+    }
+
     // Load Plotly script
     onMounted(() => {
       if (!(window as any).Plotly) {
@@ -403,6 +435,9 @@ export default defineComponent({
       } else {
         calculate()
       }
+      
+      // Load technical guide
+      loadTechnicalGuide()
     })
 
     return {
@@ -417,6 +452,8 @@ export default defineComponent({
       // Results
       results,
       isCalculating,
+      showTechnicalGuide,
+      technicalGuideContent,
 
       // Computed
       coaxOptions,
@@ -442,6 +479,16 @@ export default defineComponent({
         determine the optimal dimensions and performance characteristics for your specific
         requirements.
       </p>
+
+      <div class="technical-guide">
+        <button class="toggle-button" @click="showTechnicalGuide = !showTechnicalGuide">
+          {{ showTechnicalGuide ? 'Hide Technical Guide' : 'Show Technical Guide' }}
+        </button>
+        
+        <div v-if="showTechnicalGuide" class="guide-content">
+          <div class="markdown-content" v-html="technicalGuideContent"></div>
+        </div>
+      </div>
     </div>
 
     <div class="calculator-form">
@@ -700,6 +747,108 @@ export default defineComponent({
   line-height: 1.6;
   color: var(--color-text);
   margin-bottom: 1.5rem;
+}
+
+.technical-guide {
+  margin-top: 1.5rem;
+}
+
+.toggle-button {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  background-color: var(--color-background-mute);
+  border-color: hsla(160, 100%, 37%, 0.5);
+}
+
+.guide-content {
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid var(--color-border);
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1 {
+  font-size: 1.8rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+}
+
+.markdown-content h2 {
+  font-size: 1.4rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-heading);
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content code {
+  background-color: var(--color-background-mute);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.markdown-content pre {
+  background-color: var(--color-background-mute);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+.markdown-content strong {
+  font-weight: bold;
+  color: var(--color-heading);
 }
 
 .calculator-form {
