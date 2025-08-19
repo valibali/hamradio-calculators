@@ -397,31 +397,77 @@ export default defineComponent({
     // Watchers
     watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand], calculate)
 
+    // Configure marked to preserve LaTeX delimiters
+    const configureMarked = () => {
+      if (typeof marked !== 'undefined') {
+        marked.use({
+          extensions: [
+            {
+              name: 'tex',
+              level: 'inline',
+              start(src) {
+                return src.match(/\$\$|\$/)?.index
+              },
+              tokenizer(src) {
+                const blockRule = /^\$\$([\s\S]+?)\$\$/
+                const inlineRule = /^\$([\s\S]+?)\$/
+
+                const blockMatch = blockRule.exec(src)
+                if (blockMatch) {
+                  return {
+                    type: 'html',
+                    raw: blockMatch[0],
+                    text: `$$${blockMatch[1]}$$`,
+                  }
+                }
+
+                const inlineMatch = inlineRule.exec(src)
+                if (inlineMatch) {
+                  return {
+                    type: 'html',
+                    raw: inlineMatch[0],
+                    text: `$${inlineMatch[1]}$`,
+                  }
+                }
+
+                return undefined
+              },
+            },
+          ],
+        })
+      }
+    }
+
     // Load technical guide markdown
     const loadTechnicalGuide = async () => {
       try {
+        // Configure marked before parsing
+        configureMarked()
+
         const response = await fetch('/docs/rf-inductor-technical-guide.md')
         const markdownContent = await response.text()
-        
-        // Simple markdown to HTML conversion for basic formatting
-        let html = markdownContent
-          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-          .replace(/^\*\*(.*)\*\*$/gim, '<strong>$1</strong>')
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/^- (.*$)/gim, '<li>$1</li>')
-          .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-          .replace(/^(\d+\. .*$)/gim, '<li>$1</li>')
-          .replace(/(<li>\d+\. .*<\/li>)/s, '<ol>$1</ol>')
-          .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
-          .replace(/`([^`]+)`/g, '<code>$1</code>')
-          .replace(/^\s*---\s*$/gim, '<hr>')
-          .replace(/\n\n/g, '</p><p>')
-          .replace(/\n/g, '<br>')
-        
-        technicalGuideContent.value = `<p>${html}</p>`
-        
+
+        // Render the markdown content using marked if available
+        let html
+        if (typeof marked !== 'undefined') {
+          html = await marked.parse(markdownContent, { async: true })
+        } else {
+          // Fallback to simple conversion
+          html = markdownContent
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/^\s*---\s*$/gim, '<hr>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+          html = `<p>${html}</p>`
+        }
+
+        technicalGuideContent.value = html
+
         // Typeset math after content is loaded
         setTimeout(() => {
           if (window.MathJax) {
@@ -445,21 +491,43 @@ export default defineComponent({
       }
     }
 
-    // Load Plotly script
+    // Load Plotly and marked scripts
     onMounted(() => {
-      if (!(window as any).Plotly) {
-        const script = document.createElement('script')
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
-        script.onload = () => {
-          calculate()
+      // Load marked.js first
+      if (typeof marked === 'undefined') {
+        const markedScript = document.createElement('script')
+        markedScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/marked/7.0.5/marked.min.js'
+        markedScript.onload = () => {
+          // Load Plotly after marked
+          if (!(window as any).Plotly) {
+            const plotlyScript = document.createElement('script')
+            plotlyScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
+            plotlyScript.onload = () => {
+              calculate()
+              loadTechnicalGuide()
+            }
+            document.head.appendChild(plotlyScript)
+          } else {
+            calculate()
+            loadTechnicalGuide()
+          }
         }
-        document.head.appendChild(script)
+        document.head.appendChild(markedScript)
       } else {
-        calculate()
+        // marked is already loaded
+        if (!(window as any).Plotly) {
+          const plotlyScript = document.createElement('script')
+          plotlyScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
+          plotlyScript.onload = () => {
+            calculate()
+            loadTechnicalGuide()
+          }
+          document.head.appendChild(plotlyScript)
+        } else {
+          calculate()
+          loadTechnicalGuide()
+        }
       }
-      
-      // Load technical guide
-      loadTechnicalGuide()
     })
 
     return {
