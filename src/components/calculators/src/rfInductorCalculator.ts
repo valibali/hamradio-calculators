@@ -51,6 +51,13 @@ export interface InductorResults {
   
   // Status
   overSRF: boolean
+  
+  // Performance verdict
+  verdict: {
+    isGoodChoke: boolean
+    performanceLevel: 'poor' | 'usable' | 'excellent'
+    message: string
+  }
 }
 
 export interface FrequencyResponse {
@@ -375,6 +382,43 @@ export class RFInductorCalculator {
   }
 
   /**
+   * Evaluate choke performance based on impedance magnitude
+   */
+  static evaluateChokePerformance(impedanceMagnitude: number, overSRF: boolean): {
+    isGoodChoke: boolean
+    performanceLevel: 'poor' | 'usable' | 'excellent'
+    message: string
+  } {
+    if (overSRF) {
+      return {
+        isGoodChoke: false,
+        performanceLevel: 'poor',
+        message: 'Az induktor az önrezonancia frekvencia felett működik - nem alkalmas fojtótekercsként!'
+      }
+    }
+
+    if (impedanceMagnitude >= 3000) {
+      return {
+        isGoodChoke: true,
+        performanceLevel: 'excellent',
+        message: 'Kiváló fojtótekercs! Az impedancia nagyobb mint 3kΩ.'
+      }
+    } else if (impedanceMagnitude >= 1000) {
+      return {
+        isGoodChoke: true,
+        performanceLevel: 'usable',
+        message: 'Használható fojtótekercs. Az impedancia 1-3kΩ között van.'
+      }
+    } else {
+      return {
+        isGoodChoke: false,
+        performanceLevel: 'poor',
+        message: 'Gyenge fojtótekercs. Az impedancia kevesebb mint 1kΩ - nem ajánlott használni.'
+      }
+    }
+  }
+
+  /**
    * Main calculation function
    */
   static calculateInductor(params: InductorParameters): InductorResults {
@@ -446,6 +490,10 @@ export class RFInductorCalculator {
     const edgeToEdgeGapMm = turnSpacingMm - condDiameterMm
     const coilLengthMm = params.turnCount * turnSpacingMm
 
+    // Performance evaluation
+    const overSRF = frequencyHz > selfResonantFreq
+    const verdict = this.evaluateChokePerformance(impedanceMagnitude, overSRF)
+
     return {
       // Frequency independent
       inductance,
@@ -471,7 +519,10 @@ export class RFInductorCalculator {
       coilLength: coilLengthMm,
 
       // Status
-      overSRF: frequencyHz > selfResonantFreq
+      overSRF,
+      
+      // Performance verdict
+      verdict
     }
   }
 

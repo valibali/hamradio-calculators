@@ -708,6 +708,26 @@ export default defineComponent({
     <div v-if="results" class="results-section">
       <h3>Calculation Results</h3>
 
+      <!-- Performance Verdict - Full Width First -->
+      <div class="verdict-card" :class="results.verdict.performanceLevel">
+        <div class="verdict-icon">
+          <span v-if="results.verdict.isGoodChoke">✓</span>
+          <span v-else>✗</span>
+        </div>
+        <div class="verdict-content">
+          <h4>Fojtótekercs Értékelés</h4>
+          <p class="verdict-message">{{ results.verdict.message }}</p>
+          <div class="verdict-details">
+            <span class="impedance-value">
+              Impedancia: {{ formatNumber(results.impedanceMagnitude, 1) }} Ω
+            </span>
+            <span class="frequency-info">
+              @ {{ selectedBandData.center.toFixed(2) }} MHz ({{ selectedBandData.name }})
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Physical Dimensions - Full Width First -->
       <div class="result-card full-width">
         <h4>Physical Dimensions</h4>
@@ -1147,6 +1167,86 @@ export default defineComponent({
   font-weight: bold;
 }
 
+.verdict-card {
+  background: var(--color-background);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.verdict-card.excellent {
+  border-color: #2ecc71;
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(46, 204, 113, 0.05));
+}
+
+.verdict-card.usable {
+  border-color: #f39c12;
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.05));
+}
+
+.verdict-card.poor {
+  border-color: #e74c3c;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.05));
+}
+
+.verdict-icon {
+  font-size: 2.5rem;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: center;
+}
+
+.verdict-card.excellent .verdict-icon {
+  color: #2ecc71;
+}
+
+.verdict-card.usable .verdict-icon {
+  color: #f39c12;
+}
+
+.verdict-card.poor .verdict-icon {
+  color: #e74c3c;
+}
+
+.verdict-content {
+  flex: 1;
+}
+
+.verdict-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-heading);
+  font-size: 1.2rem;
+}
+
+.verdict-message {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.verdict-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+}
+
+.impedance-value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.frequency-info {
+  font-style: italic;
+}
+
 .plot-container {
   background-color: var(--color-background-soft);
   border-radius: 8px;
@@ -1190,6 +1290,15 @@ export default defineComponent({
 
   .plot-area {
     height: 400px;
+  }
+
+  .verdict-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .verdict-details {
+    justify-content: center;
   }
 }
 </style>
