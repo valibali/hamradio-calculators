@@ -1,5 +1,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed, watch, onMounted, nextTick } from 'vue'
+import MathJaxLoader from '../MathJaxLoader.vue'
 import {
   RFInductorCalculator,
   COAX_CABLES,
@@ -12,6 +13,9 @@ import {
 
 export default defineComponent({
   name: 'RFInductorCalculator',
+  components: {
+    MathJaxLoader,
+  },
   setup() {
     // Form values
     const coaxType = ref('3.50')
@@ -417,6 +421,24 @@ export default defineComponent({
           .replace(/\n/g, '<br>')
         
         technicalGuideContent.value = `<p>${html}</p>`
+        
+        // Typeset math after content is loaded
+        setTimeout(() => {
+          if (window.MathJax) {
+            console.log('Attempting to typeset LaTeX in RF inductor technical guide')
+            if (window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise()
+                .then(() => console.log('MathJax typesetting complete'))
+                .catch((err: Error) => console.error('MathJax typeset error:', err))
+            } else if (window.MathJax.typeset) {
+              window.MathJax.typeset()
+              console.log('MathJax typeset called')
+            } else if (window.MathJax.Hub && window.MathJax.Hub.Queue) {
+              window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub])
+              console.log('MathJax Hub Queue called')
+            }
+          }
+        }, 500)
       } catch (error) {
         console.error('Error loading technical guide:', error)
         technicalGuideContent.value = '<p>Error loading technical guide.</p>'
@@ -486,6 +508,7 @@ export default defineComponent({
         </button>
         
         <div v-if="showTechnicalGuide" class="guide-content">
+          <MathJaxLoader />
           <div class="markdown-content" v-html="technicalGuideContent"></div>
         </div>
       </div>
