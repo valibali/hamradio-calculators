@@ -1070,6 +1070,7 @@ export default defineComponent({
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid var(--color-border);
+  margin-bottom: 2rem;
 }
 
 .plot-container h3 {
