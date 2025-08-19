@@ -124,7 +124,7 @@ export default defineComponent({
     }
 
     const updatePlot = () => {
-      if (!plotData.value || !window.Plotly) return
+      if (!plotData.value || !(window as any).Plotly) return
 
       const data = plotData.value
       const selectedBand = selectedBandData.value
@@ -303,7 +303,7 @@ export default defineComponent({
         displaylogo: false,
       }
 
-      window.Plotly.newPlot('impedancePlot', traces, layout, config)
+      ;(window as any).Plotly.newPlot('impedancePlot', traces, layout, config)
     }
 
     const formatNumber = (value: number, decimals: number = 2): string => {
@@ -331,8 +331,7 @@ export default defineComponent({
 
     // Load Plotly script
     onMounted(() => {
-      ##AI! Property 'Plotly' does not exist on type 'Window & typeof globalThis'.
-      if (!window.Plotly) {
+      if (!(window as any).Plotly) {
         const script = document.createElement('script')
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
         script.onload = () => {
