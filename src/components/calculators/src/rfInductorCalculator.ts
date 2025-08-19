@@ -23,6 +23,8 @@ export interface InductorParameters {
   frequency: number // MHz
   iaruRegion: string
   hamBand: string
+  loadImpedance?: number // Ω (optional load impedance)
+  transmitterPower?: number // W (optional transmitter power)
 }
 
 export interface InductorResults {
@@ -57,6 +59,15 @@ export interface InductorResults {
     isGoodChoke: boolean
     performanceLevel: 'poor' | 'usable' | 'excellent'
     message: string
+  }
+  
+  // Common mode suppression (optional, when load is specified)
+  commonModeResults?: {
+    commonModeSuppression: number // dB
+    feedlineCurrent: number // A
+    feedlineCurrentReduction: number // dB
+    loadCurrent: number // A
+    chokeEffectiveness: 'poor' | 'good' | 'excellent'
   }
 }
 
@@ -419,6 +430,57 @@ export class RFInductorCalculator {
   }
 
   /**
+   * Calculate common mode suppression and feedline current
+   */
+  static calculateCommonModeResults(
+    chokeImpedance: number,
+    loadImpedance: number,
+    transmitterPower: number,
+    feedlineZ0: number = 50
+  ): {
+    commonModeSuppression: number
+    feedlineCurrent: number
+    feedlineCurrentReduction: number
+    loadCurrent: number
+    chokeEffectiveness: 'poor' | 'good' | 'excellent'
+  } {
+    // Calculate load current (assuming matched load)
+    const loadCurrent = Math.sqrt(transmitterPower / loadImpedance)
+    
+    // Common mode suppression in dB
+    // CMS = 20 * log10(1 + Zchoke/Zload)
+    const commonModeSuppression = 20 * Math.log10(1 + chokeImpedance / loadImpedance)
+    
+    // Feedline current without choke (worst case scenario)
+    const feedlineCurrentWithoutChoke = loadCurrent
+    
+    // Feedline current with choke
+    // Ich = Iload / (1 + Zchoke/Zload)
+    const feedlineCurrent = loadCurrent / (1 + chokeImpedance / loadImpedance)
+    
+    // Feedline current reduction in dB
+    const feedlineCurrentReduction = 20 * Math.log10(feedlineCurrentWithoutChoke / feedlineCurrent)
+    
+    // Determine choke effectiveness
+    let chokeEffectiveness: 'poor' | 'good' | 'excellent'
+    if (commonModeSuppression >= 20) {
+      chokeEffectiveness = 'excellent'
+    } else if (commonModeSuppression >= 10) {
+      chokeEffectiveness = 'good'
+    } else {
+      chokeEffectiveness = 'poor'
+    }
+    
+    return {
+      commonModeSuppression,
+      feedlineCurrent,
+      feedlineCurrentReduction,
+      loadCurrent,
+      chokeEffectiveness
+    }
+  }
+
+  /**
    * Main calculation function
    */
   static calculateInductor(params: InductorParameters): InductorResults {
@@ -494,6 +556,16 @@ export class RFInductorCalculator {
     const overSRF = frequencyHz > selfResonantFreq
     const verdict = this.evaluateChokePerformance(impedanceMagnitude, overSRF)
 
+    // Common mode calculations (if load impedance and power are specified)
+    let commonModeResults
+    if (params.loadImpedance && params.transmitterPower) {
+      commonModeResults = this.calculateCommonModeResults(
+        impedanceMagnitude,
+        params.loadImpedance,
+        params.transmitterPower
+      )
+    }
+
     return {
       // Frequency independent
       inductance,
@@ -522,7 +594,10 @@ export class RFInductorCalculator {
       overSRF,
       
       // Performance verdict
-      verdict
+      verdict,
+      
+      // Common mode results
+      commonModeResults
     }
   }
 

@@ -27,6 +27,9 @@ export default defineComponent({
     const turnCount = ref(8)
     const iaruRegion = ref('Region 1')
     const hamBand = ref('144.200')
+    const loadImpedance = ref(50)
+    const transmitterPower = ref(100)
+    const enableCommonModeCalc = ref(false)
 
     // Results
     const results = ref<InductorResults | null>(null)
@@ -109,6 +112,8 @@ export default defineComponent({
           frequency: parseFloat(hamBand.value),
           iaruRegion: iaruRegion.value,
           hamBand: hamBand.value,
+          loadImpedance: enableCommonModeCalc.value ? loadImpedance.value : undefined,
+          transmitterPower: enableCommonModeCalc.value ? transmitterPower.value : undefined,
         }
 
         results.value = RFInductorCalculator.calculateInductor(params)
@@ -407,7 +412,7 @@ export default defineComponent({
     }
 
     // Watchers
-    watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand], calculate)
+    watch([coaxType, formerDiameter, pitchRatio, turnCount, iaruRegion, hamBand, loadImpedance, transmitterPower, enableCommonModeCalc], calculate)
 
     // Configure marked to preserve LaTeX delimiters
     const configureMarked = () => {
@@ -551,6 +556,9 @@ export default defineComponent({
       turnCount,
       iaruRegion,
       hamBand,
+      loadImpedance,
+      transmitterPower,
+      enableCommonModeCalc,
 
       // Results
       results,
@@ -697,6 +705,61 @@ export default defineComponent({
             </div>
           </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>
+              <input type="checkbox" v-model="enableCommonModeCalc" />
+              Enable Common Mode Suppression Analysis
+            </label>
+          </div>
+        </div>
+
+        <div v-if="enableCommonModeCalc" class="form-row">
+          <div class="form-group">
+            <label for="loadImpedance">Load Impedance: {{ loadImpedance }} Ω</label>
+            <div class="slider-input-group">
+              <input
+                id="loadImpedance"
+                v-model.number="loadImpedance"
+                type="range"
+                min="25"
+                max="300"
+                step="1"
+              />
+              <input
+                v-model.number="loadImpedance"
+                type="number"
+                min="25"
+                max="300"
+                step="1"
+                class="number-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="transmitterPower">Transmitter Power: {{ transmitterPower }} W</label>
+            <div class="slider-input-group">
+              <input
+                id="transmitterPower"
+                v-model.number="transmitterPower"
+                type="range"
+                min="1"
+                max="1500"
+                step="1"
+              />
+              <input
+                v-model.number="transmitterPower"
+                type="number"
+                min="1"
+                max="1500"
+                step="1"
+                class="number-input"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -810,6 +873,32 @@ export default defineComponent({
         <div class="result-item">
           <span class="result-label">Coil Length (ℓ):</span>
           <span class="result-value">{{ formatNumber(results.coilLength, 1) }} mm</span>
+        </div>
+
+        <div v-if="results.commonModeResults">
+          <h4>Common Mode Suppression</h4>
+          <div class="result-item">
+            <span class="result-label">Load Current:</span>
+            <span class="result-value">{{ formatNumber(results.commonModeResults.loadCurrent, 3) }} A</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Feedline Current:</span>
+            <span class="result-value">{{ formatNumber(results.commonModeResults.feedlineCurrent, 3) }} A</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Current Reduction:</span>
+            <span class="result-value">{{ formatNumber(results.commonModeResults.feedlineCurrentReduction, 1) }} dB</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">CM Suppression:</span>
+            <span class="result-value">{{ formatNumber(results.commonModeResults.commonModeSuppression, 1) }} dB</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Choke Effectiveness:</span>
+            <span class="result-value" :class="`effectiveness-${results.commonModeResults.chokeEffectiveness}`">
+              {{ results.commonModeResults.chokeEffectiveness.toUpperCase() }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -1199,6 +1288,29 @@ export default defineComponent({
 
 .frequency-info {
   font-style: italic;
+}
+
+.form-group.full-width {
+  flex: 1 1 100%;
+}
+
+.form-group label input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.effectiveness-poor {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.effectiveness-good {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.effectiveness-excellent {
+  color: #2ecc71;
+  font-weight: bold;
 }
 
 .plot-container {
