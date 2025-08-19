@@ -296,6 +296,68 @@ export default defineComponent({
         })
       }
 
+      // Add band label annotation
+      if (selectedBand.start < data.stopFreq && selectedBand.end > data.startFreq) {
+        const labelX = (Math.max(selectedBand.start, data.startFreq) + Math.min(selectedBand.end, data.stopFreq)) / 2
+        
+        layout.annotations = [{
+          x: labelX,
+          y: 0.95,
+          xref: 'x',
+          yref: 'paper',
+          text: `<b>${selectedBand.name} Band (${iaruRegion.value})</b><br>${selectedBand.start}-${selectedBand.end} MHz`,
+          showarrow: false,
+          font: {
+            size: 12,
+            color: 'hsla(160, 100%, 37%, 1)'
+          },
+          bgcolor: 'rgba(255,255,255,0.8)',
+          bordercolor: 'hsla(160, 100%, 37%, 1)',
+          borderwidth: 1,
+          borderpad: 4
+        }]
+        
+        // Add performance zone labels
+        layout.annotations.push({
+          x: 0.98,
+          y: 0.85,
+          xref: 'paper',
+          yref: 'paper',
+          text: '<b>Performance Zones:</b><br><span style="color: #e74c3c;">■</span> Poor (&lt;1kΩ)<br><span style="color: #f39c12;">■</span> Usable (1-3kΩ)<br><span style="color: #2ecc71;">■</span> Excellent (&gt;3kΩ)',
+          showarrow: false,
+          font: {
+            size: 10,
+            color: 'var(--color-text)'
+          },
+          bgcolor: 'rgba(255,255,255,0.9)',
+          bordercolor: 'var(--color-border)',
+          borderwidth: 1,
+          borderpad: 4,
+          align: 'right',
+          xanchor: 'right'
+        })
+        
+        // Add invalid region annotation if SRF is visible
+        if (data.srfMHz < data.stopFreq && data.srfMHz >= data.startFreq) {
+          layout.annotations.push({
+            x: (data.srfMHz + data.stopFreq) / 2,
+            y: 0.5,
+            xref: 'x',
+            yref: 'paper',
+            text: '<b>Invalid Region</b><br>Above SRF<br>(Not functioning as choke)',
+            showarrow: false,
+            font: {
+              size: 11,
+              color: '#666'
+            },
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#999',
+            borderwidth: 1,
+            borderpad: 4
+          })
+        }
+      }
+
       const config = {
         responsive: true,
         displayModeBar: true,
