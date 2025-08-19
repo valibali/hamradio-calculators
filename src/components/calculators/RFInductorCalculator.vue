@@ -490,6 +490,40 @@ export default defineComponent({
     <div v-if="results" class="results-section">
       <h3>Calculation Results</h3>
 
+      <!-- Physical Dimensions - Full Width First -->
+      <div class="result-card full-width">
+        <h4>Physical Dimensions</h4>
+        <div class="result-items-grid">
+          <div class="result-item">
+            <span class="result-label">Mean Diameter (Øm):</span>
+            <span class="result-value"
+              >{{ formatNumber(results.conductorMeanDiameter, 2) }} mm</span
+            >
+          </div>
+          <div class="result-item">
+            <span class="result-label">Outer Diameter (Øo):</span>
+            <span class="result-value">{{ formatNumber(results.outerDiameter, 2) }} mm</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Former Diameter (Øf):</span>
+            <span class="result-value">{{ formatNumber(formerDiameter, 2) }} mm</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Turn Spacing (c):</span>
+            <span class="result-value">{{ formatNumber(results.turnSpacing, 2) }} mm</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Edge-to-Edge Gap:</span>
+            <span class="result-value">{{ formatNumber(results.edgeToEdgeGap, 2) }} mm</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Coil Length (ℓ):</span>
+            <span class="result-value">{{ formatNumber(results.coilLength, 1) }} mm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Results - Two Column Grid -->
       <div class="results-grid">
         <div class="result-card">
           <h4>Frequency Independent</h4>
@@ -562,36 +596,6 @@ export default defineComponent({
             <span class="result-value" :class="{ 'over-srf': results.overSRF }">
               {{ formatNumber(results.qualityFactor, 1) }}
             </span>
-          </div>
-        </div>
-
-        <div class="result-card">
-          <h4>Physical Dimensions</h4>
-          <div class="result-item">
-            <span class="result-label">Mean Diameter (Øm):</span>
-            <span class="result-value"
-              >{{ formatNumber(results.conductorMeanDiameter, 2) }} mm</span
-            >
-          </div>
-          <div class="result-item">
-            <span class="result-label">Outer Diameter (Øo):</span>
-            <span class="result-value">{{ formatNumber(results.outerDiameter, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Former Diameter (Øf):</span>
-            <span class="result-value">{{ formatNumber(formerDiameter, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Turn Spacing (c):</span>
-            <span class="result-value">{{ formatNumber(results.turnSpacing, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Edge-to-Edge Gap:</span>
-            <span class="result-value">{{ formatNumber(results.edgeToEdgeGap, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Coil Length (ℓ):</span>
-            <span class="result-value">{{ formatNumber(results.coilLength, 1) }} mm</span>
           </div>
         </div>
       </div>
@@ -762,6 +766,27 @@ export default defineComponent({
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.result-card.full-width {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.result-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.result-items-grid .result-item {
+  border-bottom: 1px solid var(--color-border-light, #eee);
+  padding: 8px 0;
+}
+
+.result-items-grid .result-item:last-child {
+  border-bottom: none;
 }
 
 .result-card {
@@ -834,6 +859,10 @@ export default defineComponent({
   }
 
   .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-items-grid {
     grid-template-columns: 1fr;
   }
 
