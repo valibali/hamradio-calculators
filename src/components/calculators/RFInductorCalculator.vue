@@ -386,20 +386,23 @@ export default defineComponent({
       return value.toFixed(decimals)
     }
 
-##AI! improve formatEngineering. e.g. Capacitance is displayed in Farads instead of likely picofarads.
     const formatEngineering = (value: number, unit: string): string => {
-      if (value >= 1e-3 && value < 1) {
-        return `${(value * 1e6).toFixed(1)} μ${unit}`
-      } else if (value >= 1e-6 && value < 1e-3) {
-        return `${(value * 1e9).toFixed(1)} n${unit}`
-      } else if (value >= 1e-9 && value < 1e-6) {
+      if (value >= 1e-12 && value < 1e-9) {
         return `${(value * 1e12).toFixed(1)} p${unit}`
+      } else if (value >= 1e-9 && value < 1e-6) {
+        return `${(value * 1e9).toFixed(1)} n${unit}`
+      } else if (value >= 1e-6 && value < 1e-3) {
+        return `${(value * 1e6).toFixed(1)} μ${unit}`
+      } else if (value >= 1e-3 && value < 1) {
+        return `${(value * 1e3).toFixed(1)} m${unit}`
       } else if (value >= 1e6) {
         return `${(value / 1e6).toFixed(1)} M${unit}`
       } else if (value >= 1e3) {
         return `${(value / 1e3).toFixed(1)} k${unit}`
-      } else {
+      } else if (value >= 1) {
         return `${value.toFixed(2)} ${unit}`
+      } else {
+        return `${(value * 1e12).toFixed(1)} p${unit}`
       }
     }
 
