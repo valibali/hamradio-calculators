@@ -137,7 +137,7 @@ export default defineComponent({
           name: '|Z| Magnitude',
           type: 'scatter',
           mode: 'lines',
-          line: { color: 'hsla(160, 100%, 37%, 1)', width: 3 },
+          line: { color: '#007bff', width: 3 },
           connectgaps: false,
         },
         {
