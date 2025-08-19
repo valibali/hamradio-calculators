@@ -18,12 +18,12 @@ export default defineComponent({
   },
   setup() {
     // Form values
-    const coaxType = ref('3.50')
-    const formerDiameter = ref(100.0)
+    const coaxType = ref('2.00')
+    const formerDiameter = ref(25)
     const pitchRatio = ref(1.4)
-    const turnCount = ref(10)
+    const turnCount = ref(8)
     const iaruRegion = ref('Region 1')
-    const hamBand = ref('7.150')
+    const hamBand = ref('144.200')
 
     // Results
     const results = ref<InductorResults | null>(null)
@@ -191,7 +191,7 @@ export default defineComponent({
 
       const layout = {
         title: {
-          text: `Impedance vs Frequency (±10% around ${selectedBand.name} - ${selectedBand.center.toFixed(3)} MHz, ${iaruRegion.value})`,
+          text: `Common Mode Impedance vs Frequency <br>(±10% around ${selectedBand.name} - ${selectedBand.center.toFixed(3)} MHz, ${iaruRegion.value})`,
           font: { size: 16, color: 'var(--color-heading)' },
         },
         xaxis: {
@@ -304,25 +304,30 @@ export default defineComponent({
 
       // Add band label annotation
       if (selectedBand.start < data.stopFreq && selectedBand.end > data.startFreq) {
-        const labelX = (Math.max(selectedBand.start, data.startFreq) + Math.min(selectedBand.end, data.stopFreq)) / 2
-        
-        layout.annotations = [{
-          x: labelX,
-          y: 0.95,
-          xref: 'x',
-          yref: 'paper',
-          text: `<b>${selectedBand.name} Band (${iaruRegion.value})</b><br>${selectedBand.start}-${selectedBand.end} MHz`,
-          showarrow: false,
-          font: {
-            size: 12,
-            color: 'hsla(160, 100%, 37%, 1)'
+        const labelX =
+          (Math.max(selectedBand.start, data.startFreq) +
+            Math.min(selectedBand.end, data.stopFreq)) /
+          2
+
+        layout.annotations = [
+          {
+            x: labelX,
+            y: 0.95,
+            xref: 'x',
+            yref: 'paper',
+            text: `<b>${selectedBand.name} Band (${iaruRegion.value})</b><br>${selectedBand.start}-${selectedBand.end} MHz`,
+            showarrow: false,
+            font: {
+              size: 12,
+              color: 'hsla(160, 100%, 37%, 1)',
+            },
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: 'hsla(160, 100%, 37%, 1)',
+            borderwidth: 1,
+            borderpad: 4,
           },
-          bgcolor: 'rgba(255,255,255,0.8)',
-          bordercolor: 'hsla(160, 100%, 37%, 1)',
-          borderwidth: 1,
-          borderpad: 4
-        }]
-        
+        ]
+
         // Add performance zone labels
         layout.annotations.push({
           x: 0.98,
@@ -333,16 +338,16 @@ export default defineComponent({
           showarrow: false,
           font: {
             size: 10,
-            color: 'var(--color-text)'
+            color: 'var(--color-text)',
           },
           bgcolor: 'rgba(255,255,255,0.9)',
           bordercolor: 'var(--color-border)',
           borderwidth: 1,
           borderpad: 4,
           align: 'right',
-          xanchor: 'right'
+          xanchor: 'right',
         })
-        
+
         // Add invalid region annotation if SRF is visible
         if (data.srfMHz < data.stopFreq && data.srfMHz >= data.startFreq) {
           layout.annotations.push({
@@ -354,12 +359,12 @@ export default defineComponent({
             showarrow: false,
             font: {
               size: 11,
-              color: '#666'
+              color: '#666',
             },
             bgcolor: 'rgba(255,255,255,0.9)',
             bordercolor: '#999',
             borderwidth: 1,
-            borderpad: 4
+            borderpad: 4,
           })
         }
       }
@@ -501,7 +506,8 @@ export default defineComponent({
           // Load Plotly after marked
           if (!(window as any).Plotly) {
             const plotlyScript = document.createElement('script')
-            plotlyScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
+            plotlyScript.src =
+              'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js'
             plotlyScript.onload = () => {
               calculate()
               loadTechnicalGuide()
@@ -574,7 +580,7 @@ export default defineComponent({
         <button class="toggle-button" @click="showTechnicalGuide = !showTechnicalGuide">
           {{ showTechnicalGuide ? 'Hide Technical Guide' : 'Show Technical Guide' }}
         </button>
-        
+
         <div v-if="showTechnicalGuide" class="guide-content">
           <MathJaxLoader />
           <div class="markdown-content" v-html="technicalGuideContent"></div>
@@ -901,7 +907,8 @@ export default defineComponent({
   margin-bottom: 1rem;
 }
 
-.markdown-content ul, .markdown-content ol {
+.markdown-content ul,
+.markdown-content ol {
   margin: 1rem 0;
   padding-left: 2rem;
 }
