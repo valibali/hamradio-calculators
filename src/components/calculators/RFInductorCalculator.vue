@@ -388,21 +388,21 @@ export default defineComponent({
 
     const formatEngineering = (value: number, unit: string): string => {
       if (value >= 1e-12 && value < 1e-9) {
-        return `${(value * 1e12).toFixed(1)} p${unit}`
+        return `${(value * 1e12).toFixed(1)} p`
       } else if (value >= 1e-9 && value < 1e-6) {
-        return `${(value * 1e9).toFixed(1)} n${unit}`
+        return `${(value * 1e9).toFixed(1)} n`
       } else if (value >= 1e-6 && value < 1e-3) {
-        return `${(value * 1e6).toFixed(1)} μ${unit}`
+        return `${(value * 1e6).toFixed(1)} μ`
       } else if (value >= 1e-3 && value < 1) {
-        return `${(value * 1e3).toFixed(1)} m${unit}`
+        return `${(value * 1e3).toFixed(1)} m`
       } else if (value >= 1e6) {
-        return `${(value / 1e6).toFixed(1)} M${unit}`
+        return `${(value / 1e6).toFixed(1)} M`
       } else if (value >= 1e3) {
-        return `${(value / 1e3).toFixed(1)} k${unit}`
+        return `${(value / 1e3).toFixed(1)} k`
       } else if (value >= 1) {
-        return `${value.toFixed(2)} ${unit}`
+        return `${value.toFixed(2)}`
       } else {
-        return `${(value * 1e12).toFixed(1)} p${unit}`
+        return `${(value * 1e12).toFixed(1)} p`
       }
     }
 
@@ -728,114 +728,127 @@ export default defineComponent({
         </div>
       </div>
 
-      <!-- Physical Dimensions - Full Width First -->
-      <div class="result-card full-width">
-        <h4>Physical Dimensions</h4>
-        <div class="result-items-grid">
-          <div class="result-item">
-            <span class="result-label">Mean Diameter (Øm):</span>
-            <span class="result-value"
-              >{{ formatNumber(results.conductorMeanDiameter, 2) }} mm</span
-            >
-          </div>
-          <div class="result-item">
-            <span class="result-label">Outer Diameter (Øo):</span>
-            <span class="result-value">{{ formatNumber(results.outerDiameter, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Former Diameter (Øf):</span>
-            <span class="result-value">{{ formatNumber(formerDiameter, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Turn Spacing (c):</span>
-            <span class="result-value">{{ formatNumber(results.turnSpacing, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Edge-to-Edge Gap:</span>
-            <span class="result-value">{{ formatNumber(results.edgeToEdgeGap, 2) }} mm</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Coil Length (ℓ):</span>
-            <span class="result-value">{{ formatNumber(results.coilLength, 1) }} mm</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Other Results - Two Column Grid -->
-      <div class="results-grid">
-        <div class="result-card">
-          <h4>Frequency Independent</h4>
-          <div class="result-item">
-            <span class="result-label">Inductance (L):</span>
-            <span class="result-value">{{ formatEngineering(results.inductance, 'H') }}</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Capacitance (C):</span>
-            <span class="result-value">{{ formatEngineering(results.capacitance, 'F') }}</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">DC Resistance (Rdc):</span>
-            <span class="result-value">{{ formatNumber(results.dcResistance, 2) }} Ω</span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Self-Resonant Freq:</span>
-            <span class="result-value"
-              >{{ formatNumber(results.selfResonantFreq / 1e6, 1) }} MHz</span
-            >
-          </div>
-          <div class="result-item">
-            <span class="result-label">Wire Length:</span>
-            <span class="result-value">{{ formatNumber(results.wireLength, 2) }} m</span>
-          </div>
-        </div>
-
-        <div class="result-card">
-          <h4>Frequency Dependent</h4>
-          <div class="result-item">
-            <span class="result-label">Frequency:</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ selectedBandData.center.toFixed(2) }} MHz
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Skin Depth (δ):</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.skinDepth * 1e6, 1) }} μm
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">AC Resistance (Rac):</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.acResistance, 2) }} Ω
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Inductive Reactance:</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.inductiveReactance, 1) }} Ω
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Complex Impedance:</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.complexImpedance.re, 1) }}
-              {{ results.complexImpedance.im >= 0 ? ' + j' : ' - j'
-              }}{{ formatNumber(Math.abs(results.complexImpedance.im), 1) }} Ω
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Impedance Magnitude:</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.impedanceMagnitude, 1) }} Ω
-            </span>
-          </div>
-          <div class="result-item">
-            <span class="result-label">Quality Factor (Q):</span>
-            <span class="result-value" :class="{ 'over-srf': results.overSRF }">
-              {{ formatNumber(results.qualityFactor, 1) }}
-            </span>
-          </div>
-        </div>
+      <!-- Results Table -->
+      <div class="results-table-container">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Value</th>
+              <th>Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Physical Dimensions -->
+            <tr class="section-header">
+              <td colspan="3"><strong>Physical Dimensions</strong></td>
+            </tr>
+            <tr>
+              <td>Mean Diameter (Øm)</td>
+              <td>{{ formatNumber(results.conductorMeanDiameter, 2) }}</td>
+              <td>mm</td>
+            </tr>
+            <tr>
+              <td>Outer Diameter (Øo)</td>
+              <td>{{ formatNumber(results.outerDiameter, 2) }}</td>
+              <td>mm</td>
+            </tr>
+            <tr>
+              <td>Former Diameter (Øf)</td>
+              <td>{{ formatNumber(formerDiameter, 2) }}</td>
+              <td>mm</td>
+            </tr>
+            <tr>
+              <td>Turn Spacing (c)</td>
+              <td>{{ formatNumber(results.turnSpacing, 2) }}</td>
+              <td>mm</td>
+            </tr>
+            <tr>
+              <td>Edge-to-Edge Gap</td>
+              <td>{{ formatNumber(results.edgeToEdgeGap, 2) }}</td>
+              <td>mm</td>
+            </tr>
+            <tr>
+              <td>Coil Length (ℓ)</td>
+              <td>{{ formatNumber(results.coilLength, 1) }}</td>
+              <td>mm</td>
+            </tr>
+            
+            <!-- Frequency Independent -->
+            <tr class="section-header">
+              <td colspan="3"><strong>Frequency Independent</strong></td>
+            </tr>
+            <tr>
+              <td>Inductance (L)</td>
+              <td>{{ formatEngineering(results.inductance, '') }}</td>
+              <td>H</td>
+            </tr>
+            <tr>
+              <td>Capacitance (C)</td>
+              <td>{{ formatEngineering(results.capacitance, '') }}</td>
+              <td>F</td>
+            </tr>
+            <tr>
+              <td>DC Resistance (Rdc)</td>
+              <td>{{ formatNumber(results.dcResistance, 2) }}</td>
+              <td>Ω</td>
+            </tr>
+            <tr>
+              <td>Self-Resonant Frequency</td>
+              <td>{{ formatNumber(results.selfResonantFreq / 1e6, 1) }}</td>
+              <td>MHz</td>
+            </tr>
+            <tr>
+              <td>Wire Length</td>
+              <td>{{ formatNumber(results.wireLength, 2) }}</td>
+              <td>m</td>
+            </tr>
+            
+            <!-- Frequency Dependent -->
+            <tr class="section-header">
+              <td colspan="3"><strong>Frequency Dependent</strong></td>
+            </tr>
+            <tr>
+              <td>Operating Frequency</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ selectedBandData.center.toFixed(2) }}</td>
+              <td>MHz</td>
+            </tr>
+            <tr>
+              <td>Skin Depth (δ)</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ formatNumber(results.skinDepth * 1e6, 1) }}</td>
+              <td>μm</td>
+            </tr>
+            <tr>
+              <td>AC Resistance (Rac)</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ formatNumber(results.acResistance, 2) }}</td>
+              <td>Ω</td>
+            </tr>
+            <tr>
+              <td>Inductive Reactance</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ formatNumber(results.inductiveReactance, 1) }}</td>
+              <td>Ω</td>
+            </tr>
+            <tr>
+              <td>Complex Impedance</td>
+              <td :class="{ 'over-srf': results.overSRF }">
+                {{ formatNumber(results.complexImpedance.re, 1) }}
+                {{ results.complexImpedance.im >= 0 ? ' + j' : ' - j'
+                }}{{ formatNumber(Math.abs(results.complexImpedance.im), 1) }}
+              </td>
+              <td>Ω</td>
+            </tr>
+            <tr>
+              <td>Impedance Magnitude</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ formatNumber(results.impedanceMagnitude, 1) }}</td>
+              <td>Ω</td>
+            </tr>
+            <tr>
+              <td>Quality Factor (Q)</td>
+              <td :class="{ 'over-srf': results.overSRF }">{{ formatNumber(results.qualityFactor, 1) }}</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1098,71 +1111,65 @@ export default defineComponent({
   text-align: center;
 }
 
-.results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.result-card.full-width {
-  width: 100%;
-  margin-bottom: 2rem;
-}
-
-.result-items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.result-items-grid .result-item {
-  border-bottom: 1px solid var(--color-border-light, #eee);
-  padding: 8px 0;
-}
-
-.result-items-grid .result-item:last-child {
-  border-bottom: none;
-}
-
-.result-card {
+.results-table-container {
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  padding: 1.25rem;
+  overflow: hidden;
+  margin-top: 1.5rem;
 }
 
-.result-card h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-heading);
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.result-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-border-light, #eee);
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.95rem;
 }
 
-.result-item:last-child {
-  border-bottom: none;
-}
-
-.result-label {
+.results-table th {
+  background-color: var(--color-background-soft);
+  color: var(--color-heading);
   font-weight: bold;
-  color: var(--color-text-light);
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--color-border);
 }
 
-.result-value {
+.results-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-light, #eee);
   color: var(--color-text);
-  font-family: 'Courier New', monospace;
 }
 
-.result-value.over-srf {
+.results-table tbody tr:hover {
+  background-color: var(--color-background-mute);
+}
+
+.results-table .section-header td {
+  background-color: var(--color-background-soft);
+  color: var(--color-heading);
+  font-weight: bold;
+  padding: 0.75rem 1rem;
+  border-top: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.results-table .section-header:first-child td {
+  border-top: none;
+}
+
+.results-table td:nth-child(2) {
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  font-weight: 500;
+}
+
+.results-table td:nth-child(3) {
+  font-weight: 500;
+  color: var(--color-text-light);
+  width: 60px;
+}
+
+.results-table td.over-srf {
   color: #e74c3c !important;
   font-weight: bold;
 }
@@ -1275,19 +1282,6 @@ export default defineComponent({
     flex: 1 1 100%;
   }
 
-  .results-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .result-items-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .result-item {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
   .plot-area {
     height: 400px;
   }
@@ -1299,6 +1293,19 @@ export default defineComponent({
 
   .verdict-details {
     justify-content: center;
+  }
+
+  .results-table {
+    font-size: 0.85rem;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 0.5rem;
+  }
+
+  .results-table td:nth-child(3) {
+    width: 50px;
   }
 }
 </style>
