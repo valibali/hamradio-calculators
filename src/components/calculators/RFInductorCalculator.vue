@@ -308,7 +308,7 @@ export default defineComponent({
           (Math.max(selectedBand.start, data.startFreq) +
             Math.min(selectedBand.end, data.stopFreq)) /
           2
-
+##AI! Property 'annotations' does not exist on type '{ title: { text: string; font: { size: number; color: string; }; }; xaxis: { title: string; gridcolor: string; showgrid: boolean; range: number[]; }; yaxis: { title: string; gridcolor: string; showgrid: boolean; type: string; range: number[]; }; ... 6 more ...; shapes: never[]; }'.ts-plugin(2339)
         layout.annotations = [
           {
             x: labelX,
