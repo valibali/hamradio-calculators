@@ -4,6 +4,7 @@ import TwinLeadCharImp from '../components/TwinLeadCharImp.vue'
 import TwistedPairCharImp from '../components/TwistedPairCharImp.vue'
 import SingleConductorAboveGroundPlane from '../components/SingleConductorAboveGroundPlane.vue'
 import BalunCalculator from '../components/calculators/BalunCalculator.vue'
+import RFInductorCalculator from '../components/calculators/RFInductorCalculator.vue'
 
 interface Calculator {
   id: string
@@ -27,6 +28,7 @@ export default defineComponent({
     TwistedPairCharImp,
     SingleConductorAboveGroundPlane,
     BalunCalculator,
+    RFInductorCalculator,
   },
   data() {
     return {
@@ -92,6 +94,11 @@ export default defineComponent({
           name: 'Components',
           description: 'Calculate values for inductors, capacitors, and other RF components',
           calculators: [
+            {
+              id: 'rf-inductor',
+              name: 'RF Inductor Calculator',
+              description: 'Calculate air-core coaxial cable inductor parameters',
+            },
             {
               id: 'coil',
               name: 'Coil Inductance',
@@ -330,6 +337,7 @@ export default defineComponent({
           <p>We're working on adding calculators for this category.</p>
         </div>
         <BalunCalculator v-else-if="activeCalculator === 'balun'" />
+        <RFInductorCalculator v-else-if="activeCalculator === 'rf-inductor'" />
         <TwinLeadCharImp v-else-if="activeCalculator === 'twinlead'" />
         <TwistedPairCharImp v-else-if="activeCalculator === 'twistedpair'" />
         <SingleConductorAboveGroundPlane v-else-if="activeCalculator === 'singleconductor'" />
