@@ -940,6 +940,9 @@ export default defineComponent({
             <span class="frequency-info">
               @ {{ selectedBandData.center.toFixed(2) }} MHz ({{ selectedBandData.name }})
             </span>
+            <span v-if="results.commonModeResults" class="cm-suppression-value">
+              CM Suppression: {{ formatNumber(results.commonModeResults.commonModeSuppression, 1) }} dB
+            </span>
           </div>
         </div>
       </div>
@@ -1431,6 +1434,12 @@ export default defineComponent({
 
 .frequency-info {
   font-style: italic;
+}
+
+.cm-suppression-value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: var(--color-text);
 }
 
 .form-group.full-width {
